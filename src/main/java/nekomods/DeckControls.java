@@ -1,5 +1,6 @@
 package nekomods;
 
+import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.BlockItem;
@@ -86,6 +87,7 @@ public class DeckControls
     }
 
     public static void renderOverlay() {
-        LOGGER.info("RENDER!!!");
+        PoseStack ps = new PoseStack();
+        Minecraft.getInstance().font.draw(ps, "hewwo world!", 0, 0, 0xff0000);
     }
 }
