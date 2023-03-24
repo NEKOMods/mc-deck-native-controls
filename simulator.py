@@ -4,6 +4,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk
 import os
+import struct
 import time
 
 FIFO_PATH = '/tmp/mc-deck-debug-sim'
@@ -56,8 +57,72 @@ TOUCH_STICKS_DATA = {
 
 iothread_run = True
 def iothread_func():
+	frame_id = 0
 	while iothread_run:
-		print(pad_state, l_trig_val, r_trig_val, touch_sticks_state)
+		# print(pad_state, l_trig_val, r_trig_val, touch_sticks_state)
+		buttons0 = (
+			((r_trig_val > 32767) << 0) |
+			((l_trig_val > 32767) << 1) |
+			(pad_state['right_digital'] << 2) |
+			(pad_state['left_digital'] << 3) |
+			(pad_state['btn_y'] << 4) |
+			(pad_state['btn_b'] << 5) |
+			(pad_state['btn_x'] << 6) |
+			(pad_state['btn_a'] << 7) |
+			(pad_state['d_up'] << 8) |
+			(pad_state['d_right'] << 9) |
+			(pad_state['d_left'] << 10) |
+			(pad_state['d_down'] << 11) |
+			(pad_state['btn_view'] << 12) |
+			(pad_state['btn_steam'] << 13) |
+			(pad_state['btn_option'] << 14) |
+			(pad_state['btn_l5'] << 15) |
+			(pad_state['btn_r5'] << 16) |
+			# no support for pad press
+			((touch_sticks_state['l_pad'] is not None) << 19) |
+			((touch_sticks_state['r_pad'] is not None) << 20)
+			# no support for thumbstick click
+		)
+		buttons1 = (
+			(pad_state['btn_l4'] << 9) |
+			(pad_state['btn_r4'] << 10) |
+			((touch_sticks_state['l_thumb'] is not None) << 14) |
+			((touch_sticks_state['r_thumb'] is not None) << 15) |
+			(pad_state['btn_dots'] << 18)
+		)
+		pkt = struct.pack(
+			"<BBBBIIIhhhhhhhhhhhhhhHHhhhhhhhh",
+			1,
+			0,
+			9,
+			0x40,
+
+			frame_id,
+			buttons0,
+			buttons1,
+
+			0 if touch_sticks_state['l_pad'] is None else touch_sticks_state['l_pad'][0],
+			0 if touch_sticks_state['l_pad'] is None else touch_sticks_state['l_pad'][1],
+			0 if touch_sticks_state['r_pad'] is None else touch_sticks_state['r_pad'][0],
+			0 if touch_sticks_state['r_pad'] is None else touch_sticks_state['r_pad'][1],
+
+			0, 0, 0, 0, 0, 0, 0, 0, 0, 0,	# no support for motion controls
+
+			l_trig_val,
+			r_trig_val,
+
+			0 if touch_sticks_state['l_thumb'] is None else touch_sticks_state['l_thumb'][0],
+			0 if touch_sticks_state['l_thumb'] is None else touch_sticks_state['l_thumb'][1],
+			0 if touch_sticks_state['r_thumb'] is None else touch_sticks_state['r_thumb'][0],
+			0 if touch_sticks_state['r_thumb'] is None else touch_sticks_state['r_thumb'][1],
+
+			0, 0, 0, 0	# no support for force sensors
+		)
+		frame_id = (frame_id + 1) & 0xFFFFFFFF
+
+		assert len(pkt) == 64
+		print(pkt)
+
 		time.sleep(0.5)
 
 iothread = threading.Thread(target=iothread_func)
