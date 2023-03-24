@@ -21,7 +21,7 @@ function initializeCoreMod() {
 
                         var new_opc = new MethodInsnNode(
                             opcodes.INVOKESTATIC,
-                            "nekomods/DeckControls",
+                            "nekomods/OverlayRenderer",
                             "renderOverlay",
                             "()V"
                         );
