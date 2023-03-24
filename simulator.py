@@ -15,9 +15,6 @@ except FileNotFoundError:
 	pass
 os.mkfifo(FIFO_PATH)
 
-# simpipe = open(FIFO_PATH, 'w')
-# simpipe.write('asdfasdf')
-
 pad_state = {
 	'd_up': False,
 	'd_down': False,
@@ -57,7 +54,9 @@ TOUCH_STICKS_DATA = {
 
 iothread_run = True
 def iothread_func():
+	simpipe = open(FIFO_PATH, 'wb')
 	frame_id = 0
+
 	while iothread_run:
 		# print(pad_state, l_trig_val, r_trig_val, touch_sticks_state)
 		buttons0 = (
@@ -121,9 +120,10 @@ def iothread_func():
 		frame_id = (frame_id + 1) & 0xFFFFFFFF
 
 		assert len(pkt) == 64
-		print(pkt)
+		# print(pkt)
+		simpipe.write(pkt)
 
-		time.sleep(0.5)
+		time.sleep(0.004)
 
 iothread = threading.Thread(target=iothread_func)
 iothread.start()
