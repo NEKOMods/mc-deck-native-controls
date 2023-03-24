@@ -18,7 +18,7 @@ public class DeckControls
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            Thread inputThread = new Thread(HidInput::threadFunc);
+            Thread inputThread = new Thread(HidInput::threadFunc, "Steam Deck Input Thread");
             inputThread.setDaemon(true);
             inputThread.start();
         }
