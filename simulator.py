@@ -40,10 +40,24 @@ pad_state = {
 l_trig_val = 0
 r_trig_val = 0
 
+touch_sticks_state = {
+	'l_thumb': None,
+	'r_thumb': None,
+	'l_pad': None,
+	'r_pad': None,
+}
+
+TOUCH_STICKS_DATA = {
+	'l_thumb': ((170, 130, 370, 330), "L Thumb = ({}, {})"),
+	'r_thumb': ((380, 130, 580, 330), "R Thumb = ({}, {})"),
+	'l_pad': ((170, 340, 370, 540), "L Pad = ({}, {})"),
+	'r_pad': ((380, 340, 580, 540), "R Pad = ({}, {})"),
+}
+
 iothread_run = True
 def iothread_func():
 	while iothread_run:
-		print(pad_state, l_trig_val, r_trig_val)
+		print(pad_state, l_trig_val, r_trig_val, touch_sticks_state)
 		time.sleep(0.5)
 
 iothread = threading.Thread(target=iothread_func)
@@ -67,11 +81,11 @@ canvas.create_text(135, 205, text="RIGHT", fill='black', tags='d_right')
 canvas.create_rectangle(60, 230, 110, 280, outline='black', fill='white', tags='d_down')
 canvas.create_text(85, 255, text="DOWN", fill='black', tags='d_down')
 
-canvas.create_rectangle(170, 130, 370, 330, outline='black', fill='white', tags='l_thumb')
-l_thumb_text = canvas.create_text(270, 230, text="L Thumb = (XXXXX, YYYYY)", fill='black', tags='l_thumb')
+canvas.create_rectangle(TOUCH_STICKS_DATA['l_thumb'][0], outline='black', fill='white', tags='l_thumb')
+l_thumb_text = canvas.create_text(270, 230, text=TOUCH_STICKS_DATA['l_thumb'][1].format(0, 0), fill='black', tags='l_thumb')
 
-canvas.create_rectangle(170, 340, 370, 540, outline='black', fill='white', tags='l_pad')
-l_pad_text = canvas.create_text(270, 440, text="L Pad = (XXXXX, YYYYY)", fill='black', tags='l_pad')
+canvas.create_rectangle(TOUCH_STICKS_DATA['l_pad'][0], outline='black', fill='white', tags='l_pad')
+l_pad_text = canvas.create_text(270, 440, text=TOUCH_STICKS_DATA['l_pad'][1].format(0, 0), fill='black', tags='l_pad')
 
 canvas.create_rectangle(170, 10, 220, 60, outline='black', fill='white', tags='btn_view')
 canvas.create_text(195, 35, text="VIEW", fill='black', tags='btn_view')
@@ -97,11 +111,11 @@ canvas.create_text(715, 205, text="B", fill='black', tags='btn_b')
 canvas.create_rectangle(640, 230, 690, 280, outline='black', fill='white', tags='btn_a')
 canvas.create_text(665, 255, text="A", fill='black', tags='btn_a')
 
-canvas.create_rectangle(380, 130, 580, 330, outline='black', fill='white', tags='r_thumb')
-r_thumb_text = canvas.create_text(480, 230, text="R Thumb = (XXXXX, YYYYY)", fill='black', tags='r_thumb')
+canvas.create_rectangle(TOUCH_STICKS_DATA['r_thumb'][0], outline='black', fill='white', tags='r_thumb')
+r_thumb_text = canvas.create_text(480, 230, text=TOUCH_STICKS_DATA['r_thumb'][1].format(0, 0), fill='black', tags='r_thumb')
 
-canvas.create_rectangle(380, 340, 580, 540, outline='black', fill='white', tags='r_pad')
-r_pad_text = canvas.create_text(480, 440, text="R Pad = (XXXXX, YYYYY)", fill='black', tags='r_pad')
+canvas.create_rectangle(TOUCH_STICKS_DATA['r_pad'][0], outline='black', fill='white', tags='r_pad')
+r_pad_text = canvas.create_text(480, 440, text=TOUCH_STICKS_DATA['r_pad'][1].format(0, 0), fill='black', tags='r_pad')
 
 canvas.create_rectangle(530, 10, 580, 60, outline='black', fill='white', tags='btn_option')
 canvas.create_text(555, 35, text="OPTN", fill='black', tags='btn_option')
@@ -111,6 +125,13 @@ canvas.create_rectangle(690, 400, 740, 450, outline='black', fill='white', tags=
 canvas.create_text(715, 425, text="R4", fill='black', tags='btn_r4')
 canvas.create_rectangle(690, 460, 740, 510, outline='black', fill='white', tags='btn_r5')
 canvas.create_text(715, 485, text="R5", fill='black', tags='btn_r5')
+
+touch_sticks_ids = {
+	'l_thumb': l_thumb_text,
+	'r_thumb': r_thumb_text,
+	'l_pad': l_pad_text,
+	'r_pad': r_pad_text,
+}
 
 for button in ['d_up', 'd_down', 'd_left', 'd_right', 'btn_a', 'btn_b', 'btn_x', 'btn_y', 'left_digital', 'right_digital', 'btn_view', 'btn_steam', 'btn_option', 'btn_dots', 'btn_l4', 'btn_l5', 'btn_r4', 'btn_r5']:
 	def f(button):
@@ -128,7 +149,12 @@ def l_trig_motion(e):
 	x = x * 32767.0 / 100.0
 	l_trig_val = int(x)
 	canvas.itemconfig(l_trig_text, text=f"LT = {l_trig_val}")
+def l_trig_release(_):
+	global l_trig_val
+	l_trig_val = 0
+	canvas.itemconfig(l_trig_text, text=f"LT = {l_trig_val}")
 canvas.tag_bind('left_analog', '<B1-Motion>', l_trig_motion)
+canvas.tag_bind('left_analog', '<ButtonRelease-1>', l_trig_release)
 def r_trig_motion(e):
 	global r_trig_val
 	x = e.x - 640
@@ -139,7 +165,36 @@ def r_trig_motion(e):
 	x = x * 32767.0 / 100.0
 	r_trig_val = int(x)
 	canvas.itemconfig(r_trig_text, text=f"RT = {r_trig_val}")
+def r_trig_release(_):
+	global r_trig_val
+	r_trig_val = 0
+	canvas.itemconfig(r_trig_text, text=f"RT = {r_trig_val}")
 canvas.tag_bind('right_analog', '<B1-Motion>', r_trig_motion)
+canvas.tag_bind('right_analog', '<ButtonRelease-1>', r_trig_release)
+
+for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
+	def f(thumb_pad):
+		def update_state(e):
+			x = e.x - TOUCH_STICKS_DATA[thumb_pad][0][0]
+			y = e.y - TOUCH_STICKS_DATA[thumb_pad][0][1]
+			if x < 0:
+				x = 0
+			if x > 200:
+				x = 200
+			if y < 0:
+				y = 0
+			if y > 200:
+				y = 200
+			x = x * 65535.0 / 200.0 - 32767
+			y = y * 65535.0 / 200.0 - 32767
+			x = int(x)
+			y = int(y)
+			touch_sticks_state[thumb_pad] = (x, y)
+			canvas.itemconfig(touch_sticks_ids[thumb_pad], text=TOUCH_STICKS_DATA[thumb_pad][1].format(x, y))
+		canvas.tag_bind(thumb_pad, '<Button-1>', update_state)
+		canvas.tag_bind(thumb_pad, '<B1-Motion>', update_state)
+		canvas.tag_bind(thumb_pad, '<ButtonRelease-1>', lambda _: touch_sticks_state.update({thumb_pad: None}))
+	f(thumb_pad)
 
 canvas.pack()
 rootwin.mainloop()
