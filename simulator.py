@@ -60,8 +60,8 @@ def iothread_func():
 	while iothread_run:
 		# print(pad_state, l_trig_val, r_trig_val, touch_sticks_state)
 		buttons0 = (
-			((r_trig_val > 32767) << 0) |
-			((l_trig_val > 32767) << 1) |
+			((r_trig_val > 16384) << 0) |
+			((l_trig_val > 16384) << 1) |
 			(pad_state['right_digital'] << 2) |
 			(pad_state['left_digital'] << 3) |
 			(pad_state['btn_y'] << 4) |

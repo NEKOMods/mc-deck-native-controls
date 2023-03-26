@@ -8,8 +8,6 @@ public class OsIo {
     private static OsIoInterface INSTANCE = Native.load("c", OsIoInterface.class);
 
     public interface OsIoInterface extends Library {
-        String getenv(String env);
-
         int open(String pathname, int flags);
         int read(int fd, byte[] data, NativeLong len);
         // TODO: we will probably need this later
