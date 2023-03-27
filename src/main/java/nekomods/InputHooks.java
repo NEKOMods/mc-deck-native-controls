@@ -10,12 +10,91 @@ public class InputHooks {
     private static final Logger LOGGER = LogUtils.getLogger();
     private final Minecraft minecraft;
 
+    private int last_lthumb_x;
+    private int last_lthumb_y;
+
     public InputHooks() {
         minecraft = Minecraft.getInstance();
     }
     public void runTick() {
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
+
+        HidInput.OtherHidState gamepad = HidInput.latestInput;
+        if (last_lthumb_y < 16000 && gamepad.lthumb_y >= 16000) {
+            LOGGER.info("FORWARD DOWN");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyUp.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyUp.getKey().getValue()),
+                    GLFW_PRESS,
+                    0);
+        }
+        if (last_lthumb_y >= 15000 && gamepad.lthumb_y < 15000) {
+            LOGGER.info("FORWARD UP");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyUp.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyUp.getKey().getValue()),
+                    GLFW_RELEASE,
+                    0);
+        }
+        if (-last_lthumb_y < 16000 && -gamepad.lthumb_y >= 16000) {
+            LOGGER.info("BACKWARD DOWN");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyDown.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyDown.getKey().getValue()),
+                    GLFW_PRESS,
+                    0);
+        }
+        if (-last_lthumb_y >= 15000 && -gamepad.lthumb_y < 15000) {
+            LOGGER.info("BACKWARD UP");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyDown.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyDown.getKey().getValue()),
+                    GLFW_RELEASE,
+                    0);
+        }
+        if (last_lthumb_x < 16000 && gamepad.lthumb_x >= 16000) {
+            LOGGER.info("RIGHT DOWN");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyRight.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyRight.getKey().getValue()),
+                    GLFW_PRESS,
+                    0);
+        }
+        if (last_lthumb_x >= 15000 && gamepad.lthumb_x < 15000) {
+            LOGGER.info("RIGHT UP");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyRight.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyRight.getKey().getValue()),
+                    GLFW_RELEASE,
+                    0);
+        }
+        if (-last_lthumb_x < 16000 && -gamepad.lthumb_x >= 16000) {
+            LOGGER.info("LEFT DOWN");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyLeft.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyLeft.getKey().getValue()),
+                    GLFW_PRESS,
+                    0);
+        }
+        if (-last_lthumb_x >= 15000 && -gamepad.lthumb_x < 15000) {
+            LOGGER.info("LEFT UP");
+            minecraft.keyboardHandler.keyPress(
+                    minecraft.getWindow().getWindow(),
+                    minecraft.options.keyLeft.getKey().getValue(),
+                    glfwGetKeyScancode(minecraft.options.keyLeft.getKey().getValue()),
+                    GLFW_RELEASE,
+                    0);
+        }
+        last_lthumb_x = gamepad.lthumb_x;
+        last_lthumb_y = gamepad.lthumb_y;
 
         HidInput.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
@@ -24,11 +103,10 @@ public class InputHooks {
                 LOGGER.info("KEY DOWN " + keyevent);
 
                 if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
-                    // jump hack
                     minecraft.keyboardHandler.keyPress(
                         minecraft.getWindow().getWindow(),
-                        GLFW_KEY_SPACE,
-                        glfwGetKeyScancode(GLFW_KEY_SPACE),
+                        minecraft.options.keyJump.getKey().getValue(),
+                        glfwGetKeyScancode(minecraft.options.keyJump.getKey().getValue()),
                         GLFW_PRESS,
                         0);
                 }
@@ -36,11 +114,10 @@ public class InputHooks {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
 
                 if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
-                    // jump hack
                     minecraft.keyboardHandler.keyPress(
                             minecraft.getWindow().getWindow(),
-                            GLFW_KEY_SPACE,
-                            glfwGetKeyScancode(GLFW_KEY_SPACE),
+                            minecraft.options.keyJump.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keyJump.getKey().getValue()),
                             GLFW_RELEASE,
                             0);
                 }
