@@ -1,11 +1,14 @@
 package nekomods;
 
 import com.mojang.logging.LogUtils;
-import com.sun.jna.platform.unix.LibC;
 import org.slf4j.Logger;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class HidInput {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -26,8 +29,8 @@ public class HidInput {
         public int frame;
         public int lpad_force;
         public int rpad_force;
-        public int lthumb_capa;
-        public int rthumb_capa;
+        public short lthumb_capa;
+        public short rthumb_capa;
 
         public short accel_x;
         public short accel_y;
@@ -71,6 +74,13 @@ public class HidInput {
     }
     public static HidState latestInput = new HidState();
 
+    private static Map<String, String> parse_uevent(String s) {
+        return Arrays.stream(s.split("\n"))
+            .filter((x) -> x.trim().length() > 0)
+            .map((line) -> line.split("=", 2))
+            .collect(Collectors.toMap((entry) -> entry[0], (entry) -> entry[1]));
+    }
+
     public static void threadFunc() {
         LOGGER.info("Deck controls thread init...");
 
@@ -82,7 +92,36 @@ public class HidInput {
             LOGGER.info("Deck controls using simulator");
             debug = true;
         } else {
-            // TODO
+            try {
+                Path[] fns = Files.list(Paths.get("/sys/class/hidraw")).toArray(Path[]::new);
+                for (Path f : fns) {
+                    Path hidraw_uevent_fn = f.resolve("uevent");
+                    Path hiddev_uevent_fn = f.resolve("device/uevent");
+
+                    String hidraw_uevent = Files.readString(hidraw_uevent_fn);
+                    String hiddev_uevent = Files.readString(hiddev_uevent_fn);
+
+                    Map<String, String> hidraw_uevent_data = parse_uevent(hidraw_uevent);
+                    Map<String, String> hiddev_uevent_data = parse_uevent(hiddev_uevent);
+
+                    LOGGER.info(hidraw_uevent_data.get("MODALIAS"));
+
+                    String modalias = hiddev_uevent_data.get("MODALIAS");
+                    if (modalias.equals("hid:b0003g0103v000028DEp00001205")) {
+                        String devname = hidraw_uevent_data.get("DEVNAME");
+                        String devname_full_path = "/dev/" + devname;
+
+                        LOGGER.info("Deck controls are at " + devname_full_path);
+
+                        fd = OsIo.open(devname_full_path, 0);
+                        break;
+                    }
+                }
+            }
+            catch (Exception e) {
+                LOGGER.error("Deck couldn't open hidraw", e);
+                return;
+            }
         }
 
         if (fd == -1) {
@@ -187,8 +226,8 @@ public class HidInput {
             newState.rthumb_y = (short)((buf[54] & 0xFF) | ((buf[55] & 0xFF) << 8));
             newState.lpad_force = (buf[56] & 0xFF) | ((buf[57] & 0xFF) << 8);
             newState.rpad_force = (buf[58] & 0xFF) | ((buf[59] & 0xFF) << 8);
-            newState.lthumb_capa = (buf[60] & 0xFF) | ((buf[61] & 0xFF) << 8);
-            newState.rthumb_capa = (buf[62] & 0xFF) | ((buf[63] & 0xFF) << 8);
+            newState.lthumb_capa = (short)((buf[60] & 0xFF) | ((buf[61] & 0xFF) << 8));
+            newState.rthumb_capa = (short)((buf[62] & 0xFF) | ((buf[63] & 0xFF) << 8));
 
             latestInput = newState;
         }

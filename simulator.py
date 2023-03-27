@@ -251,7 +251,7 @@ for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
 			if y > 200:
 				y = 200
 			x = x * 65535.0 / 200.0 - 32767
-			y = y * 65535.0 / 200.0 - 32767
+			y = 32767 - y * 65535.0 / 200.0
 			x = int(x)
 			y = int(y)
 			touch_sticks_state[thumb_pad] = (x, y)

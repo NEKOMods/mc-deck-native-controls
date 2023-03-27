@@ -46,17 +46,19 @@ public class OverlayRenderer {
                 "(" + hidState.lthumb_x + ", " + hidState.lthumb_y + ") " +
                 "(" + hidState.rthumb_x + ", " + hidState.rthumb_y + ") " +
                 "(" + hidState.lpad_x + ", " + hidState.lpad_y + ") " +
-                "(" + hidState.rpad_x + ", " + hidState.rpad_y + ") " +
-                "(" + hidState.accel_x + ", " + hidState.accel_y + ", " + hidState.accel_z + ") " +
-                "(" + hidState.gyro_yaw + ", " + hidState.gyro_pitch + ", " + hidState.gyro_roll + ") " +
-                "(" + hidState.pose_quat_w + ", " + hidState.pose_quat_x + ", " + hidState.pose_quat_y + ", " + hidState.pose_quat_z + ") ";
-        Minecraft.getInstance().font.draw(ps, dbgText, 0, 16, 0x00ff00);
+                "(" + hidState.rpad_x + ", " + hidState.rpad_y + ") ";
+        Minecraft.getInstance().font.draw(ps, dbgText, 0, 8, 0x00ff00);
         dbgText =
                 hidState.lpad_force + " " +
                 hidState.rpad_force + " " +
                 hidState.lthumb_capa + " " +
                 hidState.rthumb_capa;
-        Minecraft.getInstance().font.draw(ps, dbgText, 0, 32, 0x00ff00);
+        Minecraft.getInstance().font.draw(ps, dbgText, 0, 16, 0x00ff00);
+        dbgText =
+                "(" + hidState.accel_x + ", " + hidState.accel_y + ", " + hidState.accel_z + ") " +
+                "(" + hidState.gyro_yaw + ", " + hidState.gyro_pitch + ", " + hidState.gyro_roll + ") " +
+                "(" + hidState.pose_quat_w + ", " + hidState.pose_quat_x + ", " + hidState.pose_quat_y + ", " + hidState.pose_quat_z + ") ";
+        Minecraft.getInstance().font.draw(ps, dbgText, 0, 24, 0x00ff00);
 
 //        RenderSystem.setShader(GameRenderer::getPositionTexShader);
 //        RenderSystem.disableDepthTest();
