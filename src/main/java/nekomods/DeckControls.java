@@ -9,6 +9,7 @@ import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 public class DeckControls
 {
     public static final String MODID = "deckcontrols";
+    public static InputHooks HOOKS;
 
     public DeckControls() {}
 
@@ -21,6 +22,8 @@ public class DeckControls
             Thread inputThread = new Thread(HidInput::threadFunc, "Steam Deck Input Thread");
             inputThread.setDaemon(true);
             inputThread.start();
+
+            HOOKS = new InputHooks();
         }
     }
 }

@@ -1,3 +1,4 @@
 {
-  "hook_render": "hook_render.js"
+  "hook_render": "hook_render.js",
+  "hook_runTick": "hook_runTick.js"
 }
