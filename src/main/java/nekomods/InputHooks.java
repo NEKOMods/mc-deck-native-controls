@@ -50,9 +50,41 @@ public class InputHooks {
         minecraft.getProfiler().pop();
     }
 
+    public float fbImpulse(float keyboardImpulse) {
+        HidInput.OtherHidState gamepad = HidInput.latestInput;
+        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > 5000 * 5000) {
+            float ret = gamepad.lthumb_y / 32700f;
+            if (ret > 1) ret = 1;
+            if (ret < -1) ret = -1;
+            return ret;
+        } else {
+            return keyboardImpulse;
+        }
+    }
+
+    public float lrImpulse(float keyboardImpulse) {
+        HidInput.OtherHidState gamepad = HidInput.latestInput;
+        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > 5000 * 5000) {
+            float ret = gamepad.lthumb_x / -32700f;
+            if (ret > 1) ret = 1;
+            if (ret < -1) ret = -1;
+            return ret;
+        } else {
+            return keyboardImpulse;
+        }
+    }
+
     public static void runTickHook() {
         if (DeckControls.HOOKS != null) {
             DeckControls.HOOKS.runTick();
         }
+    }
+
+    public static float playerFBImpulse(float keyboardImpulse) {
+        return DeckControls.HOOKS.fbImpulse(keyboardImpulse);
+    }
+
+    public static float playerLRImpulse(float keyboardImpulse) {
+        return DeckControls.HOOKS.lrImpulse(keyboardImpulse);
     }
 }

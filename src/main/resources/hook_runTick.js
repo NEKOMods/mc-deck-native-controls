@@ -1,6 +1,6 @@
 function initializeCoreMod() {
     return {
-        'hook_render': {
+        'hook_runTick': {
             'target': {
                 'type': 'METHOD',
                 'class': 'net.minecraft.client.Minecraft',

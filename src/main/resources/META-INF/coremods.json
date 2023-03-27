@@ -1,4 +1,5 @@
 {
+  "hook_player_impulse": "hook_player_impulse.js",
   "hook_render": "hook_render.js",
   "hook_runTick": "hook_runTick.js"
 }
