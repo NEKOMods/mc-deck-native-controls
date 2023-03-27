@@ -13,6 +13,7 @@ public class InputHooks {
     private int last_lthumb_x;
     private int last_lthumb_y;
     private boolean last_btn_view_down_was_e;
+    boolean btn_b_is_right_click;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -163,6 +164,40 @@ public class InputHooks {
                 if ((keyevent & HidInput.GamepadButtons.BTN_D_RIGHT) != 0) {
                     minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
+                    if (!btn_b_is_right_click) {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_1,
+                                GLFW_PRESS,
+                                0);
+                    } else {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_2,
+                                GLFW_PRESS,
+                                0);
+                    }
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+                    if (!btn_b_is_right_click) {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_2,
+                                GLFW_PRESS,
+                                0);
+                    } else {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_1,
+                                GLFW_PRESS,
+                                0);
+                    }
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_R4) != 0) {
+                    // TODO: sound/haptics?
+                    btn_b_is_right_click = !btn_b_is_right_click;
+                }
             } else {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
 
@@ -199,6 +234,36 @@ public class InputHooks {
                                 minecraft.getWindow().getWindow(),
                                 GLFW_KEY_ESCAPE,
                                 glfwGetKeyScancode(GLFW_KEY_ESCAPE),
+                                GLFW_RELEASE,
+                                0);
+                    }
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
+                    if (!btn_b_is_right_click) {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_1,
+                                GLFW_RELEASE,
+                                0);
+                    } else {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_2,
+                                GLFW_RELEASE,
+                                0);
+                    }
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+                    if (!btn_b_is_right_click) {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_2,
+                                GLFW_RELEASE,
+                                0);
+                    } else {
+                        minecraft.mouseHandler.onPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_MOUSE_BUTTON_1,
                                 GLFW_RELEASE,
                                 0);
                     }
