@@ -59,9 +59,9 @@ public class OverlayRenderer {
 
         if (DeckControls.HOOKS != null) {
             if (!DeckControls.HOOKS.btn_b_is_right_click) {
-                Minecraft.getInstance().font.draw(ps, "A = right click, B = left click", 0, 32, 0x00ff00);
+                Minecraft.getInstance().font.draw(ps, "X = right click, B = left click", 0, 32, 0x00ff00);
             } else {
-                Minecraft.getInstance().font.draw(ps, "A = left click, B = right click", 0, 32, 0x00ff00);
+                Minecraft.getInstance().font.draw(ps, "X = left click, B = right click", 0, 32, 0x00ff00);
             }
         }
 

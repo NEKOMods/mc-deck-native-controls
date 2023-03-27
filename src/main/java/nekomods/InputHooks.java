@@ -179,7 +179,7 @@ public class InputHooks {
                                 0);
                     }
                 }
-                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
                     if (!btn_b_is_right_click) {
                         minecraft.mouseHandler.onPress(
                                 minecraft.getWindow().getWindow(),
@@ -253,7 +253,7 @@ public class InputHooks {
                                 0);
                     }
                 }
-                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
                     if (!btn_b_is_right_click) {
                         minecraft.mouseHandler.onPress(
                                 minecraft.getWindow().getWindow(),
