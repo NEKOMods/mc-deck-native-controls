@@ -156,6 +156,13 @@ public class InputHooks {
                                 0);
                     }
                 }
+                // TODO: repeat?
+                if ((keyevent & HidInput.GamepadButtons.BTN_D_LEFT) != 0) {
+                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_D_RIGHT) != 0) {
+                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+                }
             } else {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
 
