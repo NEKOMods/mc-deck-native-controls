@@ -194,6 +194,14 @@ public class InputHooks {
                                 0);
                     }
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            minecraft.options.keySprint.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keySprint.getKey().getValue()),
+                            GLFW_PRESS,
+                            0);
+                }
                 if ((keyevent & HidInput.GamepadButtons.BTN_R4) != 0) {
                     // TODO: sound/haptics?
                     btn_b_is_right_click = !btn_b_is_right_click;
@@ -267,6 +275,14 @@ public class InputHooks {
                                 GLFW_RELEASE,
                                 0);
                     }
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            minecraft.options.keySprint.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keySprint.getKey().getValue()),
+                            GLFW_RELEASE,
+                            0);
                 }
             }
         }
