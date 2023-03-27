@@ -17,6 +17,8 @@ public class InputHooks {
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
     private static final float THUMB_DIGITAL_ACTIVATE = 16000;
     private static final float THUMB_DIGITAL_DEACTIVATE = 15000;
+    private static final double THUMB_SCALE_CAM_X = 1000;
+    private static final double THUMB_SCALE_CAM_Y = 800;
 
     public InputHooks() {
         minecraft = Minecraft.getInstance();
@@ -100,6 +102,13 @@ public class InputHooks {
         }
         last_lthumb_x = gamepad.lthumb_x;
         last_lthumb_y = gamepad.lthumb_y;
+        if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
+            minecraft.mouseHandler.onMove(
+                minecraft.getWindow().getWindow(),
+                minecraft.mouseHandler.xpos() + gamepad.rthumb_x / THUMB_SCALE_CAM_X,
+                minecraft.mouseHandler.ypos() - gamepad.rthumb_y / THUMB_SCALE_CAM_Y
+            );
+        }
 
         HidInput.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
