@@ -13,6 +13,11 @@ public class InputHooks {
     private int last_lthumb_x;
     private int last_lthumb_y;
 
+    private static final float THUMB_DEADZONE = 5000;
+    private static final float THUMB_ANALOG_FULLSCALE = 32700;
+    private static final float THUMB_DIGITAL_ACTIVATE = 16000;
+    private static final float THUMB_DIGITAL_DEACTIVATE = 15000;
+
     public InputHooks() {
         minecraft = Minecraft.getInstance();
     }
@@ -21,7 +26,7 @@ public class InputHooks {
         minecraft.getProfiler().push("deck_controls_mod");
 
         HidInput.OtherHidState gamepad = HidInput.latestInput;
-        if (last_lthumb_y < 16000 && gamepad.lthumb_y >= 16000) {
+        if (last_lthumb_y < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
             LOGGER.info("FORWARD DOWN");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -30,7 +35,7 @@ public class InputHooks {
                     GLFW_PRESS,
                     0);
         }
-        if (last_lthumb_y >= 15000 && gamepad.lthumb_y < 15000) {
+        if (last_lthumb_y >= THUMB_DIGITAL_DEACTIVATE && gamepad.lthumb_y < THUMB_DIGITAL_DEACTIVATE) {
             LOGGER.info("FORWARD UP");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -39,7 +44,7 @@ public class InputHooks {
                     GLFW_RELEASE,
                     0);
         }
-        if (-last_lthumb_y < 16000 && -gamepad.lthumb_y >= 16000) {
+        if (-last_lthumb_y < THUMB_DIGITAL_ACTIVATE && -gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
             LOGGER.info("BACKWARD DOWN");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -48,7 +53,7 @@ public class InputHooks {
                     GLFW_PRESS,
                     0);
         }
-        if (-last_lthumb_y >= 15000 && -gamepad.lthumb_y < 15000) {
+        if (-last_lthumb_y >= THUMB_DIGITAL_DEACTIVATE && -gamepad.lthumb_y < THUMB_DIGITAL_DEACTIVATE) {
             LOGGER.info("BACKWARD UP");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -57,7 +62,7 @@ public class InputHooks {
                     GLFW_RELEASE,
                     0);
         }
-        if (last_lthumb_x < 16000 && gamepad.lthumb_x >= 16000) {
+        if (last_lthumb_x < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_x >= THUMB_DIGITAL_ACTIVATE) {
             LOGGER.info("RIGHT DOWN");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -66,7 +71,7 @@ public class InputHooks {
                     GLFW_PRESS,
                     0);
         }
-        if (last_lthumb_x >= 15000 && gamepad.lthumb_x < 15000) {
+        if (last_lthumb_x >= THUMB_DIGITAL_DEACTIVATE && gamepad.lthumb_x < THUMB_DIGITAL_DEACTIVATE) {
             LOGGER.info("RIGHT UP");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -75,7 +80,7 @@ public class InputHooks {
                     GLFW_RELEASE,
                     0);
         }
-        if (-last_lthumb_x < 16000 && -gamepad.lthumb_x >= 16000) {
+        if (-last_lthumb_x < THUMB_DIGITAL_ACTIVATE && -gamepad.lthumb_x >= THUMB_DIGITAL_ACTIVATE) {
             LOGGER.info("LEFT DOWN");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -84,7 +89,7 @@ public class InputHooks {
                     GLFW_PRESS,
                     0);
         }
-        if (-last_lthumb_x >= 15000 && -gamepad.lthumb_x < 15000) {
+        if (-last_lthumb_x >= THUMB_DIGITAL_DEACTIVATE && -gamepad.lthumb_x < THUMB_DIGITAL_DEACTIVATE) {
             LOGGER.info("LEFT UP");
             minecraft.keyboardHandler.keyPress(
                     minecraft.getWindow().getWindow(),
@@ -129,8 +134,8 @@ public class InputHooks {
 
     public float fbImpulse(float keyboardImpulse) {
         HidInput.OtherHidState gamepad = HidInput.latestInput;
-        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > 5000 * 5000) {
-            float ret = gamepad.lthumb_y / 32700f;
+        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
+            float ret = gamepad.lthumb_y / THUMB_ANALOG_FULLSCALE;
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;
@@ -141,8 +146,8 @@ public class InputHooks {
 
     public float lrImpulse(float keyboardImpulse) {
         HidInput.OtherHidState gamepad = HidInput.latestInput;
-        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > 5000 * 5000) {
-            float ret = gamepad.lthumb_x / -32700f;
+        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
+            float ret = gamepad.lthumb_x / -THUMB_ANALOG_FULLSCALE;
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;
