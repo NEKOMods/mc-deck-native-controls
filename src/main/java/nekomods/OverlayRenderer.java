@@ -1,44 +1,41 @@
 package nekomods;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.resources.ResourceLocation;
 
 public class OverlayRenderer {
     public static void renderOverlay() {
         PoseStack ps = new PoseStack();
-        HidInput.HidState hidState = HidInput.latestInput;
+        HidInput.OtherHidState hidState = HidInput.latestInput;
         String dbgText =
-                ((hidState.buttons & HidInput.HidState.BTN_D_UP) != 0 ? "U" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_D_DOWN) != 0 ? "D" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_D_LEFT) != 0 ? "L" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_D_RIGHT) != 0 ? "R" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_A) != 0 ? "A" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_B) != 0 ? "B" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_X) != 0 ? "X" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_Y) != 0 ? "Y" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_L4) != 0 ? "4" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_L5) != 0 ? "5" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_R4) != 0 ? "$" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_R5) != 0 ? "%" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_VIEW) != 0 ? "V" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_OPTIONS) != 0 ? "O" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_STEAM) != 0 ? "S" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_DOTS) != 0 ? ":" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_LTHUMB_TOUCH) != 0 ? "q" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_RTHUMB_TOUCH) != 0 ? "p" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_LPAD_TOUCH) != 0 ? "w" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_RPAD_TOUCH) != 0 ? "o" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_LTHUMB_CLICK) != 0 ? "Q" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_RTHUMB_CLICK) != 0 ? "P" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_LPAD_CLICK) != 0 ? "W" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_RPAD_CLICK) != 0 ? "O" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_LT_DIGITAL) != 0 ? "1" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_RT_DIGITAL) != 0 ? "2" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_LT_ANALOG_FULL) != 0 ? "!" : " ") +
-                ((hidState.buttons & HidInput.HidState.BTN_RT_ANALOG_FULL) != 0 ? "@" : " ");
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_D_UP) != 0 ? "U" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_D_DOWN) != 0 ? "D" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_D_LEFT) != 0 ? "L" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_D_RIGHT) != 0 ? "R" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_A) != 0 ? "A" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_B) != 0 ? "B" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_X) != 0 ? "X" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_Y) != 0 ? "Y" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_L4) != 0 ? "4" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_L5) != 0 ? "5" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_R4) != 0 ? "$" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_R5) != 0 ? "%" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_VIEW) != 0 ? "V" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_OPTIONS) != 0 ? "O" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_STEAM) != 0 ? "S" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_DOTS) != 0 ? ":" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_LTHUMB_TOUCH) != 0 ? "q" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_RTHUMB_TOUCH) != 0 ? "p" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0 ? "w" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) != 0 ? "o" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_LTHUMB_CLICK) != 0 ? "Q" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_RTHUMB_CLICK) != 0 ? "P" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_LPAD_CLICK) != 0 ? "W" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_RPAD_CLICK) != 0 ? "O" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0 ? "1" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0 ? "2" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0 ? "!" : " ") +
+                ((hidState.buttons & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0 ? "@" : " ");
         Minecraft.getInstance().font.draw(ps, dbgText, 0, 0, 0x00ff00);
         dbgText =
                 hidState.frame + " " +

@@ -8,41 +8,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 
 public class HidInput {
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public static class HidState {
-        public int buttons;
-        public short lpad_x;
-        public short lpad_y;
-        public short rpad_x;
-        public short rpad_y;
-        public short lthumb_x;
-        public short lthumb_y;
-        public short rthumb_x;
-        public short rthumb_y;
-        public int ltrig;
-        public int rtrig;
-
-        public int frame;
-        public int lpad_force;
-        public int rpad_force;
-        public short lthumb_capa;
-        public short rthumb_capa;
-
-        public short accel_x;
-        public short accel_y;
-        public short accel_z;
-        public short gyro_pitch;
-        public short gyro_roll;
-        public short gyro_yaw;
-        public short pose_quat_w;
-        public short pose_quat_x;
-        public short pose_quat_y;
-        public short pose_quat_z;
-
+    public static class GamepadButtons {
         public static int BTN_D_UP      = 1 << 0;
         public static int BTN_D_DOWN    = 1 << 1;
         public static int BTN_D_LEFT    = 1 << 2;
@@ -71,8 +43,44 @@ public class HidInput {
         public static int BTN_RT_DIGITAL = 1 << 25;
         public static int BTN_LT_ANALOG_FULL = 1 << 26;
         public static int BTN_RT_ANALOG_FULL = 1 << 27;
+
+        public static int FLAG_BTN_UP = 1 << 30;
+        public static int FLAG_BARRIER = 1 << 31;
     }
-    public static HidState latestInput = new HidState();
+
+    public static class OtherHidState {
+        public int buttons;
+        public short lpad_x;
+        public short lpad_y;
+        public short rpad_x;
+        public short rpad_y;
+        public short lthumb_x;
+        public short lthumb_y;
+        public short rthumb_x;
+        public short rthumb_y;
+        public int ltrig;
+        public int rtrig;
+
+        public int frame;
+        public int lpad_force;
+        public int rpad_force;
+        public short lthumb_capa;
+        public short rthumb_capa;
+
+        public short accel_x;
+        public short accel_y;
+        public short accel_z;
+        public short gyro_pitch;
+        public short gyro_roll;
+        public short gyro_yaw;
+        public short pose_quat_w;
+        public short pose_quat_x;
+        public short pose_quat_y;
+        public short pose_quat_z;
+    }
+
+    public static final ConcurrentLinkedDeque<Integer> keyEvents = new ConcurrentLinkedDeque();
+    public static OtherHidState latestInput = new OtherHidState();
 
     private static Map<String, String> parse_uevent(String s) {
         return Arrays.stream(s.split("\n"))
@@ -130,6 +138,7 @@ public class HidInput {
         }
 
         byte[] buf = new byte[64];
+        int lastPressedButtons = 0;
 
         while (true) {
             int ret = OsIo.read(fd, buf, 64);
@@ -143,66 +152,66 @@ public class HidInput {
                 continue;
             }
 
-            HidState newState = new HidState();
+            OtherHidState newState = new OtherHidState();
 
-            int buttons = 0;
+            int currentPressedButtons = 0;
             if ((buf[8] & 0x01) != 0)
-                buttons |= HidState.BTN_RT_ANALOG_FULL;
+                currentPressedButtons |= GamepadButtons.BTN_RT_ANALOG_FULL;
             if ((buf[8] & 0x02) != 0)
-                buttons |= HidState.BTN_LT_ANALOG_FULL;
+                currentPressedButtons |= GamepadButtons.BTN_LT_ANALOG_FULL;
             if ((buf[8] & 0x04) != 0)
-                buttons |= HidState.BTN_RT_DIGITAL;
+                currentPressedButtons |= GamepadButtons.BTN_RT_DIGITAL;
             if ((buf[8] & 0x08) != 0)
-                buttons |= HidState.BTN_LT_DIGITAL;
+                currentPressedButtons |= GamepadButtons.BTN_LT_DIGITAL;
             if ((buf[8] & 0x10) != 0)
-                buttons |= HidState.BTN_Y;
+                currentPressedButtons |= GamepadButtons.BTN_Y;
             if ((buf[8] & 0x20) != 0)
-                buttons |= HidState.BTN_B;
+                currentPressedButtons |= GamepadButtons.BTN_B;
             if ((buf[8] & 0x40) != 0)
-                buttons |= HidState.BTN_X;
+                currentPressedButtons |= GamepadButtons.BTN_X;
             if ((buf[8] & 0x80) != 0)
-                buttons |= HidState.BTN_A;
+                currentPressedButtons |= GamepadButtons.BTN_A;
             if ((buf[9] & 0x01) != 0)
-                buttons |= HidState.BTN_D_UP;
+                currentPressedButtons |= GamepadButtons.BTN_D_UP;
             if ((buf[9] & 0x02) != 0)
-                buttons |= HidState.BTN_D_RIGHT;
+                currentPressedButtons |= GamepadButtons.BTN_D_RIGHT;
             if ((buf[9] & 0x04) != 0)
-                buttons |= HidState.BTN_D_LEFT;
+                currentPressedButtons |= GamepadButtons.BTN_D_LEFT;
             if ((buf[9] & 0x08) != 0)
-                buttons |= HidState.BTN_D_DOWN;
+                currentPressedButtons |= GamepadButtons.BTN_D_DOWN;
             if ((buf[9] & 0x10) != 0)
-                buttons |= HidState.BTN_VIEW;
+                currentPressedButtons |= GamepadButtons.BTN_VIEW;
             if ((buf[9] & 0x20) != 0)
-                buttons |= HidState.BTN_STEAM;
+                currentPressedButtons |= GamepadButtons.BTN_STEAM;
             if ((buf[9] & 0x40) != 0)
-                buttons |= HidState.BTN_OPTIONS;
+                currentPressedButtons |= GamepadButtons.BTN_OPTIONS;
             if ((buf[9] & 0x80) != 0)
-                buttons |= HidState.BTN_L5;
+                currentPressedButtons |= GamepadButtons.BTN_L5;
             if ((buf[10] & 0x01) != 0)
-                buttons |= HidState.BTN_R5;
+                currentPressedButtons |= GamepadButtons.BTN_R5;
             if ((buf[10] & 0x02) != 0)
-                buttons |= HidState.BTN_LPAD_CLICK;
+                currentPressedButtons |= GamepadButtons.BTN_LPAD_CLICK;
             if ((buf[10] & 0x04) != 0)
-                buttons |= HidState.BTN_RPAD_CLICK;
+                currentPressedButtons |= GamepadButtons.BTN_RPAD_CLICK;
             if ((buf[10] & 0x08) != 0)
-                buttons |= HidState.BTN_LPAD_TOUCH;
+                currentPressedButtons |= GamepadButtons.BTN_LPAD_TOUCH;
             if ((buf[10] & 0x10) != 0)
-                buttons |= HidState.BTN_RPAD_TOUCH;
+                currentPressedButtons |= GamepadButtons.BTN_RPAD_TOUCH;
             if ((buf[10] & 0x40) != 0)
-                buttons |= HidState.BTN_LTHUMB_CLICK;
+                currentPressedButtons |= GamepadButtons.BTN_LTHUMB_CLICK;
             if ((buf[11] & 0x04) != 0)
-                buttons |= HidState.BTN_RTHUMB_CLICK;
+                currentPressedButtons |= GamepadButtons.BTN_RTHUMB_CLICK;
             if ((buf[13] & 0x02) != 0)
-                buttons |= HidState.BTN_L4;
+                currentPressedButtons |= GamepadButtons.BTN_L4;
             if ((buf[13] & 0x04) != 0)
-                buttons |= HidState.BTN_R4;
+                currentPressedButtons |= GamepadButtons.BTN_R4;
             if ((buf[13] & 0x40) != 0)
-                buttons |= HidState.BTN_LTHUMB_TOUCH;
+                currentPressedButtons |= GamepadButtons.BTN_LTHUMB_TOUCH;
             if ((buf[13] & 0x80) != 0)
-                buttons |= HidState.BTN_RTHUMB_TOUCH;
+                currentPressedButtons |= GamepadButtons.BTN_RTHUMB_TOUCH;
             if ((buf[14] & 0x04) != 0)
-                buttons |= HidState.BTN_DOTS;
-            newState.buttons = buttons;
+                currentPressedButtons |= GamepadButtons.BTN_DOTS;
+            newState.buttons = currentPressedButtons;
             newState.frame = (buf[4] & 0xFF) | ((buf[5] & 0xFF) << 8) | ((buf[6] & 0xFF) << 16) | ((buf[7] & 0xFF) << 24);
             newState.lpad_x = (short)((buf[16] & 0xFF) | ((buf[17] & 0xFF) << 8));
             newState.lpad_y = (short)((buf[18] & 0xFF) | ((buf[19] & 0xFF) << 8));
@@ -230,6 +239,14 @@ public class HidInput {
             newState.rthumb_capa = (short)((buf[62] & 0xFF) | ((buf[63] & 0xFF) << 8));
 
             latestInput = newState;
+
+            int newPressedButtons = currentPressedButtons & (~lastPressedButtons);
+            int releasedButtons = lastPressedButtons & (~currentPressedButtons);
+            if (newPressedButtons != 0)
+                keyEvents.addLast(newPressedButtons);
+            if (releasedButtons != 0)
+                keyEvents.addLast(releasedButtons | GamepadButtons.FLAG_BTN_UP);
+            lastPressedButtons = currentPressedButtons;
         }
     }
 }
