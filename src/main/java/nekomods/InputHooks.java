@@ -12,6 +12,7 @@ public class InputHooks {
 
     private int last_lthumb_x;
     private int last_lthumb_y;
+    private boolean last_btn_view_down_was_e;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -118,11 +119,42 @@ public class InputHooks {
 
                 if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
                     minecraft.keyboardHandler.keyPress(
-                        minecraft.getWindow().getWindow(),
-                        minecraft.options.keyJump.getKey().getValue(),
-                        glfwGetKeyScancode(minecraft.options.keyJump.getKey().getValue()),
-                        GLFW_PRESS,
-                        0);
+                            minecraft.getWindow().getWindow(),
+                            minecraft.options.keyJump.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keyJump.getKey().getValue()),
+                            GLFW_PRESS,
+                            0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_OPTIONS) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            GLFW_KEY_ESCAPE,
+                            glfwGetKeyScancode(GLFW_KEY_ESCAPE),
+                            GLFW_PRESS,
+                            0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_VIEW) != 0) {
+                    if (minecraft.screen == null) {
+                        // no gui
+                        LOGGER.info("NO GUI e DOWN");
+                        last_btn_view_down_was_e = true;
+                        minecraft.keyboardHandler.keyPress(
+                                minecraft.getWindow().getWindow(),
+                                minecraft.options.keyInventory.getKey().getValue(),
+                                glfwGetKeyScancode(minecraft.options.keyInventory.getKey().getValue()),
+                                GLFW_PRESS,
+                                0);
+                    } else {
+                        // gui
+                        LOGGER.info("YES GUI ESC DOWN");
+                        last_btn_view_down_was_e = false;
+                        minecraft.keyboardHandler.keyPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_KEY_ESCAPE,
+                                glfwGetKeyScancode(GLFW_KEY_ESCAPE),
+                                GLFW_PRESS,
+                                0);
+                    }
                 }
             } else {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
@@ -134,6 +166,35 @@ public class InputHooks {
                             glfwGetKeyScancode(minecraft.options.keyJump.getKey().getValue()),
                             GLFW_RELEASE,
                             0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_OPTIONS) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            GLFW_KEY_ESCAPE,
+                            glfwGetKeyScancode(GLFW_KEY_ESCAPE),
+                            GLFW_RELEASE,
+                            0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_VIEW) != 0) {
+                    if (last_btn_view_down_was_e) {
+                        // no gui
+                        LOGGER.info("NO GUI e UP");
+                        minecraft.keyboardHandler.keyPress(
+                                minecraft.getWindow().getWindow(),
+                                minecraft.options.keyInventory.getKey().getValue(),
+                                glfwGetKeyScancode(minecraft.options.keyInventory.getKey().getValue()),
+                                GLFW_RELEASE,
+                                0);
+                    } else {
+                        // gui
+                        LOGGER.info("YES GUI ESC UP");
+                        minecraft.keyboardHandler.keyPress(
+                                minecraft.getWindow().getWindow(),
+                                GLFW_KEY_ESCAPE,
+                                glfwGetKeyScancode(GLFW_KEY_ESCAPE),
+                                GLFW_RELEASE,
+                                0);
+                    }
                 }
             }
         }
