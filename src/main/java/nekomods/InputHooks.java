@@ -14,6 +14,9 @@ public class InputHooks {
     private int last_lthumb_y;
     private boolean last_btn_view_down_was_e;
     boolean btn_b_is_right_click;
+    boolean sneak_is_latched;
+    boolean sneak_latched_while_manually_sneaking;
+    boolean manually_sneaking;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -206,6 +209,50 @@ public class InputHooks {
                     // TODO: sound/haptics?
                     btn_b_is_right_click = !btn_b_is_right_click;
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
+                    manually_sneaking = true;
+                    if (!sneak_is_latched) {
+                        LOGGER.info("SNEAK because manual");
+                        minecraft.keyboardHandler.keyPress(
+                                minecraft.getWindow().getWindow(),
+                                minecraft.options.keyShift.getKey().getValue(),
+                                glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
+                                GLFW_PRESS,
+                                0);
+                    } else {
+                        LOGGER.info("ignoring SNEAK because already latched");
+                    }
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
+                    // TODO: sound/haptics?
+                    sneak_is_latched = !sneak_is_latched;
+                    if (sneak_is_latched) {
+                        sneak_latched_while_manually_sneaking = manually_sneaking;
+                        if (!manually_sneaking) {
+                            LOGGER.info("SNEAK because latching");
+                            minecraft.keyboardHandler.keyPress(
+                                    minecraft.getWindow().getWindow(),
+                                    minecraft.options.keyShift.getKey().getValue(),
+                                    glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
+                                    GLFW_PRESS,
+                                    0);
+                        } else {
+                            LOGGER.info("ignoring SNEAK because already sneaking");
+                        }
+                    } else {
+                        if (!manually_sneaking) {
+                            LOGGER.info("unSNEAK because unlatching");
+                            minecraft.keyboardHandler.keyPress(
+                                    minecraft.getWindow().getWindow(),
+                                    minecraft.options.keyShift.getKey().getValue(),
+                                    glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
+                                    GLFW_RELEASE,
+                                    0);
+                        } else {
+                            LOGGER.info("ignoring unSNEAK because manually sneaking");
+                        }
+                    }
+                }
             } else {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
 
@@ -283,6 +330,21 @@ public class InputHooks {
                             glfwGetKeyScancode(minecraft.options.keySprint.getKey().getValue()),
                             GLFW_RELEASE,
                             0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
+                    // TODO: sound/haptics?
+                    manually_sneaking = false;
+                    if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
+                        sneak_is_latched = false;
+                        LOGGER.info("unSNEAK!!");
+                        minecraft.keyboardHandler.keyPress(
+                                minecraft.getWindow().getWindow(),
+                                minecraft.options.keyShift.getKey().getValue(),
+                                glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
+                                GLFW_RELEASE,
+                                0);
+                    }
+                    sneak_latched_while_manually_sneaking = false;
                 }
             }
         }
