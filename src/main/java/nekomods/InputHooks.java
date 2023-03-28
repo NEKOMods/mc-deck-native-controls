@@ -208,7 +208,7 @@ public class InputHooks {
                             0);
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_R4) != 0) {
-                    DeckControls.HAPTICS.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                    DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                     btn_b_is_right_click = !btn_b_is_right_click;
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
@@ -226,7 +226,7 @@ public class InputHooks {
                     }
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
-                    DeckControls.HAPTICS.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                    DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                     sneak_is_latched = !sneak_is_latched;
                     if (sneak_is_latched) {
                         sneak_latched_while_manually_sneaking = manually_sneaking;
@@ -360,7 +360,7 @@ public class InputHooks {
                     manually_sneaking = false;
                     if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
                         if (sneak_is_latched) {
-                            DeckControls.HAPTICS.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                            DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                         }
                         sneak_is_latched = false;
                         LOGGER.info("unSNEAK!!");

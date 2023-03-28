@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.Collectors;
 
-public class HidInput {
+public class HidInput extends Thread {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public static class GamepadButtons {
@@ -79,8 +79,16 @@ public class HidInput {
         public short pose_quat_z;
     }
 
+    public HidInput() {
+        super("Steam Deck Input Thread");
+        super.setDaemon(true);
+    }
+
     public static final ConcurrentLinkedDeque<Integer> keyEvents = new ConcurrentLinkedDeque();
     public static OtherHidState latestInput = new OtherHidState();
+
+    private int fd = -1;
+    private boolean debug;
 
     private static Map<String, String> parse_uevent(String s) {
         return Arrays.stream(s.split("\n"))
@@ -89,11 +97,8 @@ public class HidInput {
             .collect(Collectors.toMap((entry) -> entry[0], (entry) -> entry[1]));
     }
 
-    public static void threadFunc() {
+    public void run() {
         LOGGER.info("Deck controls thread init...");
-
-        int fd = -1;
-        boolean debug = false;
 
         fd = OsIo.open("/tmp/mc-deck-debug-sim", 0);
         if (fd != -1) {
@@ -130,12 +135,6 @@ public class HidInput {
                 LOGGER.error("Deck couldn't open hidraw", e);
                 return;
             }
-        }
-
-        if (debug) {
-            DeckControls.HAPTICS = new Haptics(-1);
-        } else {
-            DeckControls.HAPTICS = new Haptics(fd);
         }
 
         if (fd == -1) {
@@ -256,41 +255,33 @@ public class HidInput {
         }
     }
 
-    public static class Haptics {
-        private int fd;
+    public boolean beep(double freq, double seconds) {
+        long period = Math.round(495483.0 / freq);
+        long repeats = Math.round(freq * seconds * 0.5);
 
-        Haptics(int fd) {
-            this.fd = fd;
+        if (period > 0xFFFF) {
+            LOGGER.error("Period out of range: " + period);
+            return false;
+        }
+        if (repeats > 0x7FFF) {
+            LOGGER.error("Repeats out of range: " + repeats);
+            return false;
         }
 
-        public boolean beep(double freq, double seconds) {
-            long period = Math.round(495483.0 / freq);
-            long repeats = Math.round(freq * seconds * 0.5);
+        if (fd < 0) return false;
 
-            if (period > 0xFFFF) {
-                LOGGER.error("Period out of range: " + period);
-                return false;
-            }
-            if (repeats > 0x7FFF) {
-                LOGGER.error("Repeats out of range: " + repeats);
-                return false;
-            }
+        byte[] buf = new byte[65];
+        buf[0] = 0x00;
+        buf[1] = (byte)0x8f;
+        buf[2] = 0x07;
+        buf[3] = 0x02;
+        buf[4] = (byte)(period & 0xFF);
+        buf[5] = (byte)((period >> 8) & 0xFF);
+        buf[6] = (byte)(period & 0xFF);
+        buf[7] = (byte)((period >> 8) & 0xFF);
+        buf[8] = (byte)(repeats & 0xFF);
+        buf[9] = (byte)((repeats >> 8) & 0xFF);
 
-            if (fd < 0) return false;
-
-            byte[] buf = new byte[65];
-            buf[0] = 0x00;
-            buf[1] = (byte)0x8f;
-            buf[2] = 0x07;
-            buf[3] = 0x02;
-            buf[4] = (byte)(period & 0xFF);
-            buf[5] = (byte)((period >> 8) & 0xFF);
-            buf[6] = (byte)(period & 0xFF);
-            buf[7] = (byte)((period >> 8) & 0xFF);
-            buf[8] = (byte)(repeats & 0xFF);
-            buf[9] = (byte)((repeats >> 8) & 0xFF);
-
-            return OsIo.ioctl(fd, 0xC0414806, buf) == 0;
-        }
+        return OsIo.ioctl(fd, 0xC0414806, buf) == 0;
     }
 }

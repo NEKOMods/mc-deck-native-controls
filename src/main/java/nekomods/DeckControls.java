@@ -10,7 +10,7 @@ public class DeckControls
 {
     public static final String MODID = "deckcontrols";
     public static InputHooks HOOKS;
-    public static HidInput.Haptics HAPTICS;
+    public static HidInput INPUT;
 
     public DeckControls() {}
 
@@ -20,9 +20,8 @@ public class DeckControls
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            Thread inputThread = new Thread(HidInput::threadFunc, "Steam Deck Input Thread");
-            inputThread.setDaemon(true);
-            inputThread.start();
+            INPUT = new HidInput();
+            INPUT.start();
 
             HOOKS = new InputHooks();
         }
