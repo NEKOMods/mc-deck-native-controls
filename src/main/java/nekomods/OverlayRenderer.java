@@ -64,6 +64,12 @@ public class OverlayRenderer {
                     "Missed frames: " + DeckControls.INPUT.missedFrames +
                     ", Avg time: " + Arrays.stream(DeckControls.INPUT.frameTimes).average().orElse(0) + " ns";
             Minecraft.getInstance().font.draw(ps, dbgText, 0, 48, 0x00ff00);
+
+            HidInput.AccumHidState accumHidState = DeckControls.INPUT.accumInput.get();
+            dbgText =
+                    "Cam pitch " + accumHidState.camPitch +
+                    ", yaw " + accumHidState.camYaw;
+            Minecraft.getInstance().font.draw(ps, dbgText, 0, 56, 0x00ff00);
         }
 
         if (DeckControls.HOOKS != null) {

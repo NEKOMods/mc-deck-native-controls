@@ -17,6 +17,7 @@ public class InputHooks {
     boolean sneak_is_latched;
     boolean sneak_latched_while_manually_sneaking;
     boolean manually_sneaking;
+    private boolean gyro_is_enabled = true;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -278,6 +279,9 @@ public class InputHooks {
                             GLFW_PRESS,
                             0);
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
+                    gyro_is_enabled = false;
+                }
             } else {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
 
@@ -396,6 +400,16 @@ public class InputHooks {
                             GLFW_RELEASE,
                             0);
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
+                    gyro_is_enabled = true;
+                }
+            }
+        }
+
+        HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
+        if (gyro_is_enabled) {
+            if (minecraft.player != null) {
+                minecraft.player.turn(-accumState.camYaw / 0.15, -accumState.camPitch / 0.15);
             }
         }
 

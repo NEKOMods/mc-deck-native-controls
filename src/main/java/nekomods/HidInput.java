@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class HidInput extends Thread {
@@ -47,6 +48,13 @@ public class HidInput extends Thread {
 
         public static int FLAG_BTN_UP = 1 << 30;
         public static int FLAG_BARRIER = 1 << 31;
+    }
+
+    public static class AccumHidState {
+        // degrees, CW
+        public double camYaw;
+        // degrees, + is up
+        public double camPitch;
     }
 
     public static class OtherHidState {
@@ -87,8 +95,13 @@ public class HidInput extends Thread {
 
     public final ConcurrentLinkedDeque<Integer> keyEvents = new ConcurrentLinkedDeque();
     public OtherHidState latestInput = new OtherHidState();
+    public AtomicReference<AccumHidState> accumInput = new AtomicReference(new AccumHidState());
     public int missedFrames = 0;
     public long[] frameTimes = new long[250];
+
+    // SteamDeckGyroDSU claims 16, but a random Invensense datasheet for ICM-42605 (probably not the right part)
+    // implies 16.4 which might be more correct.
+    private static final double GYRO_LSBS_PER_DEGREE = 16.4;
 
     private int fd = -1;
     private boolean debug;
@@ -178,7 +191,6 @@ public class HidInput extends Thread {
             }
 
             OtherHidState newState = new OtherHidState();
-
             int currentPressedButtons = 0;
             if ((buf[8] & 0x01) != 0)
                 currentPressedButtons |= GamepadButtons.BTN_RT_ANALOG_FULL;
@@ -262,8 +274,24 @@ public class HidInput extends Thread {
             newState.rpad_force = (buf[58] & 0xFF) | ((buf[59] & 0xFF) << 8);
             newState.lthumb_capa = (short)((buf[60] & 0xFF) | ((buf[61] & 0xFF) << 8));
             newState.rthumb_capa = (short)((buf[62] & 0xFF) | ((buf[63] & 0xFF) << 8));
-
             latestInput = newState;
+
+            double delta_seconds = (current_nanos - last_frame_nanos) / 1e9;
+            double pitch_deg_per_s = newState.gyro_pitch / GYRO_LSBS_PER_DEGREE;
+            double yaw_deg_per_s = newState.gyro_roll / GYRO_LSBS_PER_DEGREE;
+            double pitch_delta_deg = pitch_deg_per_s * delta_seconds;
+            double yaw_delta_deg = yaw_deg_per_s * delta_seconds;
+            while (true) {
+                AccumHidState old_accum = this.accumInput.get();
+
+                AccumHidState new_accum = new AccumHidState();
+                new_accum.camPitch = old_accum.camPitch + pitch_delta_deg;
+                new_accum.camYaw = old_accum.camYaw + yaw_delta_deg;
+
+                if (this.accumInput.compareAndSet(old_accum, new_accum))
+                    break;
+            }
+
             last_frame_id = frame_id;
             last_frame_nanos = current_nanos;
 
