@@ -55,6 +55,8 @@ public class HidInput extends Thread {
         public double camYaw;
         // degrees, + is up
         public double camPitch;
+        public double mouseDX;
+        public double mouseDY;
     }
 
     public static class OtherHidState {
@@ -103,6 +105,8 @@ public class HidInput extends Thread {
     // implies 16.4 which might be more correct.
     private static final double GYRO_LSBS_PER_DEGREE = 16.4;
     private static final double GYRO_TIGHTEN_MAG = 5;
+    private static final int MOUSE_SMOOTH_THRESH = 500;
+    private static final int MOUSE_TIGHTEN_THRESH = 100;
 
     private int fd = -1;
     private boolean debug;
@@ -164,6 +168,13 @@ public class HidInput extends Thread {
         long last_frame_id = -1;
         long last_frame_nanos = -1;
         int frame_times_i = 0;
+        // mouse smoothing
+        int last_rpad_x = 0;
+        int last_rpad_y = 0;
+        boolean last_rpad_valid = false;
+        double[] rpad_mouse_smoothing_x = new double[32];
+        double[] rpad_mouse_smoothing_y = new double[32];
+        int rpad_mouse_smoothing_i = 0;
 
         while (true) {
             int ret = OsIo.read(fd, buf, 64);
@@ -277,6 +288,7 @@ public class HidInput extends Thread {
             newState.rthumb_capa = (short)((buf[62] & 0xFF) | ((buf[63] & 0xFF) << 8));
             latestInput = newState;
 
+            // gyro accum
             double delta_seconds = (current_nanos - last_frame_nanos) / 1e9;
             double pitch_deg_per_s = newState.gyro_pitch / GYRO_LSBS_PER_DEGREE;
             double yaw_deg_per_s = newState.gyro_roll / GYRO_LSBS_PER_DEGREE;
@@ -287,12 +299,64 @@ public class HidInput extends Thread {
             }
             double pitch_delta_deg = pitch_deg_per_s * delta_seconds;
             double yaw_delta_deg = yaw_deg_per_s * delta_seconds;
+
+            // mouse accum
+            double mouse_final_dx = 0;
+            double mouse_final_dy = 0;
+            if ((currentPressedButtons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) != 0) {
+                if (last_rpad_valid) {
+                    int rpad_dx = newState.rpad_x - last_rpad_x;
+                    int rpad_dy = newState.rpad_y - last_rpad_y;
+
+                    double tier_smooth_thresh_1 = MOUSE_SMOOTH_THRESH / 2;
+                    double tier_smooth_thresh_2 = MOUSE_SMOOTH_THRESH;
+
+                    double dx_mag = Math.abs(rpad_dx);
+                    double dy_mag = Math.abs(rpad_dy);
+
+                    double smooth_direct_weight_x = (dx_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
+                    if (smooth_direct_weight_x < 0) smooth_direct_weight_x = 0;
+                    if (smooth_direct_weight_x > 1) smooth_direct_weight_x = 1;
+                    double smooth_direct_weight_y = (dy_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
+                    if (smooth_direct_weight_y < 0) smooth_direct_weight_y = 0;
+                    if (smooth_direct_weight_y > 1) smooth_direct_weight_y = 1;
+
+                    double mouse_dx_direct = rpad_dx * smooth_direct_weight_x;
+                    double mouse_dy_direct = rpad_dy * smooth_direct_weight_y;
+                    double mouse_dx_to_smooth = rpad_dx * (1 - smooth_direct_weight_x);
+                    double mouse_dy_to_smooth = rpad_dy * (1 - smooth_direct_weight_y);
+                    rpad_mouse_smoothing_x[rpad_mouse_smoothing_i] = mouse_dx_to_smooth;
+                    rpad_mouse_smoothing_y[rpad_mouse_smoothing_i] = mouse_dy_to_smooth;
+                    rpad_mouse_smoothing_i = (rpad_mouse_smoothing_i + 1) % rpad_mouse_smoothing_x.length;
+
+                    double mouse_smoothed_dx = mouse_dx_direct + Arrays.stream(rpad_mouse_smoothing_x).average().orElse(0);
+                    double mouse_smoothed_dy = mouse_dy_direct + Arrays.stream(rpad_mouse_smoothing_y).average().orElse(0);
+
+                    mouse_final_dx = mouse_smoothed_dx;
+                    mouse_final_dy = mouse_smoothed_dy;
+                    if (Math.abs(mouse_smoothed_dx) < MOUSE_TIGHTEN_THRESH)
+                        mouse_final_dx *= Math.abs(mouse_smoothed_dx) / MOUSE_TIGHTEN_THRESH;
+                    if (Math.abs(mouse_smoothed_dy) < MOUSE_TIGHTEN_THRESH)
+                        mouse_final_dy *= Math.abs(mouse_smoothed_dy) / MOUSE_TIGHTEN_THRESH;
+                } else {
+                    LOGGER.info("rpad down");
+                }
+                last_rpad_x = newState.rpad_x;
+                last_rpad_y = newState.rpad_y;
+                last_rpad_valid = true;
+            } else {
+                last_rpad_valid = false;
+            }
+
+            // big CAS
             while (true) {
                 AccumHidState old_accum = this.accumInput.get();
 
                 AccumHidState new_accum = new AccumHidState();
                 new_accum.camPitch = old_accum.camPitch + pitch_delta_deg;
                 new_accum.camYaw = old_accum.camYaw + yaw_delta_deg;
+                new_accum.mouseDX = old_accum.mouseDX + mouse_final_dx;
+                new_accum.mouseDY = old_accum.mouseDY + mouse_final_dy;
 
                 if (this.accumInput.compareAndSet(old_accum, new_accum))
                     break;
