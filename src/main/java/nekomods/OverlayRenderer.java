@@ -3,6 +3,8 @@ package nekomods;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
 
+import java.util.Arrays;
+
 public class OverlayRenderer {
     public static void renderOverlay() {
         PoseStack ps = new PoseStack();
@@ -57,6 +59,11 @@ public class OverlayRenderer {
                             "(" + hidState.gyro_yaw + ", " + hidState.gyro_pitch + ", " + hidState.gyro_roll + ") " +
                             "(" + hidState.pose_quat_w + ", " + hidState.pose_quat_x + ", " + hidState.pose_quat_y + ", " + hidState.pose_quat_z + ") ";
             Minecraft.getInstance().font.draw(ps, dbgText, 0, 24, 0x00ff00);
+
+            dbgText =
+                    "Missed frames: " + DeckControls.INPUT.missedFrames +
+                    ", Avg time: " + Arrays.stream(DeckControls.INPUT.frameTimes).average().orElse(0) + " ns";
+            Minecraft.getInstance().font.draw(ps, dbgText, 0, 48, 0x00ff00);
         }
 
         if (DeckControls.HOOKS != null) {

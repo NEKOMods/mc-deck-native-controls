@@ -1,6 +1,7 @@
 package nekomods;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.Util;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -86,6 +87,8 @@ public class HidInput extends Thread {
 
     public final ConcurrentLinkedDeque<Integer> keyEvents = new ConcurrentLinkedDeque();
     public OtherHidState latestInput = new OtherHidState();
+    public int missedFrames = 0;
+    public long[] frameTimes = new long[250];
 
     private int fd = -1;
     private boolean debug;
@@ -144,6 +147,9 @@ public class HidInput extends Thread {
 
         byte[] buf = new byte[64];
         int lastPressedButtons = 0;
+        long last_frame_id = -1;
+        long last_frame_nanos = -1;
+        int frame_times_i = 0;
 
         while (true) {
             int ret = OsIo.read(fd, buf, 64);
@@ -155,6 +161,20 @@ public class HidInput extends Thread {
             if (buf[0] != 0x01 || buf[1] != 0x00 || buf[2] != 0x09 || buf[3] != 0x40) {
                 LOGGER.error("Bad frame " + Arrays.toString(buf));
                 continue;
+            }
+
+            long current_nanos = Util.getNanos();
+
+            long frame_id = (buf[4] & 0xFF) | ((buf[5] & 0xFF) << 8) | ((buf[6] & 0xFF) << 16) | ((buf[7] & 0xFF) << 24);
+            if (last_frame_id != -1) {
+                if (last_frame_id - frame_id > 1) {
+                    long missed_frames_now = last_frame_id - frame_id - 1;
+                    LOGGER.warn("Dropped " + missed_frames_now + " deck HID frames");
+                    missedFrames += missed_frames_now;
+                }
+
+                frameTimes[frame_times_i] = current_nanos - last_frame_nanos;
+                frame_times_i = (frame_times_i + 1) % frameTimes.length;
             }
 
             OtherHidState newState = new OtherHidState();
@@ -244,6 +264,8 @@ public class HidInput extends Thread {
             newState.rthumb_capa = (short)((buf[62] & 0xFF) | ((buf[63] & 0xFF) << 8));
 
             latestInput = newState;
+            last_frame_id = frame_id;
+            last_frame_nanos = current_nanos;
 
             int newPressedButtons = currentPressedButtons & (~lastPressedButtons);
             int releasedButtons = lastPressedButtons & (~currentPressedButtons);
