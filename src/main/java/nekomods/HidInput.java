@@ -84,8 +84,8 @@ public class HidInput extends Thread {
         super.setDaemon(true);
     }
 
-    public static final ConcurrentLinkedDeque<Integer> keyEvents = new ConcurrentLinkedDeque();
-    public static OtherHidState latestInput = new OtherHidState();
+    public final ConcurrentLinkedDeque<Integer> keyEvents = new ConcurrentLinkedDeque();
+    public OtherHidState latestInput = new OtherHidState();
 
     private int fd = -1;
     private boolean debug;

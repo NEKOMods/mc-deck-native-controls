@@ -34,7 +34,7 @@ public class InputHooks {
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
 
-        HidInput.OtherHidState gamepad = HidInput.latestInput;
+        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
         if (last_lthumb_y < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
             LOGGER.info("FORWARD DOWN");
             minecraft.keyboardHandler.keyPress(
@@ -117,9 +117,9 @@ public class InputHooks {
             );
         }
 
-        HidInput.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
+        DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
-        while ((keyevent = HidInput.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
+        while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
             if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                 LOGGER.info("KEY DOWN " + keyevent);
 
@@ -403,7 +403,7 @@ public class InputHooks {
     }
 
     public float fbImpulse(float keyboardImpulse) {
-        HidInput.OtherHidState gamepad = HidInput.latestInput;
+        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
         if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
             float ret = gamepad.lthumb_y / THUMB_ANALOG_FULLSCALE;
             if (ret > 1) ret = 1;
@@ -415,7 +415,7 @@ public class InputHooks {
     }
 
     public float lrImpulse(float keyboardImpulse) {
-        HidInput.OtherHidState gamepad = HidInput.latestInput;
+        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
         if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
             float ret = gamepad.lthumb_x / -THUMB_ANALOG_FULLSCALE;
             if (ret > 1) ret = 1;
