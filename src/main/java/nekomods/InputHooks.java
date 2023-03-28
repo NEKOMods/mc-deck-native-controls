@@ -41,6 +41,11 @@ public class InputHooks {
     private static final double FLICK_STICK_DEACTIVATE_DIST = 28000;
     private static final long FLICK_STICK_TIME_NANOS = 100000000;
 
+    private static double flickStickEase(double input) {
+        double flipped = 1 - input;
+        return 1 - flipped * flipped;
+    }
+
     public InputHooks() {
         minecraft = Minecraft.getInstance();
     }
@@ -435,7 +440,6 @@ public class InputHooks {
                 flick_stick_progress = 0;
                 flick_stick_amount = Math.toDegrees(Math.atan2(gamepad.rthumb_x, gamepad.rthumb_y));
             } else if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
-//                LOGGER.info("flick stick turn");
                 double cur_angle = Math.toDegrees(Math.atan2(gamepad.rthumb_x, gamepad.rthumb_y));
                 double last_angle = Math.toDegrees(Math.atan2(last_rthumb_x, last_rthumb_y));
 
@@ -455,7 +459,9 @@ public class InputHooks {
                 LOGGER.info("flicking progress raw " + flick_stick_progress);
                 double current_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
 
-                // TODO: ease?
+                last_flick_progress = flickStickEase(last_flick_progress);
+                current_flick_progress = flickStickEase(current_flick_progress);
+
                 LOGGER.info("flicking progress " + current_flick_progress);
                 tot_turn_yaw += (current_flick_progress - last_flick_progress) * flick_stick_amount;
             }
@@ -466,13 +472,6 @@ public class InputHooks {
                         tot_turn_pitch / 0.15);
             }
         }
-//        if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-//            minecraft.mouseHandler.onMove(
-//                    minecraft.getWindow().getWindow(),
-//                    minecraft.mouseHandler.xpos() + gamepad.rthumb_x / THUMB_SCALE_CAM_X,
-//                    minecraft.mouseHandler.ypos() - gamepad.rthumb_y / THUMB_SCALE_CAM_Y
-//            );
-//        }
         last_rthumb_x = gamepad.rthumb_x;
         last_rthumb_y = gamepad.rthumb_y;
 
