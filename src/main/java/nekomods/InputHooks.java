@@ -269,6 +269,13 @@ public class InputHooks {
                             GLFW_PRESS,
                             0);
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0) {
+                    minecraft.mouseHandler.onPress(
+                            minecraft.getWindow().getWindow(),
+                            GLFW_MOUSE_BUTTON_3,
+                            GLFW_PRESS,
+                            0);
+                }
             } else {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
 
@@ -375,6 +382,13 @@ public class InputHooks {
                             minecraft.getWindow().getWindow(),
                             minecraft.options.keyDrop.getKey().getValue(),
                             glfwGetKeyScancode(minecraft.options.keyDrop.getKey().getValue()),
+                            GLFW_RELEASE,
+                            0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0) {
+                    minecraft.mouseHandler.onPress(
+                            minecraft.getWindow().getWindow(),
+                            GLFW_MOUSE_BUTTON_3,
                             GLFW_RELEASE,
                             0);
                 }
