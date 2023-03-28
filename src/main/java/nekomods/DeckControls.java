@@ -10,6 +10,7 @@ public class DeckControls
 {
     public static final String MODID = "deckcontrols";
     public static InputHooks HOOKS;
+    public static HidInput.Haptics HAPTICS;
 
     public DeckControls() {}
 

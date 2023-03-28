@@ -24,6 +24,8 @@ public class InputHooks {
     private static final float THUMB_DIGITAL_DEACTIVATE = 15000;
     private static final double THUMB_SCALE_CAM_X = 1000;
     private static final double THUMB_SCALE_CAM_Y = 800;
+    private static final double MODE_SWITCH_BEEP_FREQ = 1000;
+    private static final double MODE_SWITCH_BEEP_LEN = 0.1;
 
     public InputHooks() {
         minecraft = Minecraft.getInstance();
@@ -206,7 +208,7 @@ public class InputHooks {
                             0);
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_R4) != 0) {
-                    // TODO: sound/haptics?
+                    DeckControls.HAPTICS.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                     btn_b_is_right_click = !btn_b_is_right_click;
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
@@ -224,7 +226,7 @@ public class InputHooks {
                     }
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
-                    // TODO: sound/haptics?
+                    DeckControls.HAPTICS.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                     sneak_is_latched = !sneak_is_latched;
                     if (sneak_is_latched) {
                         sneak_latched_while_manually_sneaking = manually_sneaking;
@@ -355,9 +357,11 @@ public class InputHooks {
                             0);
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
-                    // TODO: sound/haptics?
                     manually_sneaking = false;
                     if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
+                        if (sneak_is_latched) {
+                            DeckControls.HAPTICS.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                        }
                         sneak_is_latched = false;
                         LOGGER.info("unSNEAK!!");
                         minecraft.keyboardHandler.keyPress(

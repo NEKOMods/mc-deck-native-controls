@@ -132,6 +132,12 @@ public class HidInput {
             }
         }
 
+        if (debug) {
+            DeckControls.HAPTICS = new Haptics(-1);
+        } else {
+            DeckControls.HAPTICS = new Haptics(fd);
+        }
+
         if (fd == -1) {
             LOGGER.error("Deck controls could not open device!");
             return;
@@ -247,6 +253,44 @@ public class HidInput {
             if (releasedButtons != 0)
                 keyEvents.addLast(releasedButtons | GamepadButtons.FLAG_BTN_UP);
             lastPressedButtons = currentPressedButtons;
+        }
+    }
+
+    public static class Haptics {
+        private int fd;
+
+        Haptics(int fd) {
+            this.fd = fd;
+        }
+
+        public boolean beep(double freq, double seconds) {
+            long period = Math.round(495483.0 / freq);
+            long repeats = Math.round(freq * seconds * 0.5);
+
+            if (period > 0xFFFF) {
+                LOGGER.error("Period out of range: " + period);
+                return false;
+            }
+            if (repeats > 0x7FFF) {
+                LOGGER.error("Repeats out of range: " + repeats);
+                return false;
+            }
+
+            if (fd < 0) return false;
+
+            byte[] buf = new byte[65];
+            buf[0] = 0x00;
+            buf[1] = (byte)0x8f;
+            buf[2] = 0x07;
+            buf[3] = 0x02;
+            buf[4] = (byte)(period & 0xFF);
+            buf[5] = (byte)((period >> 8) & 0xFF);
+            buf[6] = (byte)(period & 0xFF);
+            buf[7] = (byte)((period >> 8) & 0xFF);
+            buf[8] = (byte)(repeats & 0xFF);
+            buf[9] = (byte)((repeats >> 8) & 0xFF);
+
+            return OsIo.ioctl(fd, 0xC0414806, buf) == 0;
         }
     }
 }

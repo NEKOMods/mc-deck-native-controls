@@ -10,7 +10,6 @@ public class OsIo {
     public interface OsIoInterface extends Library {
         int open(String pathname, int flags);
         int read(int fd, byte[] data, NativeLong len);
-        // TODO: we will probably need this later
         int ioctl(int fd, int cmd, byte[] p);
     }
 
@@ -20,5 +19,9 @@ public class OsIo {
 
     public static int read(int fd, byte[] data, long len) {
         return INSTANCE.read(fd, data, new NativeLong(len));
+    }
+
+    public static int ioctl(int fd, int cmd, byte[] p) {
+        return INSTANCE.ioctl(fd, cmd, p);
     }
 }
