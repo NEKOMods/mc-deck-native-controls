@@ -1,6 +1,7 @@
 package nekomods;
 
 import com.mojang.logging.LogUtils;
+import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 
@@ -10,14 +11,19 @@ public class InputHooks {
     private static final Logger LOGGER = LogUtils.getLogger();
     private final Minecraft minecraft;
 
+    private long last_nanos;
     private int last_lthumb_x;
     private int last_lthumb_y;
+    private int last_rthumb_x;
+    private int last_rthumb_y;
     private boolean last_btn_view_down_was_e;
     boolean btn_b_is_right_click;
     boolean sneak_is_latched;
     boolean sneak_latched_while_manually_sneaking;
     boolean manually_sneaking;
     private boolean gyro_is_enabled = true;
+    private long flick_stick_progress = FLICK_STICK_TIME_NANOS;
+    private double flick_stick_amount;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -31,6 +37,9 @@ public class InputHooks {
     private static final double GYRO_CAM_SENSITIVITY_Y = 2;
     private static final double GYRO_CAM_SENSITIVITY_SCOPE_X = 0.5;
     private static final double GYRO_CAM_SENSITIVITY_SCOPE_Y = 0.5;
+    private static final double FLICK_STICK_ACTIVATE_DIST = 29000;
+    private static final double FLICK_STICK_DEACTIVATE_DIST = 28000;
+    private static final long FLICK_STICK_TIME_NANOS = 100000000;
 
     public InputHooks() {
         minecraft = Minecraft.getInstance();
@@ -38,6 +47,8 @@ public class InputHooks {
     public void runTick() {
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
+
+        long current_nanos = Util.getNanos();
 
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
         if (last_lthumb_y < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
@@ -114,13 +125,6 @@ public class InputHooks {
         }
         last_lthumb_x = gamepad.lthumb_x;
         last_lthumb_y = gamepad.lthumb_y;
-        if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-            minecraft.mouseHandler.onMove(
-                minecraft.getWindow().getWindow(),
-                minecraft.mouseHandler.xpos() + gamepad.rthumb_x / THUMB_SCALE_CAM_X,
-                minecraft.mouseHandler.ypos() - gamepad.rthumb_y / THUMB_SCALE_CAM_Y
-            );
-        }
 
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
@@ -411,19 +415,68 @@ public class InputHooks {
         }
 
         HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
-        if (gyro_is_enabled) {
-            if (minecraft.screen == null && minecraft.player != null) {
+        if (minecraft.screen == null && minecraft.player != null) {
+            double tot_turn_yaw = 0;
+            double tot_turn_pitch = 0;
+
+            if (gyro_is_enabled) {
                 if (minecraft.player.isScoping()) {
-                    minecraft.player.turn(
-                            -accumState.camYaw * GYRO_CAM_SENSITIVITY_SCOPE_X / 0.15,
-                            -accumState.camPitch * GYRO_CAM_SENSITIVITY_SCOPE_Y / 0.15);
+                    tot_turn_yaw += -accumState.camYaw * GYRO_CAM_SENSITIVITY_SCOPE_X;
+                    tot_turn_pitch += -accumState.camPitch * GYRO_CAM_SENSITIVITY_SCOPE_Y;
                 } else {
-                    minecraft.player.turn(
-                            -accumState.camYaw * GYRO_CAM_SENSITIVITY_X / 0.15,
-                            -accumState.camPitch * GYRO_CAM_SENSITIVITY_Y / 0.15);
+                    tot_turn_yaw += -accumState.camYaw * GYRO_CAM_SENSITIVITY_X;
+                    tot_turn_pitch += -accumState.camPitch * GYRO_CAM_SENSITIVITY_Y;
                 }
             }
+
+            if ((gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST) &&
+                    (last_rthumb_x * last_rthumb_x + last_rthumb_y * last_rthumb_y <= FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST)) {
+                LOGGER.info("flick stick start");
+                flick_stick_progress = 0;
+                flick_stick_amount = Math.toDegrees(Math.atan2(gamepad.rthumb_x, gamepad.rthumb_y));
+            } else if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
+//                LOGGER.info("flick stick turn");
+                double cur_angle = Math.toDegrees(Math.atan2(gamepad.rthumb_x, gamepad.rthumb_y));
+                double last_angle = Math.toDegrees(Math.atan2(last_rthumb_x, last_rthumb_y));
+
+                double diff_angle = cur_angle - last_angle;
+                if (diff_angle < -180) diff_angle += 360;
+                if (diff_angle > 180) diff_angle -= 360;
+
+                // TODO: smoothing?
+                tot_turn_yaw += diff_angle;
+            } else {
+//                LOGGER.info("flick stick deactivate");
+            }
+
+            if (flick_stick_progress < FLICK_STICK_TIME_NANOS) {
+                double last_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
+                flick_stick_progress = Math.min(flick_stick_progress + current_nanos - last_nanos, FLICK_STICK_TIME_NANOS);
+                LOGGER.info("flicking progress raw " + flick_stick_progress);
+                double current_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
+
+                // TODO: ease?
+                LOGGER.info("flicking progress " + current_flick_progress);
+                tot_turn_yaw += (current_flick_progress - last_flick_progress) * flick_stick_amount;
+            }
+
+            if (tot_turn_yaw != 0 || tot_turn_pitch != 0) {
+                minecraft.player.turn(
+                        tot_turn_yaw / 0.15,
+                        tot_turn_pitch / 0.15);
+            }
         }
+//        if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
+//            minecraft.mouseHandler.onMove(
+//                    minecraft.getWindow().getWindow(),
+//                    minecraft.mouseHandler.xpos() + gamepad.rthumb_x / THUMB_SCALE_CAM_X,
+//                    minecraft.mouseHandler.ypos() - gamepad.rthumb_y / THUMB_SCALE_CAM_Y
+//            );
+//        }
+        last_rthumb_x = gamepad.rthumb_x;
+        last_rthumb_y = gamepad.rthumb_y;
+
+        last_nanos = current_nanos;
 
         minecraft.getProfiler().pop();
     }
