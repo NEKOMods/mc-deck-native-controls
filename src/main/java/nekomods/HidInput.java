@@ -102,6 +102,7 @@ public class HidInput extends Thread {
     // SteamDeckGyroDSU claims 16, but a random Invensense datasheet for ICM-42605 (probably not the right part)
     // implies 16.4 which might be more correct.
     private static final double GYRO_LSBS_PER_DEGREE = 16.4;
+    private static final double GYRO_TIGHTEN_MAG = 5;
 
     private int fd = -1;
     private boolean debug;
@@ -279,6 +280,11 @@ public class HidInput extends Thread {
             double delta_seconds = (current_nanos - last_frame_nanos) / 1e9;
             double pitch_deg_per_s = newState.gyro_pitch / GYRO_LSBS_PER_DEGREE;
             double yaw_deg_per_s = newState.gyro_roll / GYRO_LSBS_PER_DEGREE;
+            double gyro_mag = Math.sqrt(pitch_deg_per_s * pitch_deg_per_s + yaw_deg_per_s * yaw_deg_per_s);
+            if (gyro_mag < GYRO_TIGHTEN_MAG) {
+                pitch_deg_per_s *= gyro_mag / GYRO_TIGHTEN_MAG;
+                yaw_deg_per_s *= gyro_mag / GYRO_TIGHTEN_MAG;
+            }
             double pitch_delta_deg = pitch_deg_per_s * delta_seconds;
             double yaw_delta_deg = yaw_deg_per_s * delta_seconds;
             while (true) {
