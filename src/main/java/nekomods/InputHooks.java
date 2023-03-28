@@ -188,11 +188,32 @@ public class InputHooks {
                 if (Math.abs(mouse_smoothed_dy) < MOUSE_TIGHTEN_THRESH)
                     mouse_final_dy *= Math.abs(mouse_smoothed_dy) / MOUSE_TIGHTEN_THRESH;
 
-                minecraft.mouseHandler.onMove(
-                        minecraft.getWindow().getWindow(),
-                        minecraft.mouseHandler.xpos() + mouse_final_dx / RPAD_MOUSE_SCALE_X,
-                        minecraft.mouseHandler.ypos() - mouse_final_dy / RPAD_MOUSE_SCALE_Y
-                );
+                if (minecraft.screen == null) {
+                    minecraft.mouseHandler.onMove(
+                            minecraft.getWindow().getWindow(),
+                            minecraft.mouseHandler.xpos() + mouse_final_dx / RPAD_MOUSE_SCALE_X,
+                            minecraft.mouseHandler.ypos() - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                    );
+                } else {
+                    // YUCK
+                    double[] curX = new double[1];
+                    double[] curY = new double[1];
+                    glfwGetCursorPos(
+                            minecraft.getWindow().getWindow(),
+                            curX,
+                            curY
+                    );
+                    glfwSetCursorPos(
+                            minecraft.getWindow().getWindow(),
+                            curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
+                            curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                    );
+                    minecraft.mouseHandler.onMove(
+                            minecraft.getWindow().getWindow(),
+                            curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
+                            curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                    );
+                }
             } else {
                 LOGGER.info("rpad down");
             }
