@@ -20,7 +20,7 @@ public class InputHooks {
     boolean btn_b_is_right_click;
     boolean sneak_is_latched;
     boolean sneak_latched_while_manually_sneaking;
-    boolean manually_sneaking;
+    private boolean manually_sneaking;
     private boolean gyro_is_enabled = true;
     private long flick_stick_progress = FLICK_STICK_TIME_NANOS;
     private double flick_stick_amount;
