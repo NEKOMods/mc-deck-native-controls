@@ -27,6 +27,10 @@ public class InputHooks {
     private static final double THUMB_SCALE_CAM_Y = 800;
     private static final double MODE_SWITCH_BEEP_FREQ = 1000;
     private static final double MODE_SWITCH_BEEP_LEN = 0.1;
+    private static final double GYRO_CAM_SENSITIVITY_X = 2;
+    private static final double GYRO_CAM_SENSITIVITY_Y = 2;
+    private static final double GYRO_CAM_SENSITIVITY_SCOPE_X = 0.5;
+    private static final double GYRO_CAM_SENSITIVITY_SCOPE_Y = 0.5;
 
     public InputHooks() {
         minecraft = Minecraft.getInstance();
@@ -408,8 +412,16 @@ public class InputHooks {
 
         HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
         if (gyro_is_enabled) {
-            if (minecraft.player != null) {
-                minecraft.player.turn(-accumState.camYaw / 0.15, -accumState.camPitch / 0.15);
+            if (minecraft.screen == null && minecraft.player != null) {
+                if (minecraft.player.isScoping()) {
+                    minecraft.player.turn(
+                            -accumState.camYaw * GYRO_CAM_SENSITIVITY_SCOPE_X / 0.15,
+                            -accumState.camPitch * GYRO_CAM_SENSITIVITY_SCOPE_Y / 0.15);
+                } else {
+                    minecraft.player.turn(
+                            -accumState.camYaw * GYRO_CAM_SENSITIVITY_X / 0.15,
+                            -accumState.camPitch * GYRO_CAM_SENSITIVITY_Y / 0.15);
+                }
             }
         }
 
