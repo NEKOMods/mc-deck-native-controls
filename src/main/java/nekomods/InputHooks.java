@@ -18,6 +18,9 @@ public class InputHooks {
     private int last_lthumb_y;
     private int last_rthumb_x;
     private int last_rthumb_y;
+    private int last_rpad_x;
+    private int last_rpad_y;
+    private boolean last_rpad_valid;
     private boolean last_btn_view_down_was_e;
     boolean btn_b_is_right_click;
     boolean sneak_is_latched;
@@ -28,13 +31,17 @@ public class InputHooks {
     private double flick_stick_amount;
     private double[] flick_stick_smoothing = new double[16];
     private int flick_stick_smoothing_i;
+    private double[] rpad_mouse_smoothing_x = new double[32];
+    private double[] rpad_mouse_smoothing_y = new double[32];
+    private int rpad_mouse_smoothing_x_i;
+    private int rpad_mouse_smoothing_y_i;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
     private static final float THUMB_DIGITAL_ACTIVATE = 16000;
     private static final float THUMB_DIGITAL_DEACTIVATE = 15000;
-    private static final double THUMB_SCALE_CAM_X = 1000;
-    private static final double THUMB_SCALE_CAM_Y = 800;
+    private static final double RPAD_MOUSE_SCALE_X = 50;
+    private static final double RPAD_MOUSE_SCALE_Y = 80;
     private static final double MODE_SWITCH_BEEP_FREQ = 1000;
     private static final double MODE_SWITCH_BEEP_LEN = 0.1;
     private static final double GYRO_CAM_SENSITIVITY_X = 2;
@@ -44,7 +51,9 @@ public class InputHooks {
     private static final double FLICK_STICK_ACTIVATE_DIST = 29000;
     private static final double FLICK_STICK_DEACTIVATE_DIST = 28000;
     private static final long FLICK_STICK_TIME_NANOS = 100000000;
-    private static double FLICK_STICK_SMOOTH_THRESH = 0.1;
+    private static final double FLICK_STICK_SMOOTH_THRESH = 0.1;
+    private static final int MOUSE_SMOOTH_THRESH = 500;
+    private static final int MOUSE_TIGHTEN_THRESH = 100;
 
     private static double flickStickEase(double input) {
         double flipped = 1 - input;
@@ -55,6 +64,17 @@ public class InputHooks {
         flick_stick_smoothing[flick_stick_smoothing_i] = input;
         flick_stick_smoothing_i = (flick_stick_smoothing_i + 1) % flick_stick_smoothing.length;
         return Arrays.stream(flick_stick_smoothing).average().orElse(0);
+    }
+
+    private double mouseSmoothedX(double input) {
+        rpad_mouse_smoothing_x[rpad_mouse_smoothing_x_i] = input;
+        rpad_mouse_smoothing_x_i = (rpad_mouse_smoothing_x_i + 1) % rpad_mouse_smoothing_x.length;
+        return Arrays.stream(rpad_mouse_smoothing_x).average().orElse(0);
+    }
+    private double mouseSmoothedY(double input) {
+        rpad_mouse_smoothing_y[rpad_mouse_smoothing_y_i] = input;
+        rpad_mouse_smoothing_y_i = (rpad_mouse_smoothing_y_i + 1) % rpad_mouse_smoothing_y.length;
+        return Arrays.stream(rpad_mouse_smoothing_y).average().orElse(0);
     }
 
     public InputHooks() {
@@ -141,6 +161,47 @@ public class InputHooks {
         }
         last_lthumb_x = gamepad.lthumb_x;
         last_lthumb_y = gamepad.lthumb_y;
+
+        if ((gamepad.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) != 0) {
+            if (last_rpad_valid) {
+                int rpad_dx = gamepad.rpad_x - last_rpad_x;
+                int rpad_dy = gamepad.rpad_y - last_rpad_y;
+//                LOGGER.info("rpad move (" + rpad_dx + ", " + rpad_dy + ")");
+
+                double tier_smooth_thresh_1 = MOUSE_SMOOTH_THRESH / 2;
+                double tier_smooth_thresh_2 = MOUSE_SMOOTH_THRESH;
+                double dx_mag = Math.abs(rpad_dx);
+                double smooth_direct_weight_x = (dx_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
+                if (smooth_direct_weight_x < 0) smooth_direct_weight_x = 0;
+                if (smooth_direct_weight_x > 1) smooth_direct_weight_x = 1;
+                double mouse_smoothed_dx = rpad_dx * smooth_direct_weight_x + mouseSmoothedX(rpad_dx * (1 - smooth_direct_weight_x));
+                double dy_mag = Math.abs(rpad_dy);
+                double smooth_direct_weight_y = (dy_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
+                if (smooth_direct_weight_y < 0) smooth_direct_weight_y = 0;
+                if (smooth_direct_weight_y > 1) smooth_direct_weight_y = 1;
+                double mouse_smoothed_dy = rpad_dy * smooth_direct_weight_y + mouseSmoothedY(rpad_dy * (1 - smooth_direct_weight_y));
+
+                double mouse_final_dx = mouse_smoothed_dx;
+                double mouse_final_dy = mouse_smoothed_dy;
+                if (Math.abs(mouse_smoothed_dx) < MOUSE_TIGHTEN_THRESH)
+                    mouse_final_dx *= Math.abs(mouse_smoothed_dx) / MOUSE_TIGHTEN_THRESH;
+                if (Math.abs(mouse_smoothed_dy) < MOUSE_TIGHTEN_THRESH)
+                    mouse_final_dy *= Math.abs(mouse_smoothed_dy) / MOUSE_TIGHTEN_THRESH;
+
+                minecraft.mouseHandler.onMove(
+                        minecraft.getWindow().getWindow(),
+                        minecraft.mouseHandler.xpos() + mouse_final_dx / RPAD_MOUSE_SCALE_X,
+                        minecraft.mouseHandler.ypos() - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                );
+            } else {
+                LOGGER.info("rpad down");
+            }
+            last_rpad_x = gamepad.rpad_x;
+            last_rpad_y = gamepad.rpad_y;
+            last_rpad_valid = true;
+        } else {
+            last_rpad_valid = false;
+        }
 
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
@@ -435,7 +496,7 @@ public class InputHooks {
             double tot_turn_yaw = 0;
             double tot_turn_pitch = 0;
 
-            if (gyro_is_enabled) {
+            if (gyro_is_enabled && ((gamepad.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) == 0)) {
                 if (minecraft.player.isScoping()) {
                     tot_turn_yaw += -accumState.camYaw * GYRO_CAM_SENSITIVITY_SCOPE_X;
                     tot_turn_pitch += -accumState.camPitch * GYRO_CAM_SENSITIVITY_SCOPE_Y;
