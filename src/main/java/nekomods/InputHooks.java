@@ -253,6 +253,22 @@ public class InputHooks {
                         }
                     }
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            minecraft.options.keySwapOffhand.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keySwapOffhand.getKey().getValue()),
+                            GLFW_PRESS,
+                            0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_D_DOWN) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            minecraft.options.keyDrop.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keyDrop.getKey().getValue()),
+                            GLFW_PRESS,
+                            0);
+                }
             } else {
                 LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
 
@@ -345,6 +361,22 @@ public class InputHooks {
                                 0);
                     }
                     sneak_latched_while_manually_sneaking = false;
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            minecraft.options.keySwapOffhand.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keySwapOffhand.getKey().getValue()),
+                            GLFW_RELEASE,
+                            0);
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_D_DOWN) != 0) {
+                    minecraft.keyboardHandler.keyPress(
+                            minecraft.getWindow().getWindow(),
+                            minecraft.options.keyDrop.getKey().getValue(),
+                            glfwGetKeyScancode(minecraft.options.keyDrop.getKey().getValue()),
+                            GLFW_RELEASE,
+                            0);
                 }
             }
         }
