@@ -250,7 +250,7 @@ for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
 				y = 0
 			if y > 200:
 				y = 200
-			x = x * 65535.0 / 200.0 - 32767
+			x = x * 65535.0 / 200.0 - 32768
 			y = 32767 - y * 65535.0 / 200.0
 			x = int(x)
 			y = int(y)
