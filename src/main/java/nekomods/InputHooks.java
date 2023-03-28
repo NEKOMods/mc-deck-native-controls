@@ -5,6 +5,8 @@ import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
 import org.slf4j.Logger;
 
+import java.util.Arrays;
+
 import static org.lwjgl.glfw.GLFW.*;
 
 public class InputHooks {
@@ -24,6 +26,8 @@ public class InputHooks {
     private boolean gyro_is_enabled = true;
     private long flick_stick_progress = FLICK_STICK_TIME_NANOS;
     private double flick_stick_amount;
+    private double[] flick_stick_smoothing = new double[16];
+    private int flick_stick_smoothing_i;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -40,10 +44,17 @@ public class InputHooks {
     private static final double FLICK_STICK_ACTIVATE_DIST = 29000;
     private static final double FLICK_STICK_DEACTIVATE_DIST = 28000;
     private static final long FLICK_STICK_TIME_NANOS = 100000000;
+    private static double FLICK_STICK_SMOOTH_THRESH = 0.1;
 
     private static double flickStickEase(double input) {
         double flipped = 1 - input;
         return 1 - flipped * flipped;
+    }
+
+    private double flickSmoothed(double input) {
+        flick_stick_smoothing[flick_stick_smoothing_i] = input;
+        flick_stick_smoothing_i = (flick_stick_smoothing_i + 1) % flick_stick_smoothing.length;
+        return Arrays.stream(flick_stick_smoothing).average().orElse(0);
     }
 
     public InputHooks() {
@@ -447,10 +458,18 @@ public class InputHooks {
                 if (diff_angle < -180) diff_angle += 360;
                 if (diff_angle > 180) diff_angle -= 360;
 
-                // TODO: smoothing?
-                tot_turn_yaw += diff_angle;
-            } else {
-//                LOGGER.info("flick stick deactivate");
+                double tier_smooth_thresh_1 = FLICK_STICK_SMOOTH_THRESH / 2;
+                double tier_smooth_thresh_2 = FLICK_STICK_SMOOTH_THRESH;
+                double diff_mag = Math.abs(diff_angle);
+                double smooth_direct_weight = (diff_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
+                if (smooth_direct_weight < 0) smooth_direct_weight = 0;
+                if (smooth_direct_weight > 1) smooth_direct_weight = 1;
+
+                tot_turn_yaw += diff_angle * smooth_direct_weight + flickSmoothed(diff_angle * (1 - smooth_direct_weight));
+            } else if (last_rthumb_x * last_rthumb_x + last_rthumb_y * last_rthumb_y >= FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
+                LOGGER.info("flick stick deactivate");
+                for (int i = 0; i < flick_stick_smoothing.length; i++)
+                    flick_stick_smoothing[i] = 0;
             }
 
             if (flick_stick_progress < FLICK_STICK_TIME_NANOS) {
