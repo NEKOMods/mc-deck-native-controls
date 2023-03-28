@@ -195,24 +195,31 @@ public class InputHooks {
                             minecraft.mouseHandler.ypos() - mouse_final_dy / RPAD_MOUSE_SCALE_Y
                     );
                 } else {
-                    // YUCK
-                    double[] curX = new double[1];
-                    double[] curY = new double[1];
-                    glfwGetCursorPos(
-                            minecraft.getWindow().getWindow(),
-                            curX,
-                            curY
-                    );
-                    glfwSetCursorPos(
-                            minecraft.getWindow().getWindow(),
-                            curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
-                            curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
-                    );
-                    minecraft.mouseHandler.onMove(
-                            minecraft.getWindow().getWindow(),
-                            curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
-                            curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
-                    );
+                    // WTF?
+                    if (Math.abs(mouse_final_dx) < 1)
+                        mouse_final_dx = 0;
+                    if (Math.abs(mouse_final_dy) < 1)
+                        mouse_final_dy = 0;
+                    if (mouse_final_dx != 0 || mouse_final_dy != 0) {
+                        // YUCK
+                        double[] curX = new double[1];
+                        double[] curY = new double[1];
+                        glfwGetCursorPos(
+                                minecraft.getWindow().getWindow(),
+                                curX,
+                                curY
+                        );
+                        glfwSetCursorPos(
+                                minecraft.getWindow().getWindow(),
+                                curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
+                                curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                        );
+                        minecraft.mouseHandler.onMove(
+                                minecraft.getWindow().getWindow(),
+                                curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
+                                curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                        );
+                    }
                 }
             } else {
                 LOGGER.info("rpad down");
