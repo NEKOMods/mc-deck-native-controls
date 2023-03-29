@@ -330,6 +330,9 @@ public class InputHooks {
                         }
                     }
                 }
+                if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0) {
+                    DeckControls.INPUT.tick();
+                }
             } else {
                 // special keyup
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
