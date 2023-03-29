@@ -1,4 +1,4 @@
-package nekomods;
+package nekomods.deckcontrols;
 
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;

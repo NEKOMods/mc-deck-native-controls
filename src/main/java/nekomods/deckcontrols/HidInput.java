@@ -1,4 +1,4 @@
-package nekomods;
+package nekomods.deckcontrols;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.Util;

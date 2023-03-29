@@ -1,4 +1,4 @@
-package nekomods;
+package nekomods.deckcontrols;
 
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.eventbus.api.SubscribeEvent;

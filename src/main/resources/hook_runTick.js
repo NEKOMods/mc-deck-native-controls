@@ -38,7 +38,7 @@ function initializeCoreMod() {
 
                 var new_opc = new MethodInsnNode(
                     opcodes.INVOKESTATIC,
-                    "nekomods/InputHooks",
+                    "nekomods/deckcontrols/InputHooks",
                     "runTickHook",
                     "()V"
                 );
