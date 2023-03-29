@@ -1,5 +1,6 @@
 package nekomods;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.Util;
 import net.minecraft.client.Minecraft;
@@ -60,91 +61,100 @@ public class InputHooks {
     public InputHooks() {
         minecraft = Minecraft.getInstance();
     }
+
+    private void press(InputConstants.Key key) {
+        minecraft.keyboardHandler.keyPress(
+                minecraft.getWindow().getWindow(),
+                key.getValue(),
+                glfwGetKeyScancode(key.getValue()),
+                GLFW_PRESS,
+                0);
+    }
+
+    private void press(int key) {
+        minecraft.keyboardHandler.keyPress(
+                minecraft.getWindow().getWindow(),
+                key,
+                glfwGetKeyScancode(key),
+                GLFW_PRESS,
+                0);
+    }
+
+    private void release(InputConstants.Key key) {
+        minecraft.keyboardHandler.keyPress(
+                minecraft.getWindow().getWindow(),
+                key.getValue(),
+                glfwGetKeyScancode(key.getValue()),
+                GLFW_RELEASE,
+                0);
+    }
+
+    private void release(int key) {
+        minecraft.keyboardHandler.keyPress(
+                minecraft.getWindow().getWindow(),
+                key,
+                glfwGetKeyScancode(key),
+                GLFW_RELEASE,
+                0);
+    }
+
+    private void mousePress(int button) {
+        minecraft.mouseHandler.onPress(
+                minecraft.getWindow().getWindow(),
+                button,
+                GLFW_PRESS,
+                0);
+    }
+
+    private void mouseRelease(int button) {
+        minecraft.mouseHandler.onPress(
+                minecraft.getWindow().getWindow(),
+                button,
+                GLFW_RELEASE,
+                0);
+    }
+
     public void runTick() {
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
 
         long current_nanos = Util.getNanos();
+        boolean is_gui_mode = minecraft.screen != null;
 
         HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
+
+        // movement keys (backup only, for e.g. boats)
         if (last_lthumb_y < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
-            LOGGER.info("FORWARD DOWN");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyUp.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyUp.getKey().getValue()),
-                    GLFW_PRESS,
-                    0);
+            press(minecraft.options.keyUp.getKey());
         }
         if (last_lthumb_y >= THUMB_DIGITAL_DEACTIVATE && gamepad.lthumb_y < THUMB_DIGITAL_DEACTIVATE) {
-            LOGGER.info("FORWARD UP");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyUp.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyUp.getKey().getValue()),
-                    GLFW_RELEASE,
-                    0);
+            release(minecraft.options.keyUp.getKey());
         }
         if (-last_lthumb_y < THUMB_DIGITAL_ACTIVATE && -gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
-            LOGGER.info("BACKWARD DOWN");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyDown.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyDown.getKey().getValue()),
-                    GLFW_PRESS,
-                    0);
+            press(minecraft.options.keyDown.getKey());
         }
         if (-last_lthumb_y >= THUMB_DIGITAL_DEACTIVATE && -gamepad.lthumb_y < THUMB_DIGITAL_DEACTIVATE) {
-            LOGGER.info("BACKWARD UP");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyDown.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyDown.getKey().getValue()),
-                    GLFW_RELEASE,
-                    0);
+            release(minecraft.options.keyDown.getKey());
         }
         if (last_lthumb_x < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_x >= THUMB_DIGITAL_ACTIVATE) {
-            LOGGER.info("RIGHT DOWN");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyRight.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyRight.getKey().getValue()),
-                    GLFW_PRESS,
-                    0);
+            press(minecraft.options.keyRight.getKey());
         }
         if (last_lthumb_x >= THUMB_DIGITAL_DEACTIVATE && gamepad.lthumb_x < THUMB_DIGITAL_DEACTIVATE) {
-            LOGGER.info("RIGHT UP");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyRight.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyRight.getKey().getValue()),
-                    GLFW_RELEASE,
-                    0);
+            release(minecraft.options.keyRight.getKey());
         }
         if (-last_lthumb_x < THUMB_DIGITAL_ACTIVATE && -gamepad.lthumb_x >= THUMB_DIGITAL_ACTIVATE) {
-            LOGGER.info("LEFT DOWN");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyLeft.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyLeft.getKey().getValue()),
-                    GLFW_PRESS,
-                    0);
+            press(minecraft.options.keyLeft.getKey());
         }
         if (-last_lthumb_x >= THUMB_DIGITAL_DEACTIVATE && -gamepad.lthumb_x < THUMB_DIGITAL_DEACTIVATE) {
-            LOGGER.info("LEFT UP");
-            minecraft.keyboardHandler.keyPress(
-                    minecraft.getWindow().getWindow(),
-                    minecraft.options.keyLeft.getKey().getValue(),
-                    glfwGetKeyScancode(minecraft.options.keyLeft.getKey().getValue()),
-                    GLFW_RELEASE,
-                    0);
+            release(minecraft.options.keyLeft.getKey());
         }
         last_lthumb_x = gamepad.lthumb_x;
         last_lthumb_y = gamepad.lthumb_y;
 
+        // mouse cursor
         if (accumState.mouseDX != 0 || accumState.mouseDY != 0) {
-            if (minecraft.screen == null) {
+            if (!is_gui_mode) {
                 minecraft.mouseHandler.onMove(
                         minecraft.getWindow().getWindow(),
                         minecraft.mouseHandler.xpos() + accumState.mouseDX / RPAD_MOUSE_SCALE_X,
@@ -184,92 +194,108 @@ public class InputHooks {
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
         while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
-            if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                LOGGER.info("KEY DOWN " + keyevent);
-
-                if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keyJump.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keyJump.getKey().getValue()),
-                            GLFW_PRESS,
-                            0);
+            // boring keys
+            if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(minecraft.options.keySprint.getKey());
+                else
+                    release(minecraft.options.keySprint.getKey());
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    if (!btn_b_is_right_click)
+                        mousePress(GLFW_MOUSE_BUTTON_1);
+                    else
+                        mousePress(GLFW_MOUSE_BUTTON_2);
+                } else {
+                    if (!btn_b_is_right_click)
+                        mouseRelease(GLFW_MOUSE_BUTTON_1);
+                    else
+                        mouseRelease(GLFW_MOUSE_BUTTON_2);
                 }
-                if ((keyevent & HidInput.GamepadButtons.BTN_OPTIONS) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            GLFW_KEY_ESCAPE,
-                            glfwGetKeyScancode(GLFW_KEY_ESCAPE),
-                            GLFW_PRESS,
-                            0);
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    if (!btn_b_is_right_click)
+                        mousePress(GLFW_MOUSE_BUTTON_2);
+                    else
+                        mousePress(GLFW_MOUSE_BUTTON_1);
+                } else {
+                    if (!btn_b_is_right_click)
+                        mouseRelease(GLFW_MOUSE_BUTTON_2);
+                    else
+                        mouseRelease(GLFW_MOUSE_BUTTON_1);
                 }
-                if ((keyevent & HidInput.GamepadButtons.BTN_VIEW) != 0) {
-                    if (minecraft.screen == null) {
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(minecraft.options.keyJump.getKey());
+                else
+                    release(minecraft.options.keyJump.getKey());
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(minecraft.options.keySwapOffhand.getKey());
+                else
+                    release(minecraft.options.keySwapOffhand.getKey());
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_D_DOWN) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(minecraft.options.keyDrop.getKey());
+                else
+                    release(minecraft.options.keyDrop.getKey());
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_OPTIONS) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(GLFW_KEY_ESCAPE);
+                else
+                    release(GLFW_KEY_ESCAPE);
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_VIEW) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    if (!is_gui_mode) {
                         // no gui
-                        LOGGER.info("NO GUI e DOWN");
+                        LOGGER.debug("NO GUI e DOWN");
                         last_btn_view_down_was_e = true;
-                        minecraft.keyboardHandler.keyPress(
-                                minecraft.getWindow().getWindow(),
-                                minecraft.options.keyInventory.getKey().getValue(),
-                                glfwGetKeyScancode(minecraft.options.keyInventory.getKey().getValue()),
-                                GLFW_PRESS,
-                                0);
+                        press(minecraft.options.keyInventory.getKey());
                     } else {
                         // gui
-                        LOGGER.info("YES GUI ESC DOWN");
+                        LOGGER.debug("YES GUI ESC DOWN");
                         last_btn_view_down_was_e = false;
-                        minecraft.keyboardHandler.keyPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_KEY_ESCAPE,
-                                glfwGetKeyScancode(GLFW_KEY_ESCAPE),
-                                GLFW_PRESS,
-                                0);
+                        press(GLFW_KEY_ESCAPE);
+                    }
+                } else {
+                    if (last_btn_view_down_was_e) {
+                        // no gui
+                        LOGGER.debug("NO GUI e UP");
+                        release(minecraft.options.keyInventory.getKey());
+                    } else {
+                        // gui
+                        LOGGER.debug("YES GUI ESC UP");
+                        release(GLFW_KEY_ESCAPE);
                     }
                 }
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    gyro_is_enabled = false;
+                else
+                    gyro_is_enabled = true;
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    mousePress(GLFW_MOUSE_BUTTON_3);
+                else
+                    mouseRelease(GLFW_MOUSE_BUTTON_3);
+            }
+            if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                // special keydown
                 // TODO: repeat?
                 if ((keyevent & HidInput.GamepadButtons.BTN_D_LEFT) != 0) {
                     minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_D_RIGHT) != 0) {
                     minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
-                    if (!btn_b_is_right_click) {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_1,
-                                GLFW_PRESS,
-                                0);
-                    } else {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_2,
-                                GLFW_PRESS,
-                                0);
-                    }
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
-                    if (!btn_b_is_right_click) {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_2,
-                                GLFW_PRESS,
-                                0);
-                    } else {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_1,
-                                GLFW_PRESS,
-                                0);
-                    }
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keySprint.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keySprint.getKey().getValue()),
-                            GLFW_PRESS,
-                            0);
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_R4) != 0) {
                     DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
@@ -278,15 +304,10 @@ public class InputHooks {
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
                     manually_sneaking = true;
                     if (!sneak_is_latched) {
-                        LOGGER.info("SNEAK because manual");
-                        minecraft.keyboardHandler.keyPress(
-                                minecraft.getWindow().getWindow(),
-                                minecraft.options.keyShift.getKey().getValue(),
-                                glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
-                                GLFW_PRESS,
-                                0);
+                        LOGGER.debug("SNEAK because manual");
+                        press(minecraft.options.keyShift.getKey());
                     } else {
-                        LOGGER.info("ignoring SNEAK because already latched");
+                        LOGGER.debug("ignoring SNEAK because already latched");
                     }
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
@@ -295,134 +316,22 @@ public class InputHooks {
                     if (sneak_is_latched) {
                         sneak_latched_while_manually_sneaking = manually_sneaking;
                         if (!manually_sneaking) {
-                            LOGGER.info("SNEAK because latching");
-                            minecraft.keyboardHandler.keyPress(
-                                    minecraft.getWindow().getWindow(),
-                                    minecraft.options.keyShift.getKey().getValue(),
-                                    glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
-                                    GLFW_PRESS,
-                                    0);
+                            LOGGER.debug("SNEAK because latching");
+                            press(minecraft.options.keyShift.getKey());
                         } else {
-                            LOGGER.info("ignoring SNEAK because already sneaking");
+                            LOGGER.debug("ignoring SNEAK because already sneaking");
                         }
                     } else {
                         if (!manually_sneaking) {
-                            LOGGER.info("unSNEAK because unlatching");
-                            minecraft.keyboardHandler.keyPress(
-                                    minecraft.getWindow().getWindow(),
-                                    minecraft.options.keyShift.getKey().getValue(),
-                                    glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
-                                    GLFW_RELEASE,
-                                    0);
+                            LOGGER.debug("unSNEAK because unlatching");
+                            release(minecraft.options.keyShift.getKey());
                         } else {
-                            LOGGER.info("ignoring unSNEAK because manually sneaking");
+                            LOGGER.debug("ignoring unSNEAK because manually sneaking");
                         }
                     }
                 }
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keySwapOffhand.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keySwapOffhand.getKey().getValue()),
-                            GLFW_PRESS,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_DOWN) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keyDrop.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keyDrop.getKey().getValue()),
-                            GLFW_PRESS,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0) {
-                    minecraft.mouseHandler.onPress(
-                            minecraft.getWindow().getWindow(),
-                            GLFW_MOUSE_BUTTON_3,
-                            GLFW_PRESS,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
-                    gyro_is_enabled = false;
-                }
             } else {
-                LOGGER.info("KEY UP " + (keyevent & (~HidInput.GamepadButtons.FLAG_BTN_UP)));
-
-                if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keyJump.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keyJump.getKey().getValue()),
-                            GLFW_RELEASE,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_OPTIONS) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            GLFW_KEY_ESCAPE,
-                            glfwGetKeyScancode(GLFW_KEY_ESCAPE),
-                            GLFW_RELEASE,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_VIEW) != 0) {
-                    if (last_btn_view_down_was_e) {
-                        // no gui
-                        LOGGER.info("NO GUI e UP");
-                        minecraft.keyboardHandler.keyPress(
-                                minecraft.getWindow().getWindow(),
-                                minecraft.options.keyInventory.getKey().getValue(),
-                                glfwGetKeyScancode(minecraft.options.keyInventory.getKey().getValue()),
-                                GLFW_RELEASE,
-                                0);
-                    } else {
-                        // gui
-                        LOGGER.info("YES GUI ESC UP");
-                        minecraft.keyboardHandler.keyPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_KEY_ESCAPE,
-                                glfwGetKeyScancode(GLFW_KEY_ESCAPE),
-                                GLFW_RELEASE,
-                                0);
-                    }
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
-                    if (!btn_b_is_right_click) {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_1,
-                                GLFW_RELEASE,
-                                0);
-                    } else {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_2,
-                                GLFW_RELEASE,
-                                0);
-                    }
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
-                    if (!btn_b_is_right_click) {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_2,
-                                GLFW_RELEASE,
-                                0);
-                    } else {
-                        minecraft.mouseHandler.onPress(
-                                minecraft.getWindow().getWindow(),
-                                GLFW_MOUSE_BUTTON_1,
-                                GLFW_RELEASE,
-                                0);
-                    }
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keySprint.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keySprint.getKey().getValue()),
-                            GLFW_RELEASE,
-                            0);
-                }
+                // special keyup
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
                     manually_sneaking = false;
                     if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
@@ -430,46 +339,16 @@ public class InputHooks {
                             DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                         }
                         sneak_is_latched = false;
-                        LOGGER.info("unSNEAK!!");
-                        minecraft.keyboardHandler.keyPress(
-                                minecraft.getWindow().getWindow(),
-                                minecraft.options.keyShift.getKey().getValue(),
-                                glfwGetKeyScancode(minecraft.options.keyShift.getKey().getValue()),
-                                GLFW_RELEASE,
-                                0);
+                        LOGGER.debug("unSNEAK!!");
+                        release(minecraft.options.keyShift.getKey());
                     }
                     sneak_latched_while_manually_sneaking = false;
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keySwapOffhand.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keySwapOffhand.getKey().getValue()),
-                            GLFW_RELEASE,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_DOWN) != 0) {
-                    minecraft.keyboardHandler.keyPress(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.options.keyDrop.getKey().getValue(),
-                            glfwGetKeyScancode(minecraft.options.keyDrop.getKey().getValue()),
-                            GLFW_RELEASE,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0) {
-                    minecraft.mouseHandler.onPress(
-                            minecraft.getWindow().getWindow(),
-                            GLFW_MOUSE_BUTTON_3,
-                            GLFW_RELEASE,
-                            0);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
-                    gyro_is_enabled = true;
                 }
             }
         }
 
-        if (minecraft.screen == null && minecraft.player != null) {
+        // good gyro controls
+        if (!is_gui_mode && minecraft.player != null) {
             double tot_turn_yaw = 0;
             double tot_turn_pitch = 0;
 
@@ -485,7 +364,7 @@ public class InputHooks {
 
             if ((gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST) &&
                     (last_rthumb_x * last_rthumb_x + last_rthumb_y * last_rthumb_y <= FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST)) {
-                LOGGER.info("flick stick start");
+                LOGGER.debug("flick stick start");
                 flick_stick_progress = 0;
                 flick_stick_amount = Math.toDegrees(Math.atan2(gamepad.rthumb_x, gamepad.rthumb_y));
             } else if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
@@ -505,7 +384,7 @@ public class InputHooks {
 
                 tot_turn_yaw += diff_angle * smooth_direct_weight + flickSmoothed(diff_angle * (1 - smooth_direct_weight));
             } else if (last_rthumb_x * last_rthumb_x + last_rthumb_y * last_rthumb_y >= FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
-                LOGGER.info("flick stick deactivate");
+                LOGGER.debug("flick stick deactivate");
                 for (int i = 0; i < flick_stick_smoothing.length; i++)
                     flick_stick_smoothing[i] = 0;
             }
@@ -513,13 +392,13 @@ public class InputHooks {
             if (flick_stick_progress < FLICK_STICK_TIME_NANOS) {
                 double last_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
                 flick_stick_progress = Math.min(flick_stick_progress + current_nanos - last_nanos, FLICK_STICK_TIME_NANOS);
-                LOGGER.info("flicking progress raw " + flick_stick_progress);
+                LOGGER.debug("flicking progress raw " + flick_stick_progress);
                 double current_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
 
                 last_flick_progress = flickStickEase(last_flick_progress);
                 current_flick_progress = flickStickEase(current_flick_progress);
 
-                LOGGER.info("flicking progress " + current_flick_progress);
+                LOGGER.debug("flicking progress " + current_flick_progress);
                 tot_turn_yaw += (current_flick_progress - last_flick_progress) * flick_stick_amount;
             }
 

@@ -338,8 +338,6 @@ public class HidInput extends Thread {
                         mouse_final_dx *= Math.abs(mouse_smoothed_dx) / MOUSE_TIGHTEN_THRESH;
                     if (Math.abs(mouse_smoothed_dy) < MOUSE_TIGHTEN_THRESH)
                         mouse_final_dy *= Math.abs(mouse_smoothed_dy) / MOUSE_TIGHTEN_THRESH;
-                } else {
-                    LOGGER.info("rpad down");
                 }
                 last_rpad_x = newState.rpad_x;
                 last_rpad_y = newState.rpad_y;
