@@ -209,6 +209,18 @@ public class InputHooks {
             }
         }
 
+        // release sneak latch if a GUI opens
+        // FIXME: lots of borkiness if sneak key isn't shift
+        if (is_gui_mode && sneak_is_latched) {
+            if (!manually_sneaking) {
+                LOGGER.debug("unSNEAK because unlatching because GUI");
+                release(minecraft.options.keyShift.getKey());
+            } else {
+                LOGGER.debug("ignoring unSNEAK because manually sneaking while GUI");
+            }
+            sneak_is_latched = false;
+        }
+
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
         while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
@@ -298,6 +310,14 @@ public class InputHooks {
                     }
                 }
             }
+            if ((keyevent & HidInput.GamepadButtons.BTN_L4) != 0) {
+                if (is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(GLFW_KEY_LEFT_ALT);
+                    else
+                        release(GLFW_KEY_LEFT_ALT);
+                }
+            }
             if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
@@ -365,23 +385,27 @@ public class InputHooks {
                     }
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
-                    DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
-                    sneak_is_latched = !sneak_is_latched;
-                    if (sneak_is_latched) {
-                        sneak_latched_while_manually_sneaking = manually_sneaking;
-                        if (!manually_sneaking) {
-                            LOGGER.debug("SNEAK because latching");
-                            press(minecraft.options.keyShift.getKey());
+                    if (!is_gui_mode) {
+                        DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                        sneak_is_latched = !sneak_is_latched;
+                        if (sneak_is_latched) {
+                            sneak_latched_while_manually_sneaking = manually_sneaking;
+                            if (!manually_sneaking) {
+                                LOGGER.debug("SNEAK because latching");
+                                press(minecraft.options.keyShift.getKey());
+                            } else {
+                                LOGGER.debug("ignoring SNEAK because already sneaking");
+                            }
                         } else {
-                            LOGGER.debug("ignoring SNEAK because already sneaking");
+                            if (!manually_sneaking) {
+                                LOGGER.debug("unSNEAK because unlatching");
+                                release(minecraft.options.keyShift.getKey());
+                            } else {
+                                LOGGER.debug("ignoring unSNEAK because manually sneaking");
+                            }
                         }
                     } else {
-                        if (!manually_sneaking) {
-                            LOGGER.debug("unSNEAK because unlatching");
-                            release(minecraft.options.keyShift.getKey());
-                        } else {
-                            LOGGER.debug("ignoring unSNEAK because manually sneaking");
-                        }
+                        press(GLFW_KEY_LEFT_CONTROL);
                     }
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0) {
@@ -400,6 +424,10 @@ public class InputHooks {
                         release(minecraft.options.keyShift.getKey());
                     }
                     sneak_latched_while_manually_sneaking = false;
+                }
+                if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
+                    if (is_gui_mode)
+                        release(GLFW_KEY_LEFT_CONTROL);
                 }
             }
         }
