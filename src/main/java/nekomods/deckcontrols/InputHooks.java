@@ -279,6 +279,22 @@ public class InputHooks {
                         release(minecraft.options.keyDrop.getKey());
                 }
             }
+            if ((keyevent & HidInput.GamepadButtons.BTN_D_LEFT) != 0) {
+                if (is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(minecraft.options.keySwapOffhand.getKey());
+                    else
+                        release(minecraft.options.keySwapOffhand.getKey());
+                }
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_D_RIGHT) != 0) {
+                if (is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(minecraft.options.keyDrop.getKey());
+                    else
+                        release(minecraft.options.keyDrop.getKey());
+                }
+            }
             if ((keyevent & HidInput.GamepadButtons.BTN_OPTIONS) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                     press(GLFW_KEY_ESCAPE);
@@ -311,12 +327,16 @@ public class InputHooks {
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_L4) != 0) {
-                if (is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(GLFW_KEY_LEFT_ALT);
-                    else
-                        release(GLFW_KEY_LEFT_ALT);
-                }
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(GLFW_KEY_LEFT_CONTROL);
+                else
+                    release(GLFW_KEY_LEFT_CONTROL);
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_L5) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(GLFW_KEY_LEFT_ALT);
+                else
+                    release(GLFW_KEY_LEFT_ALT);
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
                 if (!is_gui_mode) {
@@ -405,7 +425,7 @@ public class InputHooks {
                             }
                         }
                     } else {
-                        press(GLFW_KEY_LEFT_CONTROL);
+                        mousePress(GLFW_MOUSE_BUTTON_3);
                     }
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0) {
@@ -427,7 +447,7 @@ public class InputHooks {
                 }
                 if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
                     if (is_gui_mode)
-                        release(GLFW_KEY_LEFT_CONTROL);
+                        mouseRelease(GLFW_MOUSE_BUTTON_3);
                 }
             }
         }
