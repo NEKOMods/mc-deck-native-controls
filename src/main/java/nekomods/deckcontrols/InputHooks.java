@@ -31,6 +31,9 @@ public class InputHooks {
     private int flick_stick_smoothing_i;
     private double mouse_gui_leftover_frac_x;
     private double mouse_gui_leftover_frac_y;
+    private boolean shift_pressed;
+    private boolean ctrl_pressed;
+    private boolean alt_pressed;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -65,15 +68,17 @@ public class InputHooks {
     }
 
     private void press(InputConstants.Key key) {
-        minecraft.keyboardHandler.keyPress(
-                minecraft.getWindow().getWindow(),
-                key.getValue(),
-                glfwGetKeyScancode(key.getValue()),
-                GLFW_PRESS,
-                0);
+        press(key.getValue());
     }
 
     private void press(int key) {
+        if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
+            shift_pressed = true;
+        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
+            ctrl_pressed = true;
+        if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
+            alt_pressed = true;
+
         minecraft.keyboardHandler.keyPress(
                 minecraft.getWindow().getWindow(),
                 key,
@@ -83,15 +88,17 @@ public class InputHooks {
     }
 
     private void release(InputConstants.Key key) {
-        minecraft.keyboardHandler.keyPress(
-                minecraft.getWindow().getWindow(),
-                key.getValue(),
-                glfwGetKeyScancode(key.getValue()),
-                GLFW_RELEASE,
-                0);
+        release(key.getValue());
     }
 
     private void release(int key) {
+        if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
+            shift_pressed = false;
+        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
+            ctrl_pressed = false;
+        if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
+            alt_pressed = false;
+
         minecraft.keyboardHandler.keyPress(
                 minecraft.getWindow().getWindow(),
                 key,
@@ -492,6 +499,17 @@ public class InputHooks {
         }
     }
 
+    public boolean modifierPressed(int key) {
+        if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
+            return shift_pressed;
+        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
+            return ctrl_pressed;
+        if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
+            return alt_pressed;
+
+        return false;
+    }
+
     public static void runTickHook() {
         if (DeckControls.HOOKS != null) {
             DeckControls.HOOKS.runTick();
@@ -504,5 +522,9 @@ public class InputHooks {
 
     public static float playerLRImpulse(float keyboardImpulse) {
         return DeckControls.HOOKS.lrImpulse(keyboardImpulse);
+    }
+
+    public static boolean hookKeyDown(boolean existing, int key) {
+        return existing || DeckControls.HOOKS.modifierPressed(key);
     }
 }
