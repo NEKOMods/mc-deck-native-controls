@@ -29,6 +29,8 @@ public class InputHooks {
     private double flick_stick_amount;
     private double[] flick_stick_smoothing = new double[16];
     private int flick_stick_smoothing_i;
+    private double mouse_gui_leftover_frac_x;
+    private double mouse_gui_leftover_frac_y;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -155,6 +157,10 @@ public class InputHooks {
         last_lthumb_y = gamepad.lthumb_y;
 
         // mouse cursor
+        if (!is_gui_mode) {
+            mouse_gui_leftover_frac_x = 0;
+            mouse_gui_leftover_frac_y = 0;
+        }
         if (accumState.mouseDX != 0 || accumState.mouseDY != 0) {
             if (!is_gui_mode) {
                 minecraft.mouseHandler.onMove(
@@ -163,14 +169,17 @@ public class InputHooks {
                         minecraft.mouseHandler.ypos() - accumState.mouseDY / RPAD_MOUSE_SCALE_Y
                 );
             } else {
-                // WTF?
-                double mouse_final_dx = accumState.mouseDX;
-                double mouse_final_dy = accumState.mouseDY;
-                if (Math.abs(mouse_final_dx) < 1)
-                    mouse_final_dx = 0;
-                if (Math.abs(mouse_final_dy) < 1)
-                    mouse_final_dy = 0;
-                if (mouse_final_dx != 0 || mouse_final_dy != 0) {
+                // gross, integers and units are hard
+                double mouse_final_dx = accumState.mouseDX + mouse_gui_leftover_frac_x;
+                double mouse_final_dy = accumState.mouseDY + mouse_gui_leftover_frac_y;
+
+                long mouse_int_dx = (long)(mouse_final_dx / RPAD_MOUSE_SCALE_X);
+                long mouse_int_dy = (long)(mouse_final_dy / RPAD_MOUSE_SCALE_Y);
+
+                mouse_gui_leftover_frac_x = mouse_final_dx - mouse_int_dx * RPAD_MOUSE_SCALE_X;
+                mouse_gui_leftover_frac_y = mouse_final_dy - mouse_int_dy * RPAD_MOUSE_SCALE_Y;
+
+                if (mouse_int_dx != 0 || mouse_int_dy != 0) {
                     // YUCK
                     double[] curX = new double[1];
                     double[] curY = new double[1];
@@ -181,13 +190,13 @@ public class InputHooks {
                     );
                     glfwSetCursorPos(
                             minecraft.getWindow().getWindow(),
-                            curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
-                            curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                            curX[0] + mouse_int_dx,
+                            curY[0] - mouse_int_dy
                     );
                     minecraft.mouseHandler.onMove(
                             minecraft.getWindow().getWindow(),
-                            curX[0] + mouse_final_dx / RPAD_MOUSE_SCALE_X,
-                            curY[0] - mouse_final_dy / RPAD_MOUSE_SCALE_Y
+                            curX[0] + mouse_int_dx,
+                            curY[0] - mouse_int_dy
                     );
                 }
             }
