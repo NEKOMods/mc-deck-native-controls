@@ -109,7 +109,7 @@ public class HidInput extends Thread {
     private static final int MOUSE_TIGHTEN_THRESH = 100;
 
     private int fd = -1;
-    private boolean debug;
+    boolean debug;
 
     private static Map<String, String> parse_uevent(String s) {
         return Arrays.stream(s.split("\n"))
