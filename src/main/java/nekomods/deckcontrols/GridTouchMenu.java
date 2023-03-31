@@ -1,24 +1,24 @@
 package nekomods.deckcontrols;
 
-import net.minecraft.client.Minecraft;
-
-import static org.lwjgl.glfw.GLFW.*;
+import java.util.function.Consumer;
 
 public class GridTouchMenu implements ITouchMenu {
     private final int[][] WIDTHS;
     private final int[] HEIGHTS;
-    private final int[] KEYS;
+    private final Consumer<Integer> ONPRESS;
+    private final Consumer<Integer> ONRELEASE;
 
     private static final int HYSTERESIS = 1000;
 
-    public GridTouchMenu(int[][] widths, int[] heights, int[] keys) {
+    public GridTouchMenu(int[][] widths, int[] heights, Consumer<Integer> onPress, Consumer<Integer> onRelease) {
         WIDTHS = widths;
         HEIGHTS = heights;
-        KEYS = keys;
+        ONPRESS = onPress;
+        ONRELEASE = onRelease;
         assert widths.length == heights.length;
     }
 
-    public GridTouchMenu(int rows, int cols, int[] keys) {
+    public GridTouchMenu(int rows, int cols, Consumer<Integer> onPress, Consumer<Integer> onRelease) {
         assert rows > 0;
         assert cols > 0;
         int[][] widths = new int[rows][];
@@ -33,7 +33,8 @@ public class GridTouchMenu implements ITouchMenu {
         }
         WIDTHS = widths;
         HEIGHTS = heights;
-        KEYS = keys;
+        ONPRESS = onPress;
+        ONRELEASE = onRelease;
     }
 
     @Override
@@ -99,23 +100,11 @@ public class GridTouchMenu implements ITouchMenu {
 
     @Override
     public void onPress(int option) {
-        Minecraft minecraft = Minecraft.getInstance();
-        minecraft.keyboardHandler.keyPress(
-                minecraft.getWindow().getWindow(),
-                KEYS[option],
-                glfwGetKeyScancode(KEYS[option]),
-                GLFW_PRESS,
-                0);
+        ONPRESS.accept(option);
     }
 
     @Override
     public void onRelease(int option) {
-        Minecraft minecraft = Minecraft.getInstance();
-        minecraft.keyboardHandler.keyPress(
-                minecraft.getWindow().getWindow(),
-                KEYS[option],
-                glfwGetKeyScancode(KEYS[option]),
-                GLFW_RELEASE,
-                0);
+        ONRELEASE.accept(option);
     }
 }

@@ -36,7 +36,7 @@ public class InputHooks {
     private boolean alt_pressed;
     int lpad_menu_selection = -1;
     private int last_lpad_menu_selection;
-    private ITouchMenu lpad_menu = new GridTouchMenu(3, 3, new int[] {GLFW_KEY_1, GLFW_KEY_2, GLFW_KEY_3, GLFW_KEY_4, GLFW_KEY_5, GLFW_KEY_6, GLFW_KEY_7, GLFW_KEY_8, GLFW_KEY_9});
+    private ITouchMenu lpad_menu = new GridTouchMenu(3, 3, (option) -> press(GLFW_KEY_1 + option), (option) -> release(GLFW_KEY_1 + option));
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
