@@ -68,6 +68,7 @@ public class OverlayRenderer {
             if (DeckControls.HOOKS.sneak_is_latched) {
                 Minecraft.getInstance().font.draw(ps, "SNEAKING" + (DeckControls.HOOKS.sneak_latched_while_manually_sneaking ? " (while manual)" : ""), 0, 40, 0x00ff00);
             }
+            Minecraft.getInstance().font.draw(ps, "" + DeckControls.HOOKS.lpad_menu_selection, 0, 48, 0x00ff00);
         }
 
 //        RenderSystem.setShader(GameRenderer::getPositionTexShader);

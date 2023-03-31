@@ -34,6 +34,8 @@ public class InputHooks {
     private boolean shift_pressed;
     private boolean ctrl_pressed;
     private boolean alt_pressed;
+    int lpad_menu_selection = -1;
+    private int last_lpad_keydown;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -123,6 +125,28 @@ public class InputHooks {
                 0);
     }
 
+    private int lpadToMenuOption(int x, int y) {
+        if (y < 21845) {
+            if (x < 21845)
+                return 0;
+            if (x < 43690)
+                return 1;
+            return 2;
+        }
+        if (y < 43690) {
+            if (x < 21845)
+                return 3;
+            if (x < 43690)
+                return 4;
+            return 5;
+        }
+        if (x < 21845)
+            return 6;
+        if (x < 43690)
+            return 7;
+        return 8;
+    }
+
     public void runTick() {
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
@@ -207,6 +231,74 @@ public class InputHooks {
                     );
                 }
             }
+        }
+
+        // menu
+        // input coordinate system:
+        //         32767
+        //           ^
+        //           |
+        // -32768 <--+--> 32767
+        //           |
+        //           v
+        //        -32768
+        int menu_x = gamepad.lpad_x + 32768;
+        int menu_y = 32767 - gamepad.lpad_y;
+        // being remapped to
+        // 0 --> 65535
+        // |
+        // v
+        // 65535
+        if ((gamepad.buttons & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0) {
+            if (lpad_menu_selection == -1) {
+                lpad_menu_selection = lpadToMenuOption(menu_x, menu_y);
+            } else {
+                boolean outside_hysteresis = false;
+                switch (lpad_menu_selection) {
+                    case 0:
+                        if (menu_x > 21845 + 1000 || menu_y > 21845 + 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 1:
+                        if (menu_x < 21845 - 1000 || menu_x > 43690 + 1000 || menu_y > 21845 + 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 2:
+                        if (menu_x < 43690 - 1000 || menu_y > 21845 + 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 3:
+                        if (menu_x > 21845 + 1000 || menu_y < 21845 - 1000 || menu_y > 43690 + 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 4:
+                        if (menu_x < 21845 - 1000 || menu_x > 43690 + 1000 || menu_y < 21845 - 1000 || menu_y > 43690 + 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 5:
+                        if (menu_x < 43690 - 1000 || menu_y < 21845 - 1000 || menu_y > 43690 + 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 6:
+                        if (menu_x > 21845 + 1000 || menu_y < 43690 - 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 7:
+                        if (menu_x < 21845 - 1000 || menu_x > 43690 + 1000 || menu_y < 43690 - 1000)
+                            outside_hysteresis = true;
+                        break;
+                    case 8:
+                        if (menu_x < 43690 - 1000 || menu_y < 43690 - 1000)
+                            outside_hysteresis = true;
+                        break;
+                }
+                if (outside_hysteresis) {
+                    lpad_menu_selection = lpadToMenuOption(menu_x, menu_y);
+                    DeckControls.INPUT.tick();
+                }
+            }
+        } else {
+            lpad_menu_selection = -1;
         }
 
         // release sneak latch if a GUI opens
@@ -372,6 +464,51 @@ public class InputHooks {
                         mouseRelease(GLFW_MOUSE_BUTTON_1);
                 }
             }
+            if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_CLICK) != 0) {
+                if (!is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                        int key;
+                        switch (lpad_menu_selection) {
+                            case 0:
+                                key = GLFW_KEY_1;
+                                break;
+                            case 1:
+                                key = GLFW_KEY_2;
+                                break;
+                            case 2:
+                                key = GLFW_KEY_3;
+                                break;
+                            case 3:
+                                key = GLFW_KEY_4;
+                                break;
+                            case 4:
+                                key = GLFW_KEY_5;
+                                break;
+                            case 5:
+                                key = GLFW_KEY_6;
+                                break;
+                            case 6:
+                                key = GLFW_KEY_7;
+                                break;
+                            case 7:
+                                key = GLFW_KEY_8;
+                                break;
+                            case 8:
+                                key = GLFW_KEY_9;
+                                break;
+                            default:
+                                key = -1;
+                                break;
+                        }
+                        if (key != -1) {
+                            last_lpad_keydown = key;
+                            press(key);
+                        }
+                    }
+                    else
+                        release(last_lpad_keydown);
+                }
+            }
             if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                 // special keydown
                 // TODO: repeat?
@@ -427,9 +564,6 @@ public class InputHooks {
                     } else {
                         mousePress(GLFW_MOUSE_BUTTON_3);
                     }
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0) {
-                    DeckControls.INPUT.tick();
                 }
             } else {
                 // special keyup
