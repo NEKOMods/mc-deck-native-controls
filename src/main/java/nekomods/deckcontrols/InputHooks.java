@@ -269,42 +269,50 @@ public class InputHooks {
         while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
             // boring keys
             if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    press(minecraft.options.keySprint.getKey());
-                else
-                    release(minecraft.options.keySprint.getKey());
+                if (!is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(minecraft.options.keySprint.getKey());
+                    else
+                        release(minecraft.options.keySprint.getKey());
+                }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (!btn_b_is_right_click)
-                        mousePress(GLFW_MOUSE_BUTTON_1);
-                    else
-                        mousePress(GLFW_MOUSE_BUTTON_2);
-                } else {
-                    if (!btn_b_is_right_click)
-                        mouseRelease(GLFW_MOUSE_BUTTON_1);
-                    else
-                        mouseRelease(GLFW_MOUSE_BUTTON_2);
+                if (!is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                        if (!btn_b_is_right_click)
+                            mousePress(GLFW_MOUSE_BUTTON_1);
+                        else
+                            mousePress(GLFW_MOUSE_BUTTON_2);
+                    } else {
+                        if (!btn_b_is_right_click)
+                            mouseRelease(GLFW_MOUSE_BUTTON_1);
+                        else
+                            mouseRelease(GLFW_MOUSE_BUTTON_2);
+                    }
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (!btn_b_is_right_click)
-                        mousePress(GLFW_MOUSE_BUTTON_2);
-                    else
-                        mousePress(GLFW_MOUSE_BUTTON_1);
-                } else {
-                    if (!btn_b_is_right_click)
-                        mouseRelease(GLFW_MOUSE_BUTTON_2);
-                    else
-                        mouseRelease(GLFW_MOUSE_BUTTON_1);
+                if (!is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                        if (!btn_b_is_right_click)
+                            mousePress(GLFW_MOUSE_BUTTON_2);
+                        else
+                            mousePress(GLFW_MOUSE_BUTTON_1);
+                    } else {
+                        if (!btn_b_is_right_click)
+                            mouseRelease(GLFW_MOUSE_BUTTON_2);
+                        else
+                            mouseRelease(GLFW_MOUSE_BUTTON_1);
+                    }
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    press(minecraft.options.keyJump.getKey());
-                else
-                    release(minecraft.options.keyJump.getKey());
+                if (!is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(minecraft.options.keyJump.getKey());
+                    else
+                        release(minecraft.options.keyJump.getKey());
+                }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
                 if (!is_gui_mode) {
