@@ -270,10 +270,17 @@ public class InputHooks {
             // boring keys
             if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
                 if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keySprint.getKey());
-                    else
-                        release(minecraft.options.keySprint.getKey());
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                        if (!btn_b_is_right_click)
+                            mousePress(GLFW_MOUSE_BUTTON_2);
+                        else
+                            mousePress(GLFW_MOUSE_BUTTON_1);
+                    } else {
+                        if (!btn_b_is_right_click)
+                            mouseRelease(GLFW_MOUSE_BUTTON_2);
+                        else
+                            mouseRelease(GLFW_MOUSE_BUTTON_1);
+                    }
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
@@ -293,17 +300,10 @@ public class InputHooks {
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
                 if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                        if (!btn_b_is_right_click)
-                            mousePress(GLFW_MOUSE_BUTTON_2);
-                        else
-                            mousePress(GLFW_MOUSE_BUTTON_1);
-                    } else {
-                        if (!btn_b_is_right_click)
-                            mouseRelease(GLFW_MOUSE_BUTTON_2);
-                        else
-                            mouseRelease(GLFW_MOUSE_BUTTON_1);
-                    }
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(minecraft.options.keySprint.getKey());
+                    else
+                        release(minecraft.options.keySprint.getKey());
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
