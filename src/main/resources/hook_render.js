@@ -8,7 +8,9 @@ function initializeCoreMod() {
                 'methodDesc': '(FJZ)V'
             },
             'transformer': function(methodNode) {
+                var InsnList = Java.type("org.objectweb.asm.tree.InsnList");
                 var MethodInsnNode = Java.type("org.objectweb.asm.tree.MethodInsnNode");
+                var VarInsnNode = Java.type("org.objectweb.asm.tree.VarInsnNode");
                 var asmapi = Java.type('net.minecraftforge.coremod.api.ASMAPI');
                 var opcodes = Java.type('org.objectweb.asm.Opcodes');
 
@@ -19,13 +21,15 @@ function initializeCoreMod() {
                     if (opc.getOpcode() === opcodes.RETURN) {
                         asmapi.log("DEBUG", "[Deck Native Controls] found ret");
 
-                        var new_opc = new MethodInsnNode(
+                        var il = new InsnList();
+                        il.add(new VarInsnNode(opcodes.FLOAD, 1));
+                        il.add(new MethodInsnNode(
                             opcodes.INVOKESTATIC,
                             "nekomods/deckcontrols/OverlayRenderer",
                             "renderOverlay",
-                            "()V"
-                        );
-                        methodNode.instructions.insertBefore(opc, new_opc);
+                            "(F)V"
+                        ));
+                        methodNode.instructions.insertBefore(opc, il);
 
                         break;
                     }

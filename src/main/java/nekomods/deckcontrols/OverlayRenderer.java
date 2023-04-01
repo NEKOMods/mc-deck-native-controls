@@ -1,6 +1,5 @@
 package nekomods.deckcontrols;
 
-import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.Minecraft;
@@ -30,24 +29,23 @@ public class OverlayRenderer {
                 .uv((atlasCol + 1) * 16.0f / 256, atlasRow * 16.0f / 256).endVertex();
     }
 
-    public static void renderOverlay() {
+    public static void renderOverlay(float pPartialTicks) {
         Minecraft minecraft = Minecraft.getInstance();
-        Window window = minecraft.getWindow();
         PoseStack ps = new PoseStack();
 
         if (DeckControls.HOOKS != null) {
             Minecraft.getInstance().font.draw(ps, "" + DeckControls.HOOKS.lpad_menu_selection, 0, 48, 0x00ff00);
         }
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.disableDepthTest();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
+
+        int screenW = minecraft.getWindow().getGuiScaledWidth();
+        int screenH = minecraft.getWindow().getGuiScaledHeight();
+
         RenderSystem.setShaderTexture(0, new ResourceLocation("deckcontrols", "textures/ui/uiatlas.png"));
-
-        float screenW = (float)((double)window.getWidth() / window.getGuiScale());
-        float screenH = (float)((double)window.getHeight() / window.getGuiScale());
-
+        RenderSystem.setShader(GameRenderer::getPositionTexShader);
         BufferBuilder b = Tesselator.getInstance().getBuilder();
         b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
@@ -69,7 +67,12 @@ public class OverlayRenderer {
                 }
             }
         }
-
         BufferUploader.drawWithShader(b.end());
+
+        if (DeckControls.HOOKS != null) {
+            if (DeckControls.HOOKS.lpad_menu_selection != -1 && DeckControls.HOOKS.lpad_menu != null) {
+                DeckControls.HOOKS.lpad_menu.render(DeckControls.HOOKS.lpad_menu_selection, pPartialTicks);
+            }
+        }
     }
 }

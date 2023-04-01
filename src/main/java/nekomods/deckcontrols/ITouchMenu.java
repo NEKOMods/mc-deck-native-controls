@@ -5,4 +5,5 @@ public interface ITouchMenu {
     boolean hysteresisExceeded(int option, int x, int y);
     void onPress(int option);
     void onRelease(int option);
+    void render(int option, float pPartialTicks);
 }
