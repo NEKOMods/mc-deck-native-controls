@@ -22,7 +22,7 @@ public class InputHooks {
     private boolean last_btn_view_down_was_e;
     boolean btn_b_is_right_click;
     boolean sneak_is_latched;
-    boolean sneak_latched_while_manually_sneaking;
+    private boolean sneak_latched_while_manually_sneaking;
     private boolean manually_sneaking;
     private boolean gyro_is_enabled = true;
     private long flick_stick_progress = FLICK_STICK_TIME_NANOS;
