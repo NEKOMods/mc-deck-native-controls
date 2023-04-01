@@ -33,19 +33,20 @@ public class OverlayRenderer {
         Minecraft minecraft = Minecraft.getInstance();
         PoseStack ps = new PoseStack();
 
-        RenderSystem.disableDepthTest();
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-
         int screenW = minecraft.getWindow().getGuiScaledWidth();
         int screenH = minecraft.getWindow().getGuiScaledHeight();
 
-        RenderSystem.setShaderTexture(0, new ResourceLocation("deckcontrols", "textures/ui/uiatlas.png"));
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        BufferBuilder b = Tesselator.getInstance().getBuilder();
-        b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
-
         if (DeckControls.HOOKS != null && DeckControls.INPUT != null && DeckControls.INPUT.isAlive()) {
+            RenderSystem.disableDepthTest();
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
+
+            // our gui elements
+            RenderSystem.setShaderTexture(0, new ResourceLocation("deckcontrols", "textures/ui/uiatlas.png"));
+            RenderSystem.setShader(GameRenderer::getPositionTexShader);
+            BufferBuilder b = Tesselator.getInstance().getBuilder();
+            b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
+
             if (minecraft.screen == null) {
                 if (!DeckControls.HOOKS.btn_b_is_right_click) {
                     drawUiAtlasElem(b, ps, screenW - 16 * 4, screenH - 16, UIATLAS_BTN_X);
@@ -62,10 +63,9 @@ public class OverlayRenderer {
                     drawUiAtlasElem(b, ps, screenW - 16, screenH - 16 * 2, UIATLAS_SNEAKING);
                 }
             }
-        }
-        BufferUploader.drawWithShader(b.end());
+            BufferUploader.drawWithShader(b.end());
 
-        if (DeckControls.HOOKS != null) {
+            // menus
             if (DeckControls.HOOKS.lpad_menu_selection != -1 && DeckControls.HOOKS.lpad_menu != null) {
                 DeckControls.HOOKS.lpad_menu.render(DeckControls.HOOKS.lpad_menu_selection, pPartialTicks);
             }
