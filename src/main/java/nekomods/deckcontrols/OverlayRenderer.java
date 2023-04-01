@@ -48,17 +48,17 @@ public class OverlayRenderer {
             b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
             if (minecraft.screen == null) {
-                if (!DeckControls.HOOKS.btn_b_is_right_click) {
-                    drawUiAtlasElem(b, ps, screenW - 16 * 4, screenH - 16, UIATLAS_BTN_A);
-                    drawUiAtlasElem(b, ps, screenW - 16 * 3, screenH - 16, UIATLAS_MOUSE_R);
-                    drawUiAtlasElem(b, ps, screenW - 16 * 2, screenH - 16, UIATLAS_BTN_B);
-                    drawUiAtlasElem(b, ps, screenW - 16 * 1, screenH - 16, UIATLAS_MOUSE_L);
-                } else {
-                    drawUiAtlasElem(b, ps, screenW - 16 * 4, screenH - 16, UIATLAS_BTN_A);
-                    drawUiAtlasElem(b, ps, screenW - 16 * 3, screenH - 16, UIATLAS_MOUSE_L);
-                    drawUiAtlasElem(b, ps, screenW - 16 * 2, screenH - 16, UIATLAS_BTN_B);
-                    drawUiAtlasElem(b, ps, screenW - 16 * 1, screenH - 16, UIATLAS_MOUSE_R);
-                }
+//                if (!DeckControls.HOOKS.btn_b_is_right_click) {
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 4, screenH - 16, UIATLAS_BTN_A);
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 3, screenH - 16, UIATLAS_MOUSE_R);
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 2, screenH - 16, UIATLAS_BTN_B);
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 1, screenH - 16, UIATLAS_MOUSE_L);
+//                } else {
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 4, screenH - 16, UIATLAS_BTN_A);
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 3, screenH - 16, UIATLAS_MOUSE_L);
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 2, screenH - 16, UIATLAS_BTN_B);
+//                    drawUiAtlasElem(b, ps, screenW - 16 * 1, screenH - 16, UIATLAS_MOUSE_R);
+//                }
                 if (DeckControls.HOOKS.sneak_is_latched) {
                     drawUiAtlasElem(b, ps, screenW - 16, screenH - 16 * 2, UIATLAS_SNEAKING);
                 }

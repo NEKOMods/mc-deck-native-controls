@@ -61,6 +61,7 @@ public class InputHooks {
     private static final double FLICK_STICK_DEACTIVATE_DIST = 28000;
     private static final long FLICK_STICK_TIME_NANOS = 100000000;
     private static final double FLICK_STICK_SMOOTH_THRESH = 0.1;
+    private static final double KEY_REPEAT_ACTIVATE_TIME = 0.75;
 
     private static double flickStickEase(double input) {
         double flipped = 1 - input;
@@ -272,46 +273,37 @@ public class InputHooks {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                         if (!btn_b_is_right_click)
-                            mousePress(GLFW_MOUSE_BUTTON_2);
-                        else
                             mousePress(GLFW_MOUSE_BUTTON_1);
+                        else
+                            mousePress(GLFW_MOUSE_BUTTON_2);
                     } else {
                         if (!btn_b_is_right_click)
-                            mouseRelease(GLFW_MOUSE_BUTTON_2);
-                        else
                             mouseRelease(GLFW_MOUSE_BUTTON_1);
+                        else
+                            mouseRelease(GLFW_MOUSE_BUTTON_2);
                     }
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
                 if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                        if (!btn_b_is_right_click)
-                            mousePress(GLFW_MOUSE_BUTTON_1);
-                        else
-                            mousePress(GLFW_MOUSE_BUTTON_2);
-                    } else {
-                        if (!btn_b_is_right_click)
-                            mouseRelease(GLFW_MOUSE_BUTTON_1);
-                        else
-                            mouseRelease(GLFW_MOUSE_BUTTON_2);
-                    }
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(minecraft.options.keyJump.getKey());
+                    else
+                        release(minecraft.options.keyJump.getKey());
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    mousePress(GLFW_MOUSE_BUTTON_3);
+                else
+                    mouseRelease(GLFW_MOUSE_BUTTON_3);
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         press(minecraft.options.keySprint.getKey());
                     else
                         release(minecraft.options.keySprint.getKey());
-                }
-            }
-            if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keyJump.getKey());
-                    else
-                        release(minecraft.options.keyJump.getKey());
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
@@ -391,10 +383,17 @@ public class InputHooks {
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
                 if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        gyro_is_enabled = false;
-                    else
-                        gyro_is_enabled = true;
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                        if (!btn_b_is_right_click)
+                            mousePress(GLFW_MOUSE_BUTTON_2);
+                        else
+                            mousePress(GLFW_MOUSE_BUTTON_1);
+                    } else {
+                        if (!btn_b_is_right_click)
+                            mouseRelease(GLFW_MOUSE_BUTTON_2);
+                        else
+                            mouseRelease(GLFW_MOUSE_BUTTON_1);
+                    }
                 } else {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         mousePress(GLFW_MOUSE_BUTTON_2);
@@ -405,9 +404,9 @@ public class InputHooks {
             if ((keyevent & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        mousePress(GLFW_MOUSE_BUTTON_3);
+                        gyro_is_enabled = false;
                     else
-                        mouseRelease(GLFW_MOUSE_BUTTON_3);
+                        gyro_is_enabled = true;
                 } else {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         mousePress(GLFW_MOUSE_BUTTON_1);
