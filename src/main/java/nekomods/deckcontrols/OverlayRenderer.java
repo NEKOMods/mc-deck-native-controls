@@ -33,10 +33,6 @@ public class OverlayRenderer {
         Minecraft minecraft = Minecraft.getInstance();
         PoseStack ps = new PoseStack();
 
-        if (DeckControls.HOOKS != null) {
-            Minecraft.getInstance().font.draw(ps, "" + DeckControls.HOOKS.lpad_menu_selection, 0, 48, 0x00ff00);
-        }
-
         RenderSystem.disableDepthTest();
         RenderSystem.enableBlend();
         RenderSystem.defaultBlendFunc();
