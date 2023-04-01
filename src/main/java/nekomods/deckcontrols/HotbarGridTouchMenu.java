@@ -7,11 +7,12 @@ import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Player;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class HotbarGridTouchMenu extends GridTouchMenu {
-    HotbarGridTouchMenu(Consumer<Integer> onPress, Consumer<Integer> onRelease) {
-        super(3, 3, onPress, onRelease);
+    HotbarGridTouchMenu(Consumer<Integer> onPress, Consumer<Integer> onRelease, BiConsumer<Integer, Integer> onChangeWhileClicked) {
+        super(3, 3, onPress, onRelease, onChangeWhileClicked);
     }
 
     @Override

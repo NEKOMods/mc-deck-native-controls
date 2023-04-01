@@ -1,5 +1,6 @@
 package nekomods.deckcontrols;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class GridTouchMenu implements ITouchMenu {
@@ -7,18 +8,20 @@ public class GridTouchMenu implements ITouchMenu {
     private final int[] HEIGHTS;
     private final Consumer<Integer> ONPRESS;
     private final Consumer<Integer> ONRELEASE;
+    private final BiConsumer<Integer, Integer> ONCHANGE;
 
     private static final int HYSTERESIS = 1000;
 
-    public GridTouchMenu(int[][] widths, int[] heights, Consumer<Integer> onPress, Consumer<Integer> onRelease) {
+    public GridTouchMenu(int[][] widths, int[] heights, Consumer<Integer> onPress, Consumer<Integer> onRelease, BiConsumer<Integer, Integer> onChangeWhileClicked) {
         WIDTHS = widths;
         HEIGHTS = heights;
         ONPRESS = onPress;
         ONRELEASE = onRelease;
+        ONCHANGE = onChangeWhileClicked;
         assert widths.length == heights.length;
     }
 
-    public GridTouchMenu(int rows, int cols, Consumer<Integer> onPress, Consumer<Integer> onRelease) {
+    public GridTouchMenu(int rows, int cols, Consumer<Integer> onPress, Consumer<Integer> onRelease, BiConsumer<Integer, Integer> onChangeWhileClicked) {
         assert rows > 0;
         assert cols > 0;
         int[][] widths = new int[rows][];
@@ -35,6 +38,7 @@ public class GridTouchMenu implements ITouchMenu {
         HEIGHTS = heights;
         ONPRESS = onPress;
         ONRELEASE = onRelease;
+        ONCHANGE = onChangeWhileClicked;
     }
 
     @Override
@@ -107,6 +111,9 @@ public class GridTouchMenu implements ITouchMenu {
     public void onRelease(int option) {
         ONRELEASE.accept(option);
     }
+
+    @Override
+    public void onChangeWhileClicked(int old_option, int new_option) { ONCHANGE.accept(old_option, new_option); }
 
     @Override
     public void render(int option, float pPartialTicks) {}

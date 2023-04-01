@@ -36,7 +36,14 @@ public class InputHooks {
     private boolean alt_pressed;
     int lpad_menu_selection = -1;
     private int last_lpad_menu_selection;
-    ITouchMenu lpad_menu = new HotbarGridTouchMenu((option) -> press(GLFW_KEY_1 + option), (option) -> release(GLFW_KEY_1 + option));
+    private boolean lpad_is_pressed;
+    ITouchMenu lpad_menu = new HotbarGridTouchMenu(
+            (option) -> press(GLFW_KEY_1 + option),
+            (option) -> release(GLFW_KEY_1 + option),
+            (old_option, new_option) -> {
+                release(GLFW_KEY_1 + old_option);
+                press(GLFW_KEY_1 + new_option);
+            });
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -234,7 +241,10 @@ public class InputHooks {
             } else {
                 boolean outside_hysteresis = lpad_menu.hysteresisExceeded(lpad_menu_selection, menu_x, menu_y);
                 if (outside_hysteresis) {
+                    int old_lpad_menu_selection = lpad_menu_selection;
                     lpad_menu_selection = lpad_menu.padToOption(menu_x, menu_y);
+                    if (lpad_is_pressed)
+                        lpad_menu.onChangeWhileClicked(old_lpad_menu_selection, lpad_menu_selection);
                     DeckControls.INPUT.tick();
                 }
             }
@@ -411,11 +421,13 @@ public class InputHooks {
                         last_lpad_menu_selection = lpad_menu_selection;
                         if (lpad_menu_selection != -1) {
                             lpad_menu.onPress(lpad_menu_selection);
+                            lpad_is_pressed = true;
                         }
                     }
                     else {
-                        if (last_lpad_menu_selection != -1) {
+                        if (lpad_is_pressed) {
                             lpad_menu.onRelease(last_lpad_menu_selection);
+                            lpad_is_pressed = false;
                         }
                     }
                 }
