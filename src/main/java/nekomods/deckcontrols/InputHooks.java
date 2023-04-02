@@ -74,6 +74,7 @@ public class InputHooks {
     static int CONTROLS_GPB_SWAPHAND_GUI       = HidInput.GamepadButtons.BTN_D_LEFT;
     static int CONTROLS_GPB_DROPITEM_GUI       = HidInput.GamepadButtons.BTN_D_RIGHT;
     static int CONTROLS_GPB_ESCAPE             = HidInput.GamepadButtons.BTN_OPTIONS;
+    static int CONTROLS_GPB_ESCAPEALT          = HidInput.GamepadButtons.BTN_A;
     static int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
     static int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
     static int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
@@ -368,6 +369,14 @@ public class InputHooks {
                     press(GLFW_KEY_ESCAPE);
                 else
                     release(GLFW_KEY_ESCAPE);
+            }
+            if ((keyevent & CONTROLS_GPB_ESCAPEALT) != 0) {
+                if (is_gui_mode) {
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                        press(GLFW_KEY_ESCAPE);
+                    else
+                        release(GLFW_KEY_ESCAPE);
+                }
             }
             if ((keyevent & CONTROLS_GPB_INVENTORY) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
