@@ -65,7 +65,7 @@ public class InputHooks {
 
     static int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_A;
     static int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
-    static int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_X;
+    static int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_RT_DIGITAL;
     static int CONTROLS_GPB_SPRINT             = HidInput.GamepadButtons.BTN_Y;
     static int CONTROLS_GPB_SWAPHAND           = HidInput.GamepadButtons.BTN_D_UP;
     static int CONTROLS_GPB_DROPITEM           = HidInput.GamepadButtons.BTN_D_DOWN;
@@ -76,7 +76,7 @@ public class InputHooks {
     static int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
     static int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
     static int CONTROLS_GPB_RCLICKALT          = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
-    static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_RT_DIGITAL;
+    static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_X;
     static int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
     static int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
     static int CONTROLS_GPB_SCROLL_DOWN        = HidInput.GamepadButtons.BTN_D_DOWN;
