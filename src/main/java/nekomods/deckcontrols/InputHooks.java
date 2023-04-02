@@ -75,7 +75,7 @@ public class InputHooks {
     static int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
     static int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
     static int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
-    static int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
+    static int CONTROLS_GPB_RCLICKALT          = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
     static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_RT_DIGITAL;
     static int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
     static int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
@@ -404,7 +404,7 @@ public class InputHooks {
                 else
                     release(GLFW_KEY_LEFT_ALT);
             }
-            if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
+            if ((keyevent & CONTROLS_GPB_RCLICKALT) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                         if (!btn_b_is_right_click)
@@ -462,6 +462,7 @@ public class InputHooks {
                     }
                 }
             }
+            // TODO: key repeat
             if ((keyevent & CONTROLS_GPB_SCROLL_UP) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     if (is_gui_mode)
@@ -474,7 +475,7 @@ public class InputHooks {
                         minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
                 }
             }
-            if ((keyevent & CONTROLS_GPB_SCROLL_LEFT != 0) {
+            if ((keyevent & CONTROLS_GPB_SCROLL_LEFT) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     if (!is_gui_mode)
                         minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
