@@ -63,7 +63,28 @@ public class InputHooks {
     private static final double FLICK_STICK_SMOOTH_THRESH = 0.1;
     private static final double KEY_REPEAT_ACTIVATE_TIME = 0.75;
 
-    private static final int 
+    int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_A;
+    int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
+    int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_X;
+    int CONTROLS_GPB_SPRINT             = HidInput.GamepadButtons.BTN_Y;
+    int CONTROLS_GPB_SWAPHAND           = HidInput.GamepadButtons.BTN_D_UP;
+    int CONTROLS_GPB_DROPITEM           = HidInput.GamepadButtons.BTN_D_DOWN;
+    int CONTROLS_GPB_SWAPHAND_GUI       = HidInput.GamepadButtons.BTN_D_LEFT;
+    int CONTROLS_GPB_DROPITEM_GUI       = HidInput.GamepadButtons.BTN_D_RIGHT;
+    int CONTROLS_GPB_ESCAPE             = HidInput.GamepadButtons.BTN_OPTIONS;
+    int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
+    int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
+    int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
+    int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
+    int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_RT_DIGITAL;
+    int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
+    int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
+    int CONTROLS_GPB_SCROLL_DOWN        = HidInput.GamepadButtons.BTN_D_DOWN;
+    int CONTROLS_GPB_SCROLL_LEFT        = HidInput.GamepadButtons.BTN_D_LEFT;
+    int CONTROLS_GPB_SCROLL_RIGHT       = HidInput.GamepadButtons.BTN_D_RIGHT;
+    int CONTROLS_GPB_CLICK_MODESWITCH   = HidInput.GamepadButtons.BTN_R4;
+    int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
+    int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LT_DIGITAL;
 
     private static double flickStickEase(double input) {
         double flipped = 1 - input;
@@ -267,29 +288,6 @@ public class InputHooks {
             sneak_is_latched = false;
         }
 
-        int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_A;
-        int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
-        int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_X;
-        int CONTROLS_GPB_SPRINT             = HidInput.GamepadButtons.BTN_Y;
-        int CONTROLS_GPB_SWAPHAND           = HidInput.GamepadButtons.BTN_D_UP;
-        int CONTROLS_GPB_DROPITEM           = HidInput.GamepadButtons.BTN_D_DOWN;
-        int CONTROLS_GPB_SWAPHAND_GUI       = HidInput.GamepadButtons.BTN_D_LEFT;
-        int CONTROLS_GPB_DROPITEM_GUI       = HidInput.GamepadButtons.BTN_D_RIGHT;
-        int CONTROLS_GPB_ESCAPE             = HidInput.GamepadButtons.BTN_OPTIONS;
-        int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
-        int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
-        int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
-        int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
-        int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_RT_DIGITAL;
-        int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
-        int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
-        int CONTROLS_GPB_SCROLL_DOWN        = HidInput.GamepadButtons.BTN_D_DOWN;
-        int CONTROLS_GPB_SCROLL_LEFT        = HidInput.GamepadButtons.BTN_D_LEFT;
-        int CONTROLS_GPB_SCROLL_RIGHT       = HidInput.GamepadButtons.BTN_D_RIGHT;
-        int CONTROLS_GPB_CLICK_MODESWITCH   = HidInput.GamepadButtons.BTN_R4;
-        int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
-        int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LT_DIGITAL;
-
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
         while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
@@ -465,24 +463,28 @@ public class InputHooks {
                 }
             }
             if ((keyevent & CONTROLS_GPB_SCROLL_UP) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                if (is_gui_mode)
-                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    if (is_gui_mode)
+                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+                }
             }
             if ((keyevent & CONTROLS_GPB_SCROLL_DOWN) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                if (is_gui_mode)
-                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    if (is_gui_mode)
+                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+                }
             }
             if ((keyevent & CONTROLS_GPB_SCROLL_LEFT != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                if (!is_gui_mode)
-                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    if (!is_gui_mode)
+                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+                }
             }
             if ((keyevent & CONTROLS_GPB_SCROLL_RIGHT) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                if (!is_gui_mode)
-                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    if (!is_gui_mode)
+                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+                }
             }
             if ((keyevent & CONTROLS_GPB_CLICK_MODESWITCH) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
