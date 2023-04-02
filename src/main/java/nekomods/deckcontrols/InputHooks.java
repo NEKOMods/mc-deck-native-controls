@@ -49,8 +49,10 @@ public class InputHooks {
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
     private static final float THUMB_DIGITAL_ACTIVATE = 16000;
     private static final float THUMB_DIGITAL_DEACTIVATE = 15000;
-    private static final double RPAD_MOUSE_SCALE_X = 50;
-    private static final double RPAD_MOUSE_SCALE_Y = 80;
+    private static final double RPAD_MOUSE_SCALE_X_CAM = 50;
+    private static final double RPAD_MOUSE_SCALE_Y_CAM = 80;
+    private static final double RPAD_MOUSE_SCALE_X_GUI = 120;
+    private static final double RPAD_MOUSE_SCALE_Y_GUI = 120;
     private static final double MODE_SWITCH_BEEP_FREQ = 1000;
     private static final double MODE_SWITCH_BEEP_LEN = 0.1;
     private static final double GYRO_CAM_SENSITIVITY_X = 2;
@@ -206,19 +208,19 @@ public class InputHooks {
             if (!is_gui_mode) {
                 minecraft.mouseHandler.onMove(
                         minecraft.getWindow().getWindow(),
-                        minecraft.mouseHandler.xpos() + accumState.mouseDX / RPAD_MOUSE_SCALE_X,
-                        minecraft.mouseHandler.ypos() - accumState.mouseDY / RPAD_MOUSE_SCALE_Y
+                        minecraft.mouseHandler.xpos() + accumState.mouseDX / RPAD_MOUSE_SCALE_X_CAM,
+                        minecraft.mouseHandler.ypos() - accumState.mouseDY / RPAD_MOUSE_SCALE_Y_CAM
                 );
             } else {
                 // gross, integers and units are hard
                 double mouse_final_dx = accumState.mouseDX + mouse_gui_leftover_frac_x;
                 double mouse_final_dy = accumState.mouseDY + mouse_gui_leftover_frac_y;
 
-                long mouse_int_dx = (long)(mouse_final_dx / RPAD_MOUSE_SCALE_X);
-                long mouse_int_dy = (long)(mouse_final_dy / RPAD_MOUSE_SCALE_Y);
+                long mouse_int_dx = (long)(mouse_final_dx / RPAD_MOUSE_SCALE_X_GUI);
+                long mouse_int_dy = (long)(mouse_final_dy / RPAD_MOUSE_SCALE_Y_GUI);
 
-                mouse_gui_leftover_frac_x = mouse_final_dx - mouse_int_dx * RPAD_MOUSE_SCALE_X;
-                mouse_gui_leftover_frac_y = mouse_final_dy - mouse_int_dy * RPAD_MOUSE_SCALE_Y;
+                mouse_gui_leftover_frac_x = mouse_final_dx - mouse_int_dx * RPAD_MOUSE_SCALE_X_GUI;
+                mouse_gui_leftover_frac_y = mouse_final_dy - mouse_int_dy * RPAD_MOUSE_SCALE_Y_GUI;
 
                 if (mouse_int_dx != 0 || mouse_int_dy != 0) {
                     // YUCK
