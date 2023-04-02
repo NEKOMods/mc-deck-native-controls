@@ -63,6 +63,8 @@ public class InputHooks {
     private static final double FLICK_STICK_SMOOTH_THRESH = 0.1;
     private static final double KEY_REPEAT_ACTIVATE_TIME = 0.75;
 
+    private static final int 
+
     private static double flickStickEase(double input) {
         double flipped = 1 - input;
         return 1 - flipped * flipped;
@@ -265,11 +267,34 @@ public class InputHooks {
             sneak_is_latched = false;
         }
 
+        int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_A;
+        int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
+        int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_X;
+        int CONTROLS_GPB_SPRINT             = HidInput.GamepadButtons.BTN_Y;
+        int CONTROLS_GPB_SWAPHAND           = HidInput.GamepadButtons.BTN_D_UP;
+        int CONTROLS_GPB_DROPITEM           = HidInput.GamepadButtons.BTN_D_DOWN;
+        int CONTROLS_GPB_SWAPHAND_GUI       = HidInput.GamepadButtons.BTN_D_LEFT;
+        int CONTROLS_GPB_DROPITEM_GUI       = HidInput.GamepadButtons.BTN_D_RIGHT;
+        int CONTROLS_GPB_ESCAPE             = HidInput.GamepadButtons.BTN_OPTIONS;
+        int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
+        int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
+        int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
+        int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
+        int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_RT_DIGITAL;
+        int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
+        int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
+        int CONTROLS_GPB_SCROLL_DOWN        = HidInput.GamepadButtons.BTN_D_DOWN;
+        int CONTROLS_GPB_SCROLL_LEFT        = HidInput.GamepadButtons.BTN_D_LEFT;
+        int CONTROLS_GPB_SCROLL_RIGHT       = HidInput.GamepadButtons.BTN_D_RIGHT;
+        int CONTROLS_GPB_CLICK_MODESWITCH   = HidInput.GamepadButtons.BTN_R4;
+        int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
+        int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LT_DIGITAL;
+
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
         while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
             // boring keys
-            if ((keyevent & HidInput.GamepadButtons.BTN_A) != 0) {
+            if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                         if (!btn_b_is_right_click)
@@ -284,7 +309,7 @@ public class InputHooks {
                     }
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_B) != 0) {
+            if ((keyevent & CONTROLS_GPB_JUMP) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         press(minecraft.options.keyJump.getKey());
@@ -292,13 +317,13 @@ public class InputHooks {
                         release(minecraft.options.keyJump.getKey());
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_X) != 0) {
+            if ((keyevent & CONTROLS_GPB_MCLICK) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                     mousePress(GLFW_MOUSE_BUTTON_3);
                 else
                     mouseRelease(GLFW_MOUSE_BUTTON_3);
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_Y) != 0) {
+            if ((keyevent & CONTROLS_GPB_SPRINT) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         press(minecraft.options.keySprint.getKey());
@@ -306,7 +331,7 @@ public class InputHooks {
                         release(minecraft.options.keySprint.getKey());
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
+            if ((keyevent & CONTROLS_GPB_SWAPHAND) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         press(minecraft.options.keySwapOffhand.getKey());
@@ -314,7 +339,7 @@ public class InputHooks {
                         release(minecraft.options.keySwapOffhand.getKey());
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_D_DOWN) != 0) {
+            if ((keyevent & CONTROLS_GPB_DROPITEM) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         press(minecraft.options.keyDrop.getKey());
@@ -322,7 +347,7 @@ public class InputHooks {
                         release(minecraft.options.keyDrop.getKey());
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_D_LEFT) != 0) {
+            if ((keyevent & CONTROLS_GPB_SWAPHAND_GUI)  != 0) {
                 if (is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         press(minecraft.options.keySwapOffhand.getKey());
@@ -330,7 +355,7 @@ public class InputHooks {
                         release(minecraft.options.keySwapOffhand.getKey());
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_D_RIGHT) != 0) {
+            if ((keyevent & CONTROLS_GPB_DROPITEM_GUI) != 0) {
                 if (is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         press(minecraft.options.keyDrop.getKey());
@@ -338,13 +363,13 @@ public class InputHooks {
                         release(minecraft.options.keyDrop.getKey());
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_OPTIONS) != 0) {
+            if ((keyevent & CONTROLS_GPB_ESCAPE) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                     press(GLFW_KEY_ESCAPE);
                 else
                     release(GLFW_KEY_ESCAPE);
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_VIEW) != 0) {
+            if ((keyevent & CONTROLS_GPB_INVENTORY) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     if (!is_gui_mode) {
                         // no gui
@@ -369,19 +394,19 @@ public class InputHooks {
                     }
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_L4) != 0) {
+            if ((keyevent & CONTROLS_GPB_LCTRL) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                     press(GLFW_KEY_LEFT_CONTROL);
                 else
                     release(GLFW_KEY_LEFT_CONTROL);
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_L5) != 0) {
+            if ((keyevent & CONTROLS_GPB_LALT) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                     press(GLFW_KEY_LEFT_ALT);
                 else
                     release(GLFW_KEY_LEFT_ALT);
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_RT_ANALOG_FULL) != 0) {
+            if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                         if (!btn_b_is_right_click)
@@ -401,7 +426,7 @@ public class InputHooks {
                         mouseRelease(GLFW_MOUSE_BUTTON_2);
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_RT_DIGITAL) != 0) {
+            if ((keyevent & CONTROLS_GPB_GYROINHIBIT) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         gyro_is_enabled = false;
@@ -414,7 +439,7 @@ public class InputHooks {
                         mouseRelease(GLFW_MOUSE_BUTTON_1);
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.BTN_RPAD_CLICK) != 0) {
+            if ((keyevent & CONTROLS_GPB_LCLICKALT) != 0) {
                 if (is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                         mousePress(GLFW_MOUSE_BUTTON_1);
@@ -439,30 +464,34 @@ public class InputHooks {
                     }
                 }
             }
-            if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                // special keydown
-                // TODO: repeat?
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_UP) != 0) {
-                    if (is_gui_mode)
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_DOWN) != 0) {
-                    if (is_gui_mode)
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_LEFT) != 0) {
-                    if (!is_gui_mode)
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_D_RIGHT) != 0) {
-                    if (!is_gui_mode)
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_R4) != 0) {
+            if ((keyevent & CONTROLS_GPB_SCROLL_UP) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                if (is_gui_mode)
+                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+            }
+            if ((keyevent & CONTROLS_GPB_SCROLL_DOWN) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                if (is_gui_mode)
+                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+            }
+            if ((keyevent & CONTROLS_GPB_SCROLL_LEFT != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                if (!is_gui_mode)
+                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+            }
+            if ((keyevent & CONTROLS_GPB_SCROLL_RIGHT) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                if (!is_gui_mode)
+                    minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+            }
+            if ((keyevent & CONTROLS_GPB_CLICK_MODESWITCH) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                     btn_b_is_right_click = !btn_b_is_right_click;
                 }
-                if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
+            }
+            if ((keyevent & CONTROLS_GPB_HOLDSNEAK) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     manually_sneaking = true;
                     if (!sneak_is_latched) {
                         LOGGER.debug("SNEAK because manual");
@@ -470,8 +499,21 @@ public class InputHooks {
                     } else {
                         LOGGER.debug("ignoring SNEAK because already latched");
                     }
+                } else {
+                    manually_sneaking = false;
+                    if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
+                        if (sneak_is_latched) {
+                            DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                        }
+                        sneak_is_latched = false;
+                        LOGGER.debug("unSNEAK!!");
+                        release(minecraft.options.keyShift.getKey());
+                    }
+                    sneak_latched_while_manually_sneaking = false;
                 }
-                if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
+            }
+            if ((keyevent & CONTROLS_GPB_TOGGLESNEAK) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     if (!is_gui_mode) {
                         DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                         sneak_is_latched = !sneak_is_latched;
@@ -494,22 +536,7 @@ public class InputHooks {
                     } else {
                         mousePress(GLFW_MOUSE_BUTTON_3);
                     }
-                }
-            } else {
-                // special keyup
-                if ((keyevent & HidInput.GamepadButtons.BTN_LT_ANALOG_FULL) != 0) {
-                    manually_sneaking = false;
-                    if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
-                        if (sneak_is_latched) {
-                            DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
-                        }
-                        sneak_is_latched = false;
-                        LOGGER.debug("unSNEAK!!");
-                        release(minecraft.options.keyShift.getKey());
-                    }
-                    sneak_latched_while_manually_sneaking = false;
-                }
-                if ((keyevent & HidInput.GamepadButtons.BTN_LT_DIGITAL) != 0) {
+                } else {
                     if (is_gui_mode)
                         mouseRelease(GLFW_MOUSE_BUTTON_3);
                 }
