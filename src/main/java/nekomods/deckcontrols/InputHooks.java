@@ -759,10 +759,12 @@ public class InputHooks {
     }
 
     public static float playerFBImpulse(float keyboardImpulse) {
+        if (DeckControls.HOOKS == null) return keyboardImpulse;
         return DeckControls.HOOKS.fbImpulse(keyboardImpulse);
     }
 
     public static float playerLRImpulse(float keyboardImpulse) {
+        if (DeckControls.HOOKS == null) return keyboardImpulse;
         return DeckControls.HOOKS.lrImpulse(keyboardImpulse);
     }
 
