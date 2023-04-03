@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 // TODO ALT KEYS
 // F1 - F12
 // 1-9, 0
-// ` - = \ ; '
+// ` - = \ ; ' /
 
 public class TouchKeyboard {
     private static final Logger LOGGER = LogUtils.getLogger();
@@ -113,8 +113,8 @@ public class TouchKeyboard {
         public Right() {
             super(new int[][] {
                     new int[] {13107, 13107, 13107, 13107, 13108},  // yuiop
-                    new int[] {13107, 13107, 13107, 13107, 13108},  // hjkl enter
-                    new int[] {13107, 13107, 13107, 13107, 13108},  // nm,./
+                    new int[] {13107, 13107, 13107, 13107, 13108},  // hjkl backspace
+                    new int[] {13107, 13107, 13107, 13107, 13108},  // nm,. enter
                     new int[] {39322, 13107, 13107},                // spacebar []
             }, new int[] {
                     16384,
@@ -190,7 +190,7 @@ public class TouchKeyboard {
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"N", "M", ",", ".", "/"}[i],
+                        new String[]{"N", "M", ",", ".", ""}[i],
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11 * 2 - (i == 2 || i == 3 ? 2 : 0), 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
