@@ -767,6 +767,7 @@ public class InputHooks {
     }
 
     public static boolean hookKeyDown(boolean existing, int key) {
+        if (DeckControls.HOOKS == null) return existing;
         return existing || DeckControls.HOOKS.modifierPressed(key);
     }
 }
