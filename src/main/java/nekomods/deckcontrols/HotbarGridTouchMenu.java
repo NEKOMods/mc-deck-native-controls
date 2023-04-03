@@ -25,7 +25,6 @@ public class HotbarGridTouchMenu extends GridTouchMenu {
         // Render black outline manually
         RenderSystem.setShaderColor(0, 0, 0, 1);
         RenderSystem.setShader(GameRenderer::getPositionShader);
-        RenderSystem.lineWidth(1);
         BufferBuilder b = Tesselator.getInstance().getBuilder();
         b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION);
         b.vertex(ps.last().pose(), 0, screenH - 60 - 2, 0).endVertex();
