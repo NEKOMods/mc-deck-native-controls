@@ -171,8 +171,10 @@ public class InputHooks {
 
     public void runTick() {
         // TODO
-        lpad_menu = touchKeyboard.getLeft();
-        rpad_menu = touchKeyboard.getRight();
+//        lpad_menu = touchKeyboard.getLeft();
+//        rpad_menu = touchKeyboard.getRight();
+        lpad_menu = hotbarMenu;
+        rpad_menu = null;
 
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");

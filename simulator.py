@@ -45,6 +45,13 @@ touch_sticks_state = {
 	'r_pad': None,
 }
 
+thumb_pad_click_state = {
+	'l_thumb': False,
+	'r_thumb': False,
+	'l_pad': False,
+	'r_pad': False,
+}
+
 TOUCH_STICKS_DATA = {
 	'l_thumb': ((170, 130, 370, 330), "L Thumb = ({}, {})"),
 	'r_thumb': ((380, 130, 580, 330), "R Thumb = ({}, {})"),
@@ -77,10 +84,12 @@ def iothread_func():
 			(pad_state['btn_option'] << 14) |
 			(pad_state['btn_l5'] << 15) |
 			(pad_state['btn_r5'] << 16) |
-			# no support for pad press
+			(thumb_pad_click_state['l_pad'] << 17) |
+			(thumb_pad_click_state['r_pad'] << 18) |
 			((touch_sticks_state['l_pad'] is not None) << 19) |
-			((touch_sticks_state['r_pad'] is not None) << 20)
-			# no support for thumbstick click
+			((touch_sticks_state['r_pad'] is not None) << 20) |
+			(thumb_pad_click_state['l_thumb'] << 22) |
+			(thumb_pad_click_state['r_thumb'] << 26)
 		)
 		buttons1 = (
 			(pad_state['btn_l4'] << 9) |
@@ -256,10 +265,26 @@ for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
 			y = int(y)
 			touch_sticks_state[thumb_pad] = (x, y)
 			canvas.itemconfig(touch_sticks_ids[thumb_pad], text=TOUCH_STICKS_DATA[thumb_pad][1].format(x, y))
+		def clear_state(_):
+			touch_sticks_state[thumb_pad] = None
+			thumb_pad_click_state[thumb_pad] = False
 		canvas.tag_bind(thumb_pad, '<Button-1>', update_state)
 		canvas.tag_bind(thumb_pad, '<B1-Motion>', update_state)
-		canvas.tag_bind(thumb_pad, '<ButtonRelease-1>', lambda _: touch_sticks_state.update({thumb_pad: None}))
+		canvas.tag_bind(thumb_pad, '<ButtonRelease-1>', clear_state)
 	f(thumb_pad)
+
+def keydown(e):
+	for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
+		if touch_sticks_state[thumb_pad] is not None:
+			print(f"click down {thumb_pad}")
+			thumb_pad_click_state[thumb_pad] = True
+def keyup(e):
+	for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
+		if touch_sticks_state[thumb_pad] is not None:
+			print(f"click up {thumb_pad}")
+			thumb_pad_click_state[thumb_pad] = False
+rootwin.bind('<KeyPress-space>', keydown)
+rootwin.bind('<KeyRelease-space>', keyup)
 
 canvas.pack()
 rootwin.mainloop()
