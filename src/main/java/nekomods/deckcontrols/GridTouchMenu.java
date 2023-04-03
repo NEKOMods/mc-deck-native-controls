@@ -3,7 +3,7 @@ package nekomods.deckcontrols;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class GridTouchMenu implements ITouchMenu {
+public abstract class GridTouchMenu implements ITouchMenu {
     private final int[][] WIDTHS;
     private final int[] HEIGHTS;
     private final Consumer<Integer> ONPRESS;
@@ -81,8 +81,8 @@ public class GridTouchMenu implements ITouchMenu {
         int row = 0;
         int col = option;
         while (col > WIDTHS[row].length - 1) {
-            row++;
             col -= WIDTHS[row].length;
+            row++;
         }
 
         int min_y = 0;
@@ -114,7 +114,4 @@ public class GridTouchMenu implements ITouchMenu {
 
     @Override
     public void onChangeWhileClicked(int old_option, int new_option) { ONCHANGE.accept(old_option, new_option); }
-
-    @Override
-    public void render(int option, float pPartialTicks) {}
 }

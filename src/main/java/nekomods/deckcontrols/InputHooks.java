@@ -37,7 +37,12 @@ public class InputHooks {
     int lpad_menu_selection = -1;
     private int last_lpad_menu_selection;
     private boolean lpad_is_pressed;
-    ITouchMenu lpad_menu = new HotbarGridTouchMenu(
+    ITouchMenu lpad_menu;
+    int rpad_menu_selection = -1;
+    private int last_rpad_menu_selection;
+    private boolean rpad_is_pressed;
+    ITouchMenu rpad_menu;
+    private final ITouchMenu hotbarMenu = new HotbarGridTouchMenu(
             (option) -> press(GLFW_KEY_1 + option),
             (option) -> release(GLFW_KEY_1 + option),
             (old_option, new_option) -> {
@@ -46,6 +51,7 @@ public class InputHooks {
             });
     private long scroll_up_repeat_time = -1;
     private long scroll_down_repeat_time = -1;
+    private final TouchKeyboard touchKeyboard = new TouchKeyboard();
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -164,6 +170,10 @@ public class InputHooks {
     }
 
     public void runTick() {
+        // TODO
+        lpad_menu = touchKeyboard.getLeft();
+        rpad_menu = touchKeyboard.getRight();
+
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
 
@@ -204,82 +214,106 @@ public class InputHooks {
         last_lthumb_y = gamepad.lthumb_y;
 
         // mouse cursor
-        if (!is_gui_mode) {
-            mouse_gui_leftover_frac_x = 0;
-            mouse_gui_leftover_frac_y = 0;
-        }
-        if (accumState.mouseDX != 0 || accumState.mouseDY != 0) {
+        if (rpad_menu == null) {
             if (!is_gui_mode) {
-                minecraft.mouseHandler.onMove(
-                        minecraft.getWindow().getWindow(),
-                        minecraft.mouseHandler.xpos() + accumState.mouseDX / RPAD_MOUSE_SCALE_X_CAM,
-                        minecraft.mouseHandler.ypos() - accumState.mouseDY / RPAD_MOUSE_SCALE_Y_CAM
-                );
-            } else {
-                // gross, integers and units are hard
-                double mouse_final_dx = accumState.mouseDX + mouse_gui_leftover_frac_x;
-                double mouse_final_dy = accumState.mouseDY + mouse_gui_leftover_frac_y;
-
-                long mouse_int_dx = (long)(mouse_final_dx / RPAD_MOUSE_SCALE_X_GUI);
-                long mouse_int_dy = (long)(mouse_final_dy / RPAD_MOUSE_SCALE_Y_GUI);
-
-                mouse_gui_leftover_frac_x = mouse_final_dx - mouse_int_dx * RPAD_MOUSE_SCALE_X_GUI;
-                mouse_gui_leftover_frac_y = mouse_final_dy - mouse_int_dy * RPAD_MOUSE_SCALE_Y_GUI;
-
-                if (mouse_int_dx != 0 || mouse_int_dy != 0) {
-                    // YUCK
-                    double[] curX = new double[1];
-                    double[] curY = new double[1];
-                    glfwGetCursorPos(
-                            minecraft.getWindow().getWindow(),
-                            curX,
-                            curY
-                    );
-                    glfwSetCursorPos(
-                            minecraft.getWindow().getWindow(),
-                            curX[0] + mouse_int_dx,
-                            curY[0] - mouse_int_dy
-                    );
+                mouse_gui_leftover_frac_x = 0;
+                mouse_gui_leftover_frac_y = 0;
+            }
+            if (accumState.mouseDX != 0 || accumState.mouseDY != 0) {
+                if (!is_gui_mode) {
                     minecraft.mouseHandler.onMove(
                             minecraft.getWindow().getWindow(),
-                            curX[0] + mouse_int_dx,
-                            curY[0] - mouse_int_dy
+                            minecraft.mouseHandler.xpos() + accumState.mouseDX / RPAD_MOUSE_SCALE_X_CAM,
+                            minecraft.mouseHandler.ypos() - accumState.mouseDY / RPAD_MOUSE_SCALE_Y_CAM
                     );
+                } else {
+                    // gross, integers and units are hard
+                    double mouse_final_dx = accumState.mouseDX + mouse_gui_leftover_frac_x;
+                    double mouse_final_dy = accumState.mouseDY + mouse_gui_leftover_frac_y;
+
+                    long mouse_int_dx = (long) (mouse_final_dx / RPAD_MOUSE_SCALE_X_GUI);
+                    long mouse_int_dy = (long) (mouse_final_dy / RPAD_MOUSE_SCALE_Y_GUI);
+
+                    mouse_gui_leftover_frac_x = mouse_final_dx - mouse_int_dx * RPAD_MOUSE_SCALE_X_GUI;
+                    mouse_gui_leftover_frac_y = mouse_final_dy - mouse_int_dy * RPAD_MOUSE_SCALE_Y_GUI;
+
+                    if (mouse_int_dx != 0 || mouse_int_dy != 0) {
+                        // YUCK
+                        double[] curX = new double[1];
+                        double[] curY = new double[1];
+                        glfwGetCursorPos(
+                                minecraft.getWindow().getWindow(),
+                                curX,
+                                curY
+                        );
+                        glfwSetCursorPos(
+                                minecraft.getWindow().getWindow(),
+                                curX[0] + mouse_int_dx,
+                                curY[0] - mouse_int_dy
+                        );
+                        minecraft.mouseHandler.onMove(
+                                minecraft.getWindow().getWindow(),
+                                curX[0] + mouse_int_dx,
+                                curY[0] - mouse_int_dy
+                        );
+                    }
                 }
             }
         }
 
         // menu
-        // input coordinate system:
-        //         32767
-        //           ^
-        //           |
-        // -32768 <--+--> 32767
-        //           |
-        //           v
-        //        -32768
-        int menu_x = gamepad.lpad_x + 32768;
-        int menu_y = 32767 - gamepad.lpad_y;
-        // being remapped to
-        // 0 --> 65535
-        // |
-        // v
-        // 65535
-        if ((gamepad.buttons & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0) {
-            if (lpad_menu_selection == -1) {
-                lpad_menu_selection = lpad_menu.padToOption(menu_x, menu_y);
-            } else {
-                boolean outside_hysteresis = lpad_menu.hysteresisExceeded(lpad_menu_selection, menu_x, menu_y);
-                if (outside_hysteresis) {
-                    int old_lpad_menu_selection = lpad_menu_selection;
+        if (lpad_menu != null) {
+            // input coordinate system:
+            //         32767
+            //           ^
+            //           |
+            // -32768 <--+--> 32767
+            //           |
+            //           v
+            //        -32768
+            int menu_x = gamepad.lpad_x + 32768;
+            int menu_y = 32767 - gamepad.lpad_y;
+            // being remapped to
+            // 0 --> 65535
+            // |
+            // v
+            // 65535
+            if ((gamepad.buttons & HidInput.GamepadButtons.BTN_LPAD_TOUCH) != 0) {
+                if (lpad_menu_selection == -1) {
                     lpad_menu_selection = lpad_menu.padToOption(menu_x, menu_y);
-                    if (lpad_is_pressed)
-                        lpad_menu.onChangeWhileClicked(old_lpad_menu_selection, lpad_menu_selection);
-                    DeckControls.INPUT.tick();
+                } else {
+                    boolean outside_hysteresis = lpad_menu.hysteresisExceeded(lpad_menu_selection, menu_x, menu_y);
+                    if (outside_hysteresis) {
+                        int old_lpad_menu_selection = lpad_menu_selection;
+                        lpad_menu_selection = lpad_menu.padToOption(menu_x, menu_y);
+                        if (lpad_is_pressed)
+                            lpad_menu.onChangeWhileClicked(old_lpad_menu_selection, lpad_menu_selection);
+                        DeckControls.INPUT.tick();
+                    }
                 }
+            } else {
+                lpad_menu_selection = -1;
             }
-        } else {
-            lpad_menu_selection = -1;
+        }
+        if (rpad_menu != null) {
+            int menu_x = gamepad.rpad_x + 32768;
+            int menu_y = 32767 - gamepad.rpad_y;
+            if ((gamepad.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) != 0) {
+                if (rpad_menu_selection == -1) {
+                    rpad_menu_selection = rpad_menu.padToOption(menu_x, menu_y);
+                } else {
+                    boolean outside_hysteresis = rpad_menu.hysteresisExceeded(rpad_menu_selection, menu_x, menu_y);
+                    if (outside_hysteresis) {
+                        int old_rpad_menu_selection = rpad_menu_selection;
+                        rpad_menu_selection = rpad_menu.padToOption(menu_x, menu_y);
+                        if (rpad_is_pressed)
+                            rpad_menu.onChangeWhileClicked(old_rpad_menu_selection, rpad_menu_selection);
+                        DeckControls.INPUT.tick();
+                    }
+                }
+            } else {
+                rpad_menu_selection = -1;
+            }
         }
 
         // release sneak latch if a GUI opens
@@ -468,26 +502,47 @@ public class InputHooks {
                 }
             }
             if ((keyevent & CONTROLS_GPB_LCLICKALT) != 0) {
-                if (is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        mousePress(GLFW_MOUSE_BUTTON_1);
-                    else
-                        mouseRelease(GLFW_MOUSE_BUTTON_1);
+                if (rpad_menu == null) {    // FIXME
+                    if (is_gui_mode) {
+                        if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                            mousePress(GLFW_MOUSE_BUTTON_1);
+                        else
+                            mouseRelease(GLFW_MOUSE_BUTTON_1);
+                    }
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_CLICK) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                        last_lpad_menu_selection = lpad_menu_selection;
-                        if (lpad_menu_selection != -1) {
-                            lpad_menu.onPress(lpad_menu_selection);
-                            lpad_is_pressed = true;
+                if (lpad_menu != null) {
+                    if (!is_gui_mode) {
+                        if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                            last_lpad_menu_selection = lpad_menu_selection;
+                            if (lpad_menu_selection != -1) {
+                                lpad_menu.onPress(lpad_menu_selection);
+                                lpad_is_pressed = true;
+                            }
+                        } else {
+                            if (lpad_is_pressed) {
+                                lpad_menu.onRelease(last_lpad_menu_selection);
+                                lpad_is_pressed = false;
+                            }
                         }
                     }
-                    else {
-                        if (lpad_is_pressed) {
-                            lpad_menu.onRelease(last_lpad_menu_selection);
-                            lpad_is_pressed = false;
+                }
+            }
+            if ((keyevent & HidInput.GamepadButtons.BTN_RPAD_CLICK) != 0) {
+                if (rpad_menu != null) {
+                    if (!is_gui_mode) {
+                        if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                            last_rpad_menu_selection = rpad_menu_selection;
+                            if (rpad_menu_selection != -1) {
+                                rpad_menu.onPress(rpad_menu_selection);
+                                rpad_is_pressed = true;
+                            }
+                        } else {
+                            if (rpad_is_pressed) {
+                                rpad_menu.onRelease(last_rpad_menu_selection);
+                                rpad_is_pressed = false;
+                            }
                         }
                     }
                 }
