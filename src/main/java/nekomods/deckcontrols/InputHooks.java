@@ -20,7 +20,6 @@ public class InputHooks {
     private int last_rthumb_x;
     private int last_rthumb_y;
     private boolean last_btn_view_down_was_e;
-    boolean btn_b_is_right_click;
     boolean sneak_is_latched;
     private boolean sneak_latched_while_manually_sneaking;
     private boolean manually_sneaking;
@@ -74,7 +73,7 @@ public class InputHooks {
     private static final long KEY_REPEAT_ACTIVATE_TIME_NANOS = 500_000_000;
     private static final long KEY_REPEAT_REPEAT_TIME_NANOS = 300_000_000;
 
-    static int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_A;
+    static int CONTROLS_GPB_LCLICK             = HidInput.GamepadButtons.BTN_A;
     static int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
     static int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_RT_DIGITAL;
     static int CONTROLS_GPB_SPRINT             = HidInput.GamepadButtons.BTN_Y;
@@ -87,7 +86,7 @@ public class InputHooks {
     static int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
     static int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
     static int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
-    static int CONTROLS_GPB_RCLICKALT          = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
+    static int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
     static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_X;
     static int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
     static int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
@@ -350,18 +349,12 @@ public class InputHooks {
         int keyevent;
         while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
             // boring keys
-            if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
+            if ((keyevent & CONTROLS_GPB_LCLICK) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                        if (!btn_b_is_right_click)
-                            mousePress(GLFW_MOUSE_BUTTON_1);
-                        else
-                            mousePress(GLFW_MOUSE_BUTTON_2);
+                        mousePress(GLFW_MOUSE_BUTTON_1);
                     } else {
-                        if (!btn_b_is_right_click)
-                            mouseRelease(GLFW_MOUSE_BUTTON_1);
-                        else
-                            mouseRelease(GLFW_MOUSE_BUTTON_2);
+                        mouseRelease(GLFW_MOUSE_BUTTON_1);
                     }
                 }
             }
@@ -470,18 +463,12 @@ public class InputHooks {
                 else
                     release(GLFW_KEY_LEFT_ALT);
             }
-            if ((keyevent & CONTROLS_GPB_RCLICKALT) != 0) {
+            if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                        if (!btn_b_is_right_click)
-                            mousePress(GLFW_MOUSE_BUTTON_2);
-                        else
-                            mousePress(GLFW_MOUSE_BUTTON_1);
+                        mousePress(GLFW_MOUSE_BUTTON_2);
                     } else {
-                        if (!btn_b_is_right_click)
-                            mouseRelease(GLFW_MOUSE_BUTTON_2);
-                        else
-                            mouseRelease(GLFW_MOUSE_BUTTON_1);
+                        mouseRelease(GLFW_MOUSE_BUTTON_2);
                     }
                 } else {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
@@ -587,12 +574,6 @@ public class InputHooks {
                     }
                 } else {
                     scroll_down_repeat_time = -1;
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_CLICK_MODESWITCH) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
-                    btn_b_is_right_click = !btn_b_is_right_click;
                 }
             }
             if ((keyevent & CONTROLS_GPB_HOLDSNEAK) != 0) {
