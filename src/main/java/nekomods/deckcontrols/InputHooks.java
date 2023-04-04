@@ -50,9 +50,7 @@ public class InputHooks {
             });
     private long scroll_up_repeat_time = -1;
     private long scroll_down_repeat_time = -1;
-    private final TouchKeyboard touchKeyboard = new TouchKeyboard((key) -> {
-        LOGGER.debug("KEYBOARD KEY " + (char)(int)key);
-    });
+    private final TouchKeyboard touchKeyboard = new TouchKeyboard(this::onTouchKeyboardKey);
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -168,6 +166,68 @@ public class InputHooks {
                 button,
                 GLFW_RELEASE,
                 0);
+    }
+
+    private void onTouchKeyboardKey(int key) {
+        LOGGER.debug("KEYBOARD KEY " + (char)(int)key);
+
+        if (key >= '0' && key <= '9') {
+            press(GLFW_KEY_0 + key - '0');
+            release(GLFW_KEY_0 + key - '0');
+        } else if (key >= 'a' && key <= 'z') {
+            press(GLFW_KEY_A + key - 'a');
+            release(GLFW_KEY_A + key - 'a');
+        } else if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) {
+            press(key);
+            release(key);
+        } else if (key == ' ') {
+            press(GLFW_KEY_SPACE);
+            release(GLFW_KEY_SPACE);
+        } else if (key == '\t') {
+            press(GLFW_KEY_TAB);
+            release(GLFW_KEY_TAB);
+        } else if (key == '\b') {
+            press(GLFW_KEY_BACKSPACE);
+            release(GLFW_KEY_BACKSPACE);
+        } else if (key == '\n') {
+            press(GLFW_KEY_ENTER);
+            release(GLFW_KEY_ENTER);
+        } else if (key == ',') {
+            press(GLFW_KEY_COMMA);
+            release(GLFW_KEY_COMMA);
+        } else if (key == '.') {
+            press(GLFW_KEY_PERIOD);
+            release(GLFW_KEY_PERIOD);
+        } else if (key == '[') {
+            press(GLFW_KEY_LEFT_BRACKET);
+            release(GLFW_KEY_LEFT_BRACKET);
+        } else if (key == ']') {
+            press(GLFW_KEY_RIGHT_BRACKET);
+            release(GLFW_KEY_RIGHT_BRACKET);
+        } else if (key == '-') {
+            press(GLFW_KEY_MINUS);
+            release(GLFW_KEY_MINUS);
+        } else if (key == '=') {
+            press(GLFW_KEY_EQUAL);
+            release(GLFW_KEY_EQUAL);
+        } else if (key == '/') {
+            press(GLFW_KEY_SLASH);
+            release(GLFW_KEY_SLASH);
+        } else if (key == '\\') {
+            press(GLFW_KEY_BACKSLASH);
+            release(GLFW_KEY_BACKSLASH);
+        } else if (key == '`') {
+            press(GLFW_KEY_GRAVE_ACCENT);
+            release(GLFW_KEY_GRAVE_ACCENT);
+        } else if (key == ';') {
+            press(GLFW_KEY_SEMICOLON);
+            release(GLFW_KEY_SEMICOLON);
+        } else if (key == '\'') {
+            press(GLFW_KEY_APOSTROPHE);
+            release(GLFW_KEY_APOSTROPHE);
+        } else {
+            LOGGER.error("Don't know how to press key " + key);
+        }
     }
 
     public void runTick() {
