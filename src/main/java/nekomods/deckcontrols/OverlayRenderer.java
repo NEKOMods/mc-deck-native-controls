@@ -58,6 +58,11 @@ public class OverlayRenderer {
             if (DeckControls.HOOKS.lpad_menu_selection != -1 && DeckControls.HOOKS.lpad_menu != null) {
                 DeckControls.HOOKS.lpad_menu.render(DeckControls.HOOKS.lpad_menu_selection, pPartialTicks);
             }
+            // XXX? why do we have to do this again?
+            // causes highlight to not render correctly otherwise
+            RenderSystem.disableDepthTest();
+            RenderSystem.enableBlend();
+            RenderSystem.defaultBlendFunc();
             if (DeckControls.HOOKS.rpad_menu_selection != -1 && DeckControls.HOOKS.rpad_menu != null) {
                 DeckControls.HOOKS.rpad_menu.render(DeckControls.HOOKS.rpad_menu_selection, pPartialTicks);
             }
