@@ -9,6 +9,10 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
+import java.util.function.Consumer;
+
+import static org.lwjgl.glfw.GLFW.*;
+
 // TODO ALT KEYS
 // F1 - F12
 // 1-9, 0
@@ -29,12 +33,20 @@ public class TouchKeyboard {
                     16384,
                     16384,
                     16384,
+            }, (_option) -> {
             }, (option) -> {
-                // TODO
-            }, (option) -> {
-                // TODO
-            }, (old_option, new_option) -> {
-                // TODO
+                // keyup
+                if (option == 15) {
+                    sym_mode = true;
+                } else {
+                    ONKEY.accept(new int[] {
+                            'q', 'w', 'e', 'r', 't',
+                            'a', 's', 'd', 'f', 'g',
+                            'z', 'x', 'c', 'v', 'b',
+                            0, '\t', ' ',
+                    }[option]);
+                }
+            }, (_old_option, _new_option) -> {
             });
         }
 
@@ -121,12 +133,16 @@ public class TouchKeyboard {
                     16384,
                     16384,
                     16384,
+            }, (_option) -> {
             }, (option) -> {
-                // TODO
-            }, (option) -> {
-                // TODO
-            }, (old_option, new_option) -> {
-                // TODO
+                // keyup
+                ONKEY.accept(new int[] {
+                        'y', 'u', 'i', 'o', 'p',
+                        'h', 'j', 'k', 'l', '\b',
+                        'n', 'm', ',', '.', '\n',
+                        ' ', '[', ']',
+                }[option]);
+            }, (_old_option, _new_option) -> {
             });
         }
 
@@ -216,12 +232,23 @@ public class TouchKeyboard {
                     13107,
                     13107,
                     13108,
+            }, (_option) -> {
             }, (option) -> {
-                // TODO
-            }, (option) -> {
-                // TODO
-            }, (old_option, new_option) -> {
-                // TODO
+                // keyup
+                if (option == 16) {
+                    sym_mode = false;
+                } else if (option == 11 || option == 17) {
+                    // dummy slot, do nothing
+                } else {
+                    ONKEY.accept(new int[] {
+                            GLFW_KEY_F1, GLFW_KEY_F2, GLFW_KEY_F3,
+                            GLFW_KEY_F4, GLFW_KEY_F5, GLFW_KEY_F6,
+                            '1', '2', '3', '4', '5',
+                            0, '-', '=', '/', '\\',
+                            0, 0, ' ',
+                    }[option]);
+                }
+            }, (_old_option, _new_option) -> {
             });
         }
 
@@ -334,6 +361,12 @@ public class TouchKeyboard {
 
             bs.endBatch();
         }
+
+        @Override
+        public void noTouchReset() {
+            // only left sym mode has to do this
+            sym_mode = false;
+        }
     }
 
     class RightSym extends GridTouchMenu {
@@ -350,12 +383,19 @@ public class TouchKeyboard {
                     13107,
                     13107,
                     13108,
+            }, (_option) -> {
             }, (option) -> {
-                // TODO
-            }, (option) -> {
-                // TODO
-            }, (old_option, new_option) -> {
-                // TODO
+                // keyup
+                if (option != 17) {
+                    ONKEY.accept(new int[]{
+                            GLFW_KEY_F7, GLFW_KEY_F8, GLFW_KEY_F9,
+                            GLFW_KEY_F10, GLFW_KEY_F11, GLFW_KEY_F12,
+                            '6', '7', '8', '9', '0',
+                            '`', ';', '\'', '\b', '\n',
+                            ' ', 0,
+                    }[option]);
+                }
+            }, (_old_option, _new_option) -> {
             });
         }
 
@@ -471,11 +511,25 @@ public class TouchKeyboard {
     private final Right right = new Right();
     private final RightSym rightSym = new RightSym();
 
+    private final Consumer<Integer> ONKEY;
+
+    private boolean sym_mode = false;
+
+    public TouchKeyboard(Consumer<Integer> onKey) {
+        ONKEY = onKey;
+    }
+
     public ITouchMenu getLeft() {
-        return leftSym;
+        if (!sym_mode)
+            return left;
+        else
+            return leftSym;
     }
 
     public ITouchMenu getRight() {
-        return rightSym;
+        if (!sym_mode)
+            return right;
+        else
+            return rightSym;
     }
 }

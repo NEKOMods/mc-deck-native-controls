@@ -50,7 +50,9 @@ public class InputHooks {
             });
     private long scroll_up_repeat_time = -1;
     private long scroll_down_repeat_time = -1;
-    private final TouchKeyboard touchKeyboard = new TouchKeyboard();
+    private final TouchKeyboard touchKeyboard = new TouchKeyboard((key) -> {
+        LOGGER.debug("KEYBOARD KEY " + (char)(int)key);
+    });
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -170,10 +172,10 @@ public class InputHooks {
 
     public void runTick() {
         // TODO
-//        lpad_menu = touchKeyboard.getLeft();
-//        rpad_menu = touchKeyboard.getRight();
-        lpad_menu = hotbarMenu;
-        rpad_menu = null;
+        lpad_menu = touchKeyboard.getLeft();
+        rpad_menu = touchKeyboard.getRight();
+//        lpad_menu = hotbarMenu;
+//        rpad_menu = null;
 
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
@@ -294,6 +296,7 @@ public class InputHooks {
                 }
             } else {
                 lpad_menu_selection = -1;
+                lpad_menu.noTouchReset();
             }
         }
         if (rpad_menu != null) {
@@ -314,6 +317,7 @@ public class InputHooks {
                 }
             } else {
                 rpad_menu_selection = -1;
+                rpad_menu.noTouchReset();
             }
         }
 
@@ -502,36 +506,32 @@ public class InputHooks {
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_CLICK) != 0) {
                 if (lpad_menu != null) {
-                    if (!is_gui_mode) {
-                        if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                            last_lpad_menu_selection = lpad_menu_selection;
-                            if (lpad_menu_selection != -1) {
-                                lpad_menu.onPress(lpad_menu_selection);
-                                lpad_is_pressed = true;
-                            }
-                        } else {
-                            if (lpad_is_pressed) {
-                                lpad_menu.onRelease(last_lpad_menu_selection);
-                                lpad_is_pressed = false;
-                            }
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                        last_lpad_menu_selection = lpad_menu_selection;
+                        if (lpad_menu_selection != -1) {
+                            lpad_menu.onPress(lpad_menu_selection);
+                            lpad_is_pressed = true;
+                        }
+                    } else {
+                        if (lpad_is_pressed) {
+                            lpad_menu.onRelease(last_lpad_menu_selection);
+                            lpad_is_pressed = false;
                         }
                     }
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_RPAD_CLICK) != 0) {
                 if (rpad_menu != null) {
-                    if (!is_gui_mode) {
-                        if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                            last_rpad_menu_selection = rpad_menu_selection;
-                            if (rpad_menu_selection != -1) {
-                                rpad_menu.onPress(rpad_menu_selection);
-                                rpad_is_pressed = true;
-                            }
-                        } else {
-                            if (rpad_is_pressed) {
-                                rpad_menu.onRelease(last_rpad_menu_selection);
-                                rpad_is_pressed = false;
-                            }
+                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                        last_rpad_menu_selection = rpad_menu_selection;
+                        if (rpad_menu_selection != -1) {
+                            rpad_menu.onPress(rpad_menu_selection);
+                            rpad_is_pressed = true;
+                        }
+                    } else {
+                        if (rpad_is_pressed) {
+                            rpad_menu.onRelease(last_rpad_menu_selection);
+                            rpad_is_pressed = false;
                         }
                     }
                 }
