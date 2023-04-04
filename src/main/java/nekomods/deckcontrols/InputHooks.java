@@ -393,7 +393,7 @@ public class InputHooks {
                         lpad_menu_selection = lpad_menu.padToOption(menu_x, menu_y);
                         if (lpad_is_pressed)
                             lpad_menu.onChangeWhileClicked(old_lpad_menu_selection, lpad_menu_selection);
-                        DeckControls.INPUT.tick();
+                        DeckControls.INPUT.tick(false);
                     }
                 }
             } else {
@@ -414,7 +414,7 @@ public class InputHooks {
                         rpad_menu_selection = rpad_menu.padToOption(menu_x, menu_y);
                         if (rpad_is_pressed)
                             rpad_menu.onChangeWhileClicked(old_rpad_menu_selection, rpad_menu_selection);
-                        DeckControls.INPUT.tick();
+                        DeckControls.INPUT.tick(true);
                     }
                 }
             } else {

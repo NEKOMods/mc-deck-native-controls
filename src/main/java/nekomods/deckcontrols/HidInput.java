@@ -403,7 +403,7 @@ public class HidInput extends Thread {
         return OsIo.ioctl(fd, 0xC0414806, buf) == 0;
     }
 
-    public boolean tick() {
+    public boolean tick(boolean leftRight) {
         // FIXME: hardcoded to be left, "high" intensity, and 7db other/global intensity setting
         if (fd < 0) return false;
 
@@ -411,7 +411,10 @@ public class HidInput extends Thread {
         buf[0] = 0x00;
         buf[1] = (byte)0xea;
         buf[2] = 0x06;
-        buf[3] = 0x00;  // left/right/both
+        if (leftRight == false)
+            buf[3] = 0x00;  // left
+        else
+            buf[3] = 0x01;  // right
         buf[4] = 0x01;  // "tick" command
         buf[5] = 0x03;  // low/mid/high in controller haptics intensity
         buf[6] = 0x03;  // -24 to 6, other/global intensity
