@@ -51,6 +51,9 @@ public class InputHooks {
     private long scroll_up_repeat_time = -1;
     private long scroll_down_repeat_time = -1;
     private final TouchKeyboard touchKeyboard = new TouchKeyboard(this::onTouchKeyboardKey);
+    private boolean last_was_gui_mode;
+
+    private boolean touch_keyboard_active;
 
     private static final float THUMB_DEADZONE = 5000;
     private static final float THUMB_ANALOG_FULLSCALE = 32700;
@@ -364,17 +367,28 @@ public class InputHooks {
     }
 
     public void runTick() {
-        // TODO
-        lpad_menu = touchKeyboard.getLeft();
-        rpad_menu = touchKeyboard.getRight();
-//        lpad_menu = hotbarMenu;
-//        rpad_menu = null;
-
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
 
         long current_nanos = Util.getNanos();
         boolean is_gui_mode = minecraft.screen != null;
+
+        if (!is_gui_mode && last_was_gui_mode) {
+            // switch out of GUI mode --> activate hotbar
+            touch_keyboard_active = false;
+            lpad_menu_selection = -1;
+            rpad_menu_selection = -1;
+            touchKeyboard.resetState();
+        }
+        last_was_gui_mode = is_gui_mode;
+
+        if (touch_keyboard_active) {
+            lpad_menu = touchKeyboard.getLeft();
+            rpad_menu = touchKeyboard.getRight();
+        } else {
+            lpad_menu = hotbarMenu;
+            rpad_menu = null;
+        }
 
         HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
@@ -709,7 +723,9 @@ public class InputHooks {
                         }
                     } else {
                         if (lpad_is_pressed) {
-                            lpad_menu.onRelease(lpad_menu.useInitialKeydownOption() ? last_lpad_menu_selection : lpad_menu_selection);
+                            int release_option = lpad_menu.useInitialKeydownOption() ? last_lpad_menu_selection : lpad_menu_selection;
+                            if (release_option != -1)
+                                lpad_menu.onRelease(release_option);
                             lpad_is_pressed = false;
                         }
                     }
@@ -725,10 +741,20 @@ public class InputHooks {
                         }
                     } else {
                         if (rpad_is_pressed) {
-                            rpad_menu.onRelease(rpad_menu.useInitialKeydownOption() ? last_rpad_menu_selection : rpad_menu_selection);
+                            int release_option = rpad_menu.useInitialKeydownOption() ? last_rpad_menu_selection : rpad_menu_selection;
+                            if (release_option != -1)
+                                rpad_menu.onRelease(release_option);
                             rpad_is_pressed = false;
                         }
                     }
+                }
+            }
+            if ((keyevent & CONTROLS_GPB_CLICK_MODESWITCH) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    touch_keyboard_active = !touch_keyboard_active;
+                    lpad_menu_selection = -1;
+                    rpad_menu_selection = -1;
+                    touchKeyboard.resetState();
                 }
             }
             if ((keyevent & CONTROLS_GPB_SCROLL_UP) != 0) {
