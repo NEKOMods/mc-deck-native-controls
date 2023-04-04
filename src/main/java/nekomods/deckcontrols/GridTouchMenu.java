@@ -116,9 +116,6 @@ public abstract class GridTouchMenu implements ITouchMenu {
     public void onChangeWhileClicked(int old_option, int new_option) { ONCHANGE.accept(old_option, new_option); }
 
     @Override
-    public void noTouchReset() {}
-
-    @Override
     public boolean useInitialKeydownOption() {
         return true;
     }

@@ -30,7 +30,7 @@ public class InputHooks {
     private int flick_stick_smoothing_i;
     private double mouse_gui_leftover_frac_x;
     private double mouse_gui_leftover_frac_y;
-    private boolean shift_pressed;
+    boolean shift_pressed;
     private boolean ctrl_pressed;
     private boolean alt_pressed;
     int lpad_menu_selection = -1;
@@ -489,7 +489,6 @@ public class InputHooks {
                 }
             } else {
                 lpad_menu_selection = -1;
-                lpad_menu.noTouchReset();
             }
         }
         if (rpad_menu != null) {
@@ -510,8 +509,11 @@ public class InputHooks {
                 }
             } else {
                 rpad_menu_selection = -1;
-                rpad_menu.noTouchReset();
             }
+        }
+        // reset keyboard to not-sym mode if neither pad is touched
+        if ((gamepad.buttons & HidInput.GamepadButtons.BTN_LPAD_TOUCH) == 0 && (gamepad.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) == 0) {
+            touchKeyboard.resetState();
         }
 
         // release sneak latch if a GUI opens

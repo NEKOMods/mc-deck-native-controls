@@ -6,7 +6,6 @@ public interface ITouchMenu {
     void onPress(int option);
     void onRelease(int option);
     void onChangeWhileClicked(int old_option, int new_option);
-    void noTouchReset();
     void render(int option, float pPartialTicks);
     boolean useInitialKeydownOption();
 }

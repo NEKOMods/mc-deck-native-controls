@@ -101,15 +101,21 @@ public class TouchKeyboard {
             MultiBufferSource.BufferSource bs = MultiBufferSource.immediate(b);
             for (int i = 0; i < 5; i++) {
                 minecraft.font.drawInBatch(
-                        new String[]{"Q", "W", "E", "R", "T"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                                new String[]{"Q", "W", "E", "R", "T"}[i] :
+                                new String[]{"q", "w", "e", "r", "t"}[i],
                         3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"A", "S", "D", "F", "G"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"A", "S", "D", "F", "G"}[i] :
+                            new String[]{"a", "s", "d", "f", "g"}[i],
                         3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"Z", "X", "C", "V", "B"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"Z", "X", "C", "V", "B"}[i] :
+                            new String[]{"z", "x", "c", "v", "b"}[i],
                         3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11 * 2, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
             }
@@ -203,19 +209,27 @@ public class TouchKeyboard {
             MultiBufferSource.BufferSource bs = MultiBufferSource.immediate(b);
             for (int i = 0; i < 5; i++) {
                 minecraft.font.drawInBatch(
-                        new String[]{"Y", "U", "I", "O", "P"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"Y", "U", "I", "O", "P"}[i] :
+                            new String[]{"y", "u", "i", "o", "p"}[i],
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"H", "J", "K", "L", ""}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"H", "J", "K", "L", ""}[i] :
+                            new String[]{"h", "j", "k", "l", ""}[i],
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"N", "M", ",", ".", ""}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"N", "M", "<", ">", ""}[i] :
+                            new String[]{"n", "m", ",", ".", ""}[i],
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11 * 2 - (i == 2 || i == 3 ? 2 : 0), 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"", "", "", "[", "]"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"", "", "", "{", "}"}[i] :
+                            new String[]{"", "", "", "[", "]"}[i],
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11 * 3, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
             }
@@ -356,11 +370,15 @@ public class TouchKeyboard {
             }
             for (int i = 0; i < 5; i++) {
                 minecraft.font.drawInBatch(
-                        new String[]{"1", "2", "3", "4", "5"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"!", "@", "#", "$", "%"}[i] :
+                            new String[]{"1", "2", "3", "4", "5"}[i],
                         3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 2, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"", "-", "=", "/", "\\"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"", "_", "+", "?", "|"}[i] :
+                            new String[]{"", "-", "=", "/", "\\"}[i],
                         3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 3, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
             }
@@ -370,12 +388,6 @@ public class TouchKeyboard {
                     false, ps.last().pose(), bs, false, 0, 0xf000f0);
 
             bs.endBatch();
-        }
-
-        @Override
-        public void noTouchReset() {
-            // only left sym mode has to do this
-            sym_mode = false;
         }
 
         @Override
@@ -508,11 +520,15 @@ public class TouchKeyboard {
             }
             for (int i = 0; i < 5; i++) {
                 minecraft.font.drawInBatch(
-                        new String[]{"6", "7", "8", "9", "0"}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"^", "&", "*", "(", ")"}[i] :
+                            new String[]{"6", "7", "8", "9", "0"}[i],
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 2, 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
                 minecraft.font.drawInBatch(
-                        new String[]{"`", ";", "'", "", ""}[i],
+                        DeckControls.HOOKS.shift_pressed ?
+                            new String[]{"~", ":", "\"", "", ""}[i] :
+                            new String[]{"`", ";", "'", "", ""}[i],
                         screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 3 - (i == 1 ? 2 : 0), 0xffffff,
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
             }
@@ -551,5 +567,9 @@ public class TouchKeyboard {
             return right;
         else
             return rightSym;
+    }
+
+    public void resetState() {
+        sym_mode = false;
     }
 }
