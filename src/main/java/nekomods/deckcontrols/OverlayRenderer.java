@@ -49,7 +49,7 @@ public class OverlayRenderer {
 
             if (minecraft.screen == null) {
                 if (DeckControls.HOOKS.sneak_is_latched) {
-                    drawUiAtlasElem(b, ps, screenW - 16, screenH - 16 * 2, UIATLAS_SNEAKING);
+                    drawUiAtlasElem(b, ps, screenW - 16, screenH - 16, UIATLAS_SNEAKING);
                 }
             }
             BufferUploader.drawWithShader(b.end());

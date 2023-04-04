@@ -183,8 +183,6 @@ public class InputHooks {
     }
 
     private void onTouchKeyboardKey(int key) {
-        // FIXME: shift? other modifiers?
-
         if (key >= '0' && key <= '9') {
             press(GLFW_KEY_0 + key - '0');
             release(GLFW_KEY_0 + key - '0');
@@ -380,7 +378,6 @@ public class InputHooks {
             rpad_menu_selection = -1;
             touchKeyboard.resetState();
         }
-        last_was_gui_mode = is_gui_mode;
 
         if (touch_keyboard_active) {
             lpad_menu = touchKeyboard.getLeft();
@@ -531,7 +528,6 @@ public class InputHooks {
         }
 
         // release sneak latch if a GUI opens
-        // FIXME: lots of borkiness if sneak key isn't shift
         if (is_gui_mode && sneak_is_latched) {
             if (!manually_sneaking) {
                 LOGGER.debug("unSNEAK because unlatching because GUI");
@@ -540,6 +536,21 @@ public class InputHooks {
                 LOGGER.debug("ignoring unSNEAK because manually sneaking while GUI");
             }
             sneak_is_latched = false;
+        }
+        // workarounds for if sneak key isn't shift
+        if (minecraft.options.keyShift.getKey().getValue() != GLFW_KEY_LEFT_SHIFT) {
+            if (manually_sneaking) {
+                if (is_gui_mode && !last_was_gui_mode) {
+                    LOGGER.debug("entering GUI while sneak/shift held");
+                    release(minecraft.options.keyShift.getKey());
+                    press(GLFW_KEY_LEFT_SHIFT);
+                }
+                if (!is_gui_mode && last_was_gui_mode) {
+                    LOGGER.debug("exiting GUI while sneak/shift held");
+                    release(GLFW_KEY_LEFT_SHIFT);
+                    press(minecraft.options.keyShift.getKey());
+                }
+            }
         }
 
         // key repeat
@@ -704,7 +715,7 @@ public class InputHooks {
                 }
             }
             if ((keyevent & CONTROLS_GPB_LCLICKALT) != 0) {
-                if (rpad_menu == null) {    // FIXME
+                if (!touch_keyboard_active) {
                     if (is_gui_mode) {
                         if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
                             mousePress(GLFW_MOUSE_BUTTON_1);
@@ -802,7 +813,10 @@ public class InputHooks {
                     manually_sneaking = true;
                     if (!sneak_is_latched) {
                         LOGGER.debug("SNEAK because manual");
-                        press(minecraft.options.keyShift.getKey());
+                        if (!is_gui_mode)
+                            press(minecraft.options.keyShift.getKey());
+                        else
+                            press(GLFW_KEY_LEFT_SHIFT);
                     } else {
                         LOGGER.debug("ignoring SNEAK because already latched");
                     }
@@ -814,7 +828,10 @@ public class InputHooks {
                         }
                         sneak_is_latched = false;
                         LOGGER.debug("unSNEAK!!");
-                        release(minecraft.options.keyShift.getKey());
+                        if (!is_gui_mode)
+                            release(minecraft.options.keyShift.getKey());
+                        else
+                            release(GLFW_KEY_LEFT_SHIFT);
                     }
                     sneak_latched_while_manually_sneaking = false;
                 }
@@ -914,6 +931,7 @@ public class InputHooks {
         last_rthumb_x = gamepad.rthumb_x;
         last_rthumb_y = gamepad.rthumb_y;
 
+        last_was_gui_mode = is_gui_mode;
         last_nanos = current_nanos;
 
         minecraft.getProfiler().pop();
