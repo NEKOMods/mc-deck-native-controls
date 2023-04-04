@@ -169,18 +169,29 @@ public class InputHooks {
     }
 
     private void onTouchKeyboardKey(int key) {
+        // FIXME: shift? other modifiers?
+
         if (key >= '0' && key <= '9') {
             press(GLFW_KEY_0 + key - '0');
             release(GLFW_KEY_0 + key - '0');
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key >= 'a' && key <= 'z') {
             press(GLFW_KEY_A + key - 'a');
             release(GLFW_KEY_A + key - 'a');
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) {
             press(key);
             release(key);
         } else if (key == ' ') {
             press(GLFW_KEY_SPACE);
             release(GLFW_KEY_SPACE);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '\t') {
             press(GLFW_KEY_TAB);
             release(GLFW_KEY_TAB);
@@ -193,36 +204,69 @@ public class InputHooks {
         } else if (key == ',') {
             press(GLFW_KEY_COMMA);
             release(GLFW_KEY_COMMA);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '.') {
             press(GLFW_KEY_PERIOD);
             release(GLFW_KEY_PERIOD);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '[') {
             press(GLFW_KEY_LEFT_BRACKET);
             release(GLFW_KEY_LEFT_BRACKET);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == ']') {
             press(GLFW_KEY_RIGHT_BRACKET);
             release(GLFW_KEY_RIGHT_BRACKET);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '-') {
             press(GLFW_KEY_MINUS);
             release(GLFW_KEY_MINUS);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '=') {
             press(GLFW_KEY_EQUAL);
             release(GLFW_KEY_EQUAL);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '/') {
             press(GLFW_KEY_SLASH);
             release(GLFW_KEY_SLASH);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '\\') {
             press(GLFW_KEY_BACKSLASH);
             release(GLFW_KEY_BACKSLASH);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '`') {
             press(GLFW_KEY_GRAVE_ACCENT);
             release(GLFW_KEY_GRAVE_ACCENT);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == ';') {
             press(GLFW_KEY_SEMICOLON);
             release(GLFW_KEY_SEMICOLON);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else if (key == '\'') {
             press(GLFW_KEY_APOSTROPHE);
             release(GLFW_KEY_APOSTROPHE);
+            minecraft.keyboardHandler.charTyped(
+                    minecraft.getWindow().getWindow(),
+                    key, 0);
         } else {
             LOGGER.error("Don't know how to press key " + key);
         }
