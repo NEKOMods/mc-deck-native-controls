@@ -89,6 +89,7 @@ public class InputHooks {
     static int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
     static int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
     static int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
+    static int CONTROLS_GPB_LSHIFTALT          = HidInput.GamepadButtons.BTN_R5;
     static int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
     static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_X;
     static int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
@@ -98,7 +99,7 @@ public class InputHooks {
     static int CONTROLS_GPB_SCROLL_RIGHT       = HidInput.GamepadButtons.BTN_D_RIGHT;
     static int CONTROLS_GPB_CLICK_MODESWITCH   = HidInput.GamepadButtons.BTN_R4;
     static int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
-    static int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LT_DIGITAL;
+    static int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LTHUMB_CLICK;
 
     private static double flickStickEase(double input) {
         double flipped = 1 - input;
@@ -686,6 +687,12 @@ public class InputHooks {
                     press(GLFW_KEY_LEFT_ALT);
                 else
                     release(GLFW_KEY_LEFT_ALT);
+            }
+            if ((keyevent & CONTROLS_GPB_LSHIFTALT) != 0) {
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
+                    press(GLFW_KEY_LEFT_SHIFT);
+                else
+                    release(GLFW_KEY_LEFT_SHIFT);
             }
             if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
                 if (!is_gui_mode) {
