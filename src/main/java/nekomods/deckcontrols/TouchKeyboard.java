@@ -119,6 +119,11 @@ public class TouchKeyboard {
                     false, ps.last().pose(), bs, false, 0, 0xf000f0);
             bs.endBatch();
         }
+
+        @Override
+        public boolean useInitialKeydownOption() {
+            return false;
+        }
     }
 
     class Right extends GridTouchMenu {
@@ -215,6 +220,11 @@ public class TouchKeyboard {
                         false, ps.last().pose(), bs, false, 0, 0xf000f0);
             }
             bs.endBatch();
+        }
+
+        @Override
+        public boolean useInitialKeydownOption() {
+            return false;
         }
     }
 
@@ -367,6 +377,11 @@ public class TouchKeyboard {
             // only left sym mode has to do this
             sym_mode = false;
         }
+
+        @Override
+        public boolean useInitialKeydownOption() {
+            return false;
+        }
     }
 
     class RightSym extends GridTouchMenu {
@@ -503,6 +518,11 @@ public class TouchKeyboard {
             }
 
             bs.endBatch();
+        }
+
+        @Override
+        public boolean useInitialKeydownOption() {
+            return false;
         }
     }
 

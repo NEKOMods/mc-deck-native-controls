@@ -8,4 +8,5 @@ public interface ITouchMenu {
     void onChangeWhileClicked(int old_option, int new_option);
     void noTouchReset();
     void render(int option, float pPartialTicks);
+    boolean useInitialKeydownOption();
 }

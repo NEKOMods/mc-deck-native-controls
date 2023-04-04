@@ -616,7 +616,7 @@ public class InputHooks {
                         }
                     } else {
                         if (lpad_is_pressed) {
-                            lpad_menu.onRelease(last_lpad_menu_selection);
+                            lpad_menu.onRelease(lpad_menu.useInitialKeydownOption() ? last_lpad_menu_selection : lpad_menu_selection);
                             lpad_is_pressed = false;
                         }
                     }
@@ -632,7 +632,7 @@ public class InputHooks {
                         }
                     } else {
                         if (rpad_is_pressed) {
-                            rpad_menu.onRelease(last_rpad_menu_selection);
+                            rpad_menu.onRelease(rpad_menu.useInitialKeydownOption() ? last_rpad_menu_selection : rpad_menu_selection);
                             rpad_is_pressed = false;
                         }
                     }

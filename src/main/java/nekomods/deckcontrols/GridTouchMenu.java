@@ -117,4 +117,9 @@ public abstract class GridTouchMenu implements ITouchMenu {
 
     @Override
     public void noTouchReset() {}
+
+    @Override
+    public boolean useInitialKeydownOption() {
+        return true;
+    }
 }
