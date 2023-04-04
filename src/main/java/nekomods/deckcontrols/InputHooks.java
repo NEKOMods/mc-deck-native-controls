@@ -112,6 +112,17 @@ public class InputHooks {
         minecraft = Minecraft.getInstance();
     }
 
+    private int calcKeyModifiers() {
+        int modifiers = 0;
+        if (shift_pressed)
+            modifiers |= GLFW_MOD_SHIFT;
+        if (alt_pressed)
+            modifiers |= GLFW_MOD_ALT;
+        if (ctrl_pressed)
+            modifiers |= GLFW_MOD_CONTROL;
+        return modifiers;
+    }
+
     private void press(InputConstants.Key key) {
         press(key.getValue());
     }
@@ -129,7 +140,7 @@ public class InputHooks {
                 key,
                 glfwGetKeyScancode(key),
                 GLFW_PRESS,
-                0);
+                calcKeyModifiers());
     }
 
     private void release(InputConstants.Key key) {
@@ -149,7 +160,7 @@ public class InputHooks {
                 key,
                 glfwGetKeyScancode(key),
                 GLFW_RELEASE,
-                0);
+                calcKeyModifiers());
     }
 
     private void mousePress(int button) {
@@ -157,7 +168,7 @@ public class InputHooks {
                 minecraft.getWindow().getWindow(),
                 button,
                 GLFW_PRESS,
-                0);
+                calcKeyModifiers());
     }
 
     private void mouseRelease(int button) {
@@ -165,7 +176,7 @@ public class InputHooks {
                 minecraft.getWindow().getWindow(),
                 button,
                 GLFW_RELEASE,
-                0);
+                calcKeyModifiers());
     }
 
     private void onTouchKeyboardKey(int key) {
@@ -174,15 +185,29 @@ public class InputHooks {
         if (key >= '0' && key <= '9') {
             press(GLFW_KEY_0 + key - '0');
             release(GLFW_KEY_0 + key - '0');
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        new int[] {')', '!', '@', '#', '$', '%', '^', '&', '*', '('} [key - '0'],
+                        calcKeyModifiers());
+            }
         } else if (key >= 'a' && key <= 'z') {
             press(GLFW_KEY_A + key - 'a');
             release(GLFW_KEY_A + key - 'a');
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key + 'A' - 'a',
+                        calcKeyModifiers());
+            }
         } else if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) {
             press(key);
             release(key);
@@ -191,7 +216,7 @@ public class InputHooks {
             release(GLFW_KEY_SPACE);
             minecraft.keyboardHandler.charTyped(
                     minecraft.getWindow().getWindow(),
-                    key, 0);
+                    key, calcKeyModifiers());
         } else if (key == '\t') {
             press(GLFW_KEY_TAB);
             release(GLFW_KEY_TAB);
@@ -204,69 +229,135 @@ public class InputHooks {
         } else if (key == ',') {
             press(GLFW_KEY_COMMA);
             release(GLFW_KEY_COMMA);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '<', calcKeyModifiers());
+            }
         } else if (key == '.') {
             press(GLFW_KEY_PERIOD);
             release(GLFW_KEY_PERIOD);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '>', calcKeyModifiers());
+            }
         } else if (key == '[') {
             press(GLFW_KEY_LEFT_BRACKET);
             release(GLFW_KEY_LEFT_BRACKET);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '{', calcKeyModifiers());
+            }
         } else if (key == ']') {
             press(GLFW_KEY_RIGHT_BRACKET);
             release(GLFW_KEY_RIGHT_BRACKET);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '}', calcKeyModifiers());
+            }
         } else if (key == '-') {
             press(GLFW_KEY_MINUS);
             release(GLFW_KEY_MINUS);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '_', calcKeyModifiers());
+            }
         } else if (key == '=') {
             press(GLFW_KEY_EQUAL);
             release(GLFW_KEY_EQUAL);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '+', calcKeyModifiers());
+            }
         } else if (key == '/') {
             press(GLFW_KEY_SLASH);
             release(GLFW_KEY_SLASH);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '?', calcKeyModifiers());
+            }
         } else if (key == '\\') {
             press(GLFW_KEY_BACKSLASH);
             release(GLFW_KEY_BACKSLASH);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '|', calcKeyModifiers());
+            }
         } else if (key == '`') {
             press(GLFW_KEY_GRAVE_ACCENT);
             release(GLFW_KEY_GRAVE_ACCENT);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '~', calcKeyModifiers());
+            }
         } else if (key == ';') {
             press(GLFW_KEY_SEMICOLON);
             release(GLFW_KEY_SEMICOLON);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        ':', calcKeyModifiers());
+            }
         } else if (key == '\'') {
             press(GLFW_KEY_APOSTROPHE);
             release(GLFW_KEY_APOSTROPHE);
-            minecraft.keyboardHandler.charTyped(
-                    minecraft.getWindow().getWindow(),
-                    key, 0);
+            if (!shift_pressed) {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        key, calcKeyModifiers());
+            } else {
+                minecraft.keyboardHandler.charTyped(
+                        minecraft.getWindow().getWindow(),
+                        '"', calcKeyModifiers());
+            }
         } else {
             LOGGER.error("Don't know how to press key " + key);
         }
