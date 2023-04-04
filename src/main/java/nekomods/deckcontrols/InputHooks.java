@@ -169,8 +169,6 @@ public class InputHooks {
     }
 
     private void onTouchKeyboardKey(int key) {
-        LOGGER.debug("KEYBOARD KEY " + (char)(int)key);
-
         if (key >= '0' && key <= '9') {
             press(GLFW_KEY_0 + key - '0');
             release(GLFW_KEY_0 + key - '0');

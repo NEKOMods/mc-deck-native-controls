@@ -276,12 +276,10 @@ for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
 def keydown(e):
 	for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
 		if touch_sticks_state[thumb_pad] is not None:
-			print(f"click down {thumb_pad}")
 			thumb_pad_click_state[thumb_pad] = True
 def keyup(e):
 	for thumb_pad in ['l_thumb', 'r_thumb', 'l_pad', 'r_pad']:
 		if touch_sticks_state[thumb_pad] is not None:
-			print(f"click up {thumb_pad}")
 			thumb_pad_click_state[thumb_pad] = False
 rootwin.bind('<KeyPress-space>', keydown)
 rootwin.bind('<KeyRelease-space>', keyup)
