@@ -695,17 +695,10 @@ public class InputHooks {
                     release(GLFW_KEY_LEFT_SHIFT);
             }
             if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                        mousePress(GLFW_MOUSE_BUTTON_2);
-                    } else {
-                        mouseRelease(GLFW_MOUSE_BUTTON_2);
-                    }
+                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                    mousePress(GLFW_MOUSE_BUTTON_2);
                 } else {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        mousePress(GLFW_MOUSE_BUTTON_2);
-                    else
-                        mouseRelease(GLFW_MOUSE_BUTTON_2);
+                    mouseRelease(GLFW_MOUSE_BUTTON_2);
                 }
             }
             if ((keyevent & CONTROLS_GPB_GYROINHIBIT) != 0) {
