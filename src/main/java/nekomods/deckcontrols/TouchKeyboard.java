@@ -5,7 +5,6 @@ import com.mojang.blaze3d.vertex.*;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
@@ -66,14 +65,25 @@ public class TouchKeyboard {
             BufferBuilder b = Tesselator.getInstance().getBuilder();
             b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-            b.vertex(ps.last().pose(), 0, screenH - 45, 0)
-                    .uv(0f / 256, 128f / 256).endVertex();
-            b.vertex(ps.last().pose(), 0, screenH, 0)
-                    .uv(0f / 256, (128f + 45) / 256).endVertex();
-            b.vertex(ps.last().pose(), 56, screenH, 0)
-                    .uv(56f / 256, (128f + 45) / 256).endVertex();
-            b.vertex(ps.last().pose(), 56, screenH - 45, 0)
-                    .uv(56f / 256, 128f / 256).endVertex();
+            if (!DeckControls.HOOKS.shift_pressed) {
+                b.vertex(ps.last().pose(), 0, screenH - 45, 0)
+                        .uv(0f / 256, 128f / 256).endVertex();
+                b.vertex(ps.last().pose(), 0, screenH, 0)
+                        .uv(0f / 256, (128f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH, 0)
+                        .uv(56f / 256, (128f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH - 45, 0)
+                        .uv(56f / 256, 128f / 256).endVertex();
+            } else {
+                b.vertex(ps.last().pose(), 0, screenH - 45, 0)
+                        .uv(0f / 256, 192f / 256).endVertex();
+                b.vertex(ps.last().pose(), 0, screenH, 0)
+                        .uv(0f / 256, (192f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH, 0)
+                        .uv(56f / 256, (192f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH - 45, 0)
+                        .uv(56f / 256, 192f / 256).endVertex();
+            }
 
             BufferUploader.drawWithShader(b.end());
 
@@ -95,35 +105,7 @@ public class TouchKeyboard {
             }
 
             BufferUploader.drawWithShader(b.end());
-
-            // labels
             RenderSystem.setShaderColor(1, 1, 1, 1);
-            MultiBufferSource.BufferSource bs = MultiBufferSource.immediate(b);
-            for (int i = 0; i < 5; i++) {
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                                new String[]{"Q", "W", "E", "R", "T"}[i] :
-                                new String[]{"q", "w", "e", "r", "t"}[i],
-                        3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"A", "S", "D", "F", "G"}[i] :
-                            new String[]{"a", "s", "d", "f", "g"}[i],
-                        3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"Z", "X", "C", "V", "B"}[i] :
-                            new String[]{"z", "x", "c", "v", "b"}[i],
-                        3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11 * 2, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-            }
-            minecraft.font.drawInBatch(
-                    "?",
-                    4, screenH - 45 + 3 + 11 * 3, 0xffffff,
-                    false, ps.last().pose(), bs, false, 0, 0xf000f0);
-            bs.endBatch();
         }
 
         @Override
@@ -173,14 +155,25 @@ public class TouchKeyboard {
             BufferBuilder b = Tesselator.getInstance().getBuilder();
             b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-            b.vertex(ps.last().pose(), screenW - 56, screenH - 45, 0)
-                    .uv(0f / 256, 176f / 256).endVertex();
-            b.vertex(ps.last().pose(), screenW - 56, screenH, 0)
-                    .uv(0f / 256, (176f + 45) / 256).endVertex();
-            b.vertex(ps.last().pose(), screenW, screenH, 0)
-                    .uv(56f / 256, (176f + 45) / 256).endVertex();
-            b.vertex(ps.last().pose(), screenW, screenH - 45, 0)
-                    .uv(56f / 256, 176f / 256).endVertex();
+            if (!DeckControls.HOOKS.shift_pressed) {
+                b.vertex(ps.last().pose(), screenW - 56, screenH - 45, 0)
+                        .uv(64f / 256, 128f / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW - 56, screenH, 0)
+                        .uv(64f / 256, (128f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH, 0)
+                        .uv((64f + 56) / 256, (128f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH - 45, 0)
+                        .uv((64f + 56) / 256, 128f / 256).endVertex();
+            } else {
+                b.vertex(ps.last().pose(), screenW - 56, screenH - 45, 0)
+                        .uv(64f / 256, 192f / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW - 56, screenH, 0)
+                        .uv(64f / 256, (192f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH, 0)
+                        .uv((64f + 56) / 256, (192f + 45) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH - 45, 0)
+                        .uv((64f + 56) / 256, 192f / 256).endVertex();
+            }
 
             BufferUploader.drawWithShader(b.end());
 
@@ -203,37 +196,7 @@ public class TouchKeyboard {
             }
 
             BufferUploader.drawWithShader(b.end());
-
-            // labels
             RenderSystem.setShaderColor(1, 1, 1, 1);
-            MultiBufferSource.BufferSource bs = MultiBufferSource.immediate(b);
-            for (int i = 0; i < 5; i++) {
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"Y", "U", "I", "O", "P"}[i] :
-                            new String[]{"y", "u", "i", "o", "p"}[i],
-                        screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"H", "J", "K", "L", ""}[i] :
-                            new String[]{"h", "j", "k", "l", ""}[i],
-                        screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"N", "M", "<", ">", ""}[i] :
-                            new String[]{"n", "m", ",", ".", ""}[i],
-                        screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11 * 2 - (i == 2 || i == 3 ? 2 : 0), 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"", "", "", "{", "}"}[i] :
-                            new String[]{"", "", "", "[", "]"}[i],
-                        screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 45 + 3 + 11 * 3, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-            }
-            bs.endBatch();
         }
 
         @Override
@@ -300,14 +263,25 @@ public class TouchKeyboard {
             BufferBuilder b = Tesselator.getInstance().getBuilder();
             b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-            b.vertex(ps.last().pose(), 0, screenH - 56, 0)
-                    .uv(64f / 256, 128f / 256).endVertex();
-            b.vertex(ps.last().pose(), 0, screenH, 0)
-                    .uv(64f / 256, (128f + 56) / 256).endVertex();
-            b.vertex(ps.last().pose(), 56, screenH, 0)
-                    .uv((64f + 56) / 256, (128f + 56) / 256).endVertex();
-            b.vertex(ps.last().pose(), 56, screenH - 56, 0)
-                    .uv((64f + 56) / 256, 128f / 256).endVertex();
+            if (!DeckControls.HOOKS.shift_pressed) {
+                b.vertex(ps.last().pose(), 0, screenH - 56, 0)
+                        .uv(128f / 256, 128f / 256).endVertex();
+                b.vertex(ps.last().pose(), 0, screenH, 0)
+                        .uv(128f / 256, (128f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH, 0)
+                        .uv((128f + 56) / 256, (128f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH - 56, 0)
+                        .uv((128f + 56) / 256, 128f / 256).endVertex();
+            } else {
+                b.vertex(ps.last().pose(), 0, screenH - 56, 0)
+                        .uv(128f / 256, 192f / 256).endVertex();
+                b.vertex(ps.last().pose(), 0, screenH, 0)
+                        .uv(128f / 256, (192f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH, 0)
+                        .uv((128f + 56) / 256, (192f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), 56, screenH - 56, 0)
+                        .uv((128f + 56) / 256, 192f / 256).endVertex();
+            }
 
             BufferUploader.drawWithShader(b.end());
 
@@ -351,43 +325,8 @@ public class TouchKeyboard {
                 }
 
                 BufferUploader.drawWithShader(b.end());
+                RenderSystem.setShaderColor(1, 1, 1, 1);
             }
-
-            // labels
-            RenderSystem.setShaderColor(1, 1, 1, 1);
-            MultiBufferSource.BufferSource bs = MultiBufferSource.immediate(b);
-
-            for (int i = 0; i < 3; i++) {
-                int x = new int[] {4, 4 + 18, 3 + 18 + 19}[i];
-                minecraft.font.drawInBatch(
-                        new String[]{"F1", "F2", "F3"}[i],
-                        x, screenH - 56 + 3, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        new String[]{"F4", "F5", "F6"}[i],
-                        x, screenH - 56 + 3 + 11, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-            }
-            for (int i = 0; i < 5; i++) {
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"!", "@", "#", "$", "%"}[i] :
-                            new String[]{"1", "2", "3", "4", "5"}[i],
-                        3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 2, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"", "_", "+", "?", "|"}[i] :
-                            new String[]{"", "-", "=", "/", "\\"}[i],
-                        3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 3, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-            }
-            minecraft.font.drawInBatch(
-                    "?",
-                    4, screenH - 56 + 3 + 11 * 4, 0xffffff,
-                    false, ps.last().pose(), bs, false, 0, 0xf000f0);
-
-            bs.endBatch();
         }
 
         @Override
@@ -450,14 +389,25 @@ public class TouchKeyboard {
             BufferBuilder b = Tesselator.getInstance().getBuilder();
             b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
-            b.vertex(ps.last().pose(), screenW - 56, screenH - 56, 0)
-                    .uv(128f / 256, 128f / 256).endVertex();
-            b.vertex(ps.last().pose(), screenW - 56, screenH, 0)
-                    .uv(128f / 256, (128f + 56) / 256).endVertex();
-            b.vertex(ps.last().pose(), screenW, screenH, 0)
-                    .uv((128f + 56) / 256, (128f + 56) / 256).endVertex();
-            b.vertex(ps.last().pose(), screenW, screenH - 56, 0)
-                    .uv((128f + 56) / 256, 128f / 256).endVertex();
+            if (!DeckControls.HOOKS.shift_pressed) {
+                b.vertex(ps.last().pose(), screenW - 56, screenH - 56, 0)
+                        .uv(192f / 256, 128f / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW - 56, screenH, 0)
+                        .uv(192f / 256, (128f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH, 0)
+                        .uv((192f + 56) / 256, (128f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH - 56, 0)
+                        .uv((192f + 56) / 256, 128f / 256).endVertex();
+            } else {
+                b.vertex(ps.last().pose(), screenW - 56, screenH - 56, 0)
+                        .uv(192f / 256, 192f / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW - 56, screenH, 0)
+                        .uv(192f / 256, (192f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH, 0)
+                        .uv((192f + 56) / 256, (192f + 56) / 256).endVertex();
+                b.vertex(ps.last().pose(), screenW, screenH - 56, 0)
+                        .uv((192f + 56) / 256, 192f / 256).endVertex();
+            }
 
             BufferUploader.drawWithShader(b.end());
 
@@ -501,39 +451,8 @@ public class TouchKeyboard {
                 }
 
                 BufferUploader.drawWithShader(b.end());
+                RenderSystem.setShaderColor(1, 1, 1, 1);
             }
-
-            // labels
-            RenderSystem.setShaderColor(1, 1, 1, 1);
-            MultiBufferSource.BufferSource bs = MultiBufferSource.immediate(b);
-
-            for (int i = 0; i < 3; i++) {
-                int x = new int[] {screenW - 56 + 4, screenW - 56 + 4 + 18, screenW - 56 + 3 + 18 + 19}[i];
-                minecraft.font.drawInBatch(
-                        new String[]{"F7", "F8", "F9"}[i],
-                        x, screenH - 56 + 3, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        new String[]{"Fa", "Fb", "Fc"}[i],  // FIXME: UHHH
-                        x, screenH - 56 + 3 + 11, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-            }
-            for (int i = 0; i < 5; i++) {
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"^", "&", "*", "(", ")"}[i] :
-                            new String[]{"6", "7", "8", "9", "0"}[i],
-                        screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 2, 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-                minecraft.font.drawInBatch(
-                        DeckControls.HOOKS.shift_pressed ?
-                            new String[]{"~", ":", "\"", "", ""}[i] :
-                            new String[]{"`", ";", "'", "", ""}[i],
-                        screenW - 56 + 3 + 11 * i + (i == 0 ? 1 : 0), screenH - 56 + 3 + 11 * 3 - (i == 1 ? 2 : 0), 0xffffff,
-                        false, ps.last().pose(), bs, false, 0, 0xf000f0);
-            }
-
-            bs.endBatch();
         }
 
         @Override
