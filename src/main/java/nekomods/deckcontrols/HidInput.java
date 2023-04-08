@@ -404,7 +404,7 @@ public class HidInput extends Thread {
     }
 
     public boolean tick(boolean leftRight) {
-        // FIXME: hardcoded to be left, "high" intensity, and 7db other/global intensity setting
+        // FIXME: hardcoded to be "high" intensity, and 7db other/global intensity setting
         if (fd < 0) return false;
 
         byte[] buf = new byte[65];

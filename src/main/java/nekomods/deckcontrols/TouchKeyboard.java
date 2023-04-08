@@ -12,11 +12,6 @@ import java.util.function.Consumer;
 
 import static org.lwjgl.glfw.GLFW.*;
 
-// TODO ALT KEYS
-// F1 - F12
-// 1-9, 0
-// ` - = \ ; ' /
-
 public class TouchKeyboard {
     private static final Logger LOGGER = LogUtils.getLogger();
 
