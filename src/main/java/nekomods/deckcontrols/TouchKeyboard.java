@@ -53,6 +53,7 @@ public class TouchKeyboard {
             PoseStack ps = new PoseStack();
             int screenW = minecraft.getWindow().getGuiScaledWidth();
             int screenH = minecraft.getWindow().getGuiScaledHeight();
+            screenH -= 16;  // don't overlap chat
 
             // background
             RenderSystem.setShaderTexture(0, new ResourceLocation("deckcontrols", "textures/ui/uiatlas.png"));
@@ -143,6 +144,7 @@ public class TouchKeyboard {
             PoseStack ps = new PoseStack();
             int screenW = minecraft.getWindow().getGuiScaledWidth();
             int screenH = minecraft.getWindow().getGuiScaledHeight();
+            screenH -= 16;  // don't overlap chat
 
             // background
             RenderSystem.setShaderTexture(0, new ResourceLocation("deckcontrols", "textures/ui/uiatlas.png"));
@@ -251,6 +253,7 @@ public class TouchKeyboard {
             PoseStack ps = new PoseStack();
             int screenW = minecraft.getWindow().getGuiScaledWidth();
             int screenH = minecraft.getWindow().getGuiScaledHeight();
+            screenH -= 16;  // don't overlap chat
 
             // background
             RenderSystem.setShaderTexture(0, new ResourceLocation("deckcontrols", "textures/ui/uiatlas.png"));
@@ -377,6 +380,7 @@ public class TouchKeyboard {
             PoseStack ps = new PoseStack();
             int screenW = minecraft.getWindow().getGuiScaledWidth();
             int screenH = minecraft.getWindow().getGuiScaledHeight();
+            screenH -= 16;  // don't overlap chat
 
             // background
             RenderSystem.setShaderTexture(0, new ResourceLocation("deckcontrols", "textures/ui/uiatlas.png"));
