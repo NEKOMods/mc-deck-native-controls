@@ -94,45 +94,10 @@ public class Settings {
     }
 
     public Settings(ForgeConfigSpec.Builder builder) {
+        builder.push("gyro");
         gyroTightenMagVal = builder
                 .comment("Threshold below which gyro motion will have tightened sensitivity (°/s)")
                 .defineInRange("gyroTightenMag", 5, 0, Double.POSITIVE_INFINITY);
-        mouseSmoothingThreshVal = builder
-                .comment("Threshold below which mouse motion will be smoothed (LSBs, [0-65535]")
-                .defineInRange("mouseSmoothingThresh", 500, 0.0, 65536);
-        mouseTightenThreshVal = builder
-                .comment("Threshold below which mouse motion will have tightened sensitivity (LSBs, [0-65535]")
-                .defineInRange("mouseTightenThresh", 100, 0.0, 65536);
-        thumbDeadzoneVal = builder
-                .comment("Thumbstick dead zone distance (LSBs, [0-65535])")
-                .defineInRange("thumbDeadzone", 5000, 0.0, 65536);
-        thumbAnalogFullScaleVal = builder
-                .comment("Thumbstick full-scale value in \"analog\" situations (i.e. walking) (LSBs, [0-65535])")
-                .defineInRange("thumbAnalogFullScale", 32700, 0.0, 65536);
-        thumbDigitalActivateVal = builder
-                .comment("Thumbstick activation threshold in \"digital\" situations (e.g. boats) (LSBs, [0-65535])")
-                .defineInRange("thumbDigitalActivate", 16000, 0.0, 65536);
-        thumbDigitalDeactivateVal = builder
-                .comment("Thumbstick deactivation threshold in \"digital\" situations (e.g. boats) (LSBs, [0-65535])")
-                .defineInRange("thumbDigitalDeactivate", 15000, 0.0, 65536);
-        rpadMouseScaleXCamVal = builder
-                .comment("Mouse sensitivity, camera mode, X axis (left-right), larger -> less sensitive")
-                .defineInRange("rpadMouseScaleXCam", 50, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
-        rpadMouseScaleYCamVal = builder
-                .comment("Mouse sensitivity, camera mode, Y axis (up-down), larger -> less sensitive")
-                .defineInRange("rpadMouseScaleYCam", 80, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
-        rpadMouseScaleXGuiVal = builder
-                .comment("Mouse sensitivity, GUI mode, X axis (left-right), larger -> less sensitive")
-                .defineInRange("rpadMouseScaleXGui", 120, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
-        rpadMouseScaleYGuiVal = builder
-                .comment("Mouse sensitivity, GUI mode, Y axis (up-down), larger -> less sensitive")
-                .defineInRange("rpadMouseScaleYGui", 120, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
-        modeSwitchBeepFreqVal = builder
-                .comment("Sneak toggle beep frequency (Hz)")
-                .defineInRange("sneakToggleBeepFreq", 1000, 7.6, 495483);
-        modeSwitchBeepLenVal = builder
-                .comment("Sneak toggle beep length (s)")
-                .defineInRange("sneakToggleBeepLen", 0.1, 0, 8622);
         gyroCamSensXVal = builder
                 .comment("Gyro camera sensitivity, X axis (left-right), not using spyglass (°/°)")
                 .defineInRange("gyroCamSensitivityX", 2, 0, Double.MAX_VALUE);
@@ -145,6 +110,54 @@ public class Settings {
         gyroCamSensYScopeVal = builder
                 .comment("Gyro camera sensitivity, Y axis (up-down), using spyglass (°/°)")
                 .defineInRange("gyroCamSensitivityScopeY", 0.5, 0, Double.MAX_VALUE);
+        builder.pop();
+
+        builder.push("mouse");
+        mouseSmoothingThreshVal = builder
+                .comment("Threshold below which mouse motion will be smoothed (LSBs, [0-65535])")
+                .defineInRange("mouseSmoothingThresh", 500, 0.0, 65536);
+        mouseTightenThreshVal = builder
+                .comment("Threshold below which mouse motion will have tightened sensitivity (LSBs, [0-65535])")
+                .defineInRange("mouseTightenThresh", 100, 0.0, 65536);
+        rpadMouseScaleXCamVal = builder
+                .comment("Mouse sensitivity, camera mode, X axis (left-right), larger -> less sensitive")
+                .defineInRange("rpadMouseScaleXCam", 50, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
+        rpadMouseScaleYCamVal = builder
+                .comment("Mouse sensitivity, camera mode, Y axis (up-down), larger -> less sensitive")
+                .defineInRange("rpadMouseScaleYCam", 80, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
+        rpadMouseScaleXGuiVal = builder
+                .comment("Mouse sensitivity, GUI mode, X axis (left-right), larger -> less sensitive")
+                .defineInRange("rpadMouseScaleXGui", 120, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
+        rpadMouseScaleYGuiVal = builder
+                .comment("Mouse sensitivity, GUI mode, Y axis (up-down), larger -> less sensitive")
+                .defineInRange("rpadMouseScaleYGui", 120, Double.MIN_VALUE, Double.POSITIVE_INFINITY);
+        builder.pop();
+
+        builder.push("thumbstick_movement");
+        thumbDeadzoneVal = builder
+                .comment("Thumbstick dead zone distance (LSBs, [0-65535])")
+                .defineInRange("thumbDeadzone", 5000, 0.0, 65536);
+        thumbAnalogFullScaleVal = builder
+                .comment("Thumbstick full-scale value in \"analog\" situations (i.e. walking) (LSBs, [0-65535])")
+                .defineInRange("thumbAnalogFullScale", 32700, 0.0, 65536);
+        thumbDigitalActivateVal = builder
+                .comment("Thumbstick activation threshold in \"digital\" situations (e.g. boats) (LSBs, [0-65535])")
+                .defineInRange("thumbDigitalActivate", 16000, 0.0, 65536);
+        thumbDigitalDeactivateVal = builder
+                .comment("Thumbstick deactivation threshold in \"digital\" situations (e.g. boats) (LSBs, [0-65535])")
+                .defineInRange("thumbDigitalDeactivate", 15000, 0.0, 65536);
+        builder.pop();
+
+        builder.push("misc");
+        modeSwitchBeepFreqVal = builder
+                .comment("Sneak toggle beep frequency (Hz)")
+                .defineInRange("sneakToggleBeepFreq", 1000, 7.6, 495483);
+        modeSwitchBeepLenVal = builder
+                .comment("Sneak toggle beep length (s)")
+                .defineInRange("sneakToggleBeepLen", 0.1, 0, 8622);
+        builder.pop();
+
+        builder.push("flick_stick");
         flickStickActivateVal = builder
                 .comment("Flick stick activation threshold (LSBs, [0-65535])")
                 .defineInRange("flickStickActivate", 29000, 0.0, 65536);
@@ -157,11 +170,15 @@ public class Settings {
         flickStickSmoothVal = builder
                 .comment("Flick stick smoothing threshold (°)")
                 .defineInRange("flickStickSmoothing", 0.1, 0, 65536);
+        builder.pop();
+
+        builder.push("keyboard");
         keyRepeatActivateTimeVal = builder
                 .comment("Key repeat activation time (ns)")
                 .defineInRange("keyRepeatActivateTime", 500_000_000, 1, Long.MAX_VALUE);
         keyRepeatRepeatTimeVal = builder
                 .comment("Key repeat repetition time (ns)")
                 .defineInRange("keyRepeatRepeatTime", 300_000_000, 1, Long.MAX_VALUE);
+        builder.pop();
     }
 }
