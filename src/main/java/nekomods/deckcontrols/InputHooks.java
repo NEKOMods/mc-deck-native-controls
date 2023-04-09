@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 
 import java.util.Arrays;
 
+import static nekomods.deckcontrols.Settings.*;
 import static org.lwjgl.glfw.GLFW.*;
 
 public class InputHooks {
@@ -54,27 +55,6 @@ public class InputHooks {
     private boolean last_was_gui_mode;
 
     private boolean touch_keyboard_active;
-
-    private static final float THUMB_DEADZONE = 5000;
-    private static final float THUMB_ANALOG_FULLSCALE = 32700;
-    private static final float THUMB_DIGITAL_ACTIVATE = 16000;
-    private static final float THUMB_DIGITAL_DEACTIVATE = 15000;
-    private static final double RPAD_MOUSE_SCALE_X_CAM = 50;
-    private static final double RPAD_MOUSE_SCALE_Y_CAM = 80;
-    private static final double RPAD_MOUSE_SCALE_X_GUI = 120;
-    private static final double RPAD_MOUSE_SCALE_Y_GUI = 120;
-    private static final double MODE_SWITCH_BEEP_FREQ = 1000;
-    private static final double MODE_SWITCH_BEEP_LEN = 0.1;
-    private static final double GYRO_CAM_SENSITIVITY_X = 2;
-    private static final double GYRO_CAM_SENSITIVITY_Y = 2;
-    private static final double GYRO_CAM_SENSITIVITY_SCOPE_X = 0.5;
-    private static final double GYRO_CAM_SENSITIVITY_SCOPE_Y = 0.5;
-    private static final double FLICK_STICK_ACTIVATE_DIST = 29000;
-    private static final double FLICK_STICK_DEACTIVATE_DIST = 28000;
-    private static final long FLICK_STICK_TIME_NANOS = 100_000_000;
-    private static final double FLICK_STICK_SMOOTH_THRESH = 0.1;
-    private static final long KEY_REPEAT_ACTIVATE_TIME_NANOS = 500_000_000;
-    private static final long KEY_REPEAT_REPEAT_TIME_NANOS = 300_000_000;
 
     static int CONTROLS_GPB_LCLICK             = HidInput.GamepadButtons.BTN_A;
     static int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
@@ -824,7 +804,8 @@ public class InputHooks {
                     manually_sneaking = false;
                     if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
                         if (sneak_is_latched) {
-                            DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                            if (MODE_SWITCH_BEEP_LEN > 0)
+                                DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                         }
                         sneak_is_latched = false;
                         LOGGER.debug("unSNEAK!!");
@@ -839,7 +820,8 @@ public class InputHooks {
             if ((keyevent & CONTROLS_GPB_TOGGLESNEAK) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     if (!is_gui_mode) {
-                        DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                        if (MODE_SWITCH_BEEP_LEN > 0)
+                            DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                         sneak_is_latched = !sneak_is_latched;
                         if (sneak_is_latched) {
                             sneak_latched_while_manually_sneaking = manually_sneaking;
@@ -941,7 +923,7 @@ public class InputHooks {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
         if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = gamepad.lthumb_y / THUMB_ANALOG_FULLSCALE;
+            float ret = (float)(gamepad.lthumb_y / THUMB_ANALOG_FULLSCALE);
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;
@@ -954,7 +936,7 @@ public class InputHooks {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
         if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = gamepad.lthumb_x / -THUMB_ANALOG_FULLSCALE;
+            float ret = (float)(gamepad.lthumb_x / -THUMB_ANALOG_FULLSCALE);
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;

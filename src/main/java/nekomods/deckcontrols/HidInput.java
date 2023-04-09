@@ -13,6 +13,8 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static nekomods.deckcontrols.Settings.*;
+
 public class HidInput extends Thread {
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -290,9 +292,9 @@ public class HidInput extends Thread {
             double pitch_deg_per_s = newState.gyro_pitch / GYRO_LSBS_PER_DEGREE;
             double yaw_deg_per_s = newState.gyro_roll / GYRO_LSBS_PER_DEGREE;
             double gyro_mag = Math.sqrt(pitch_deg_per_s * pitch_deg_per_s + yaw_deg_per_s * yaw_deg_per_s);
-            if (gyro_mag < Settings.GYRO_TIGHTEN_MAG) {
-                pitch_deg_per_s *= gyro_mag / Settings.GYRO_TIGHTEN_MAG;
-                yaw_deg_per_s *= gyro_mag / Settings.GYRO_TIGHTEN_MAG;
+            if (gyro_mag < GYRO_TIGHTEN_MAG) {
+                pitch_deg_per_s *= gyro_mag / GYRO_TIGHTEN_MAG;
+                yaw_deg_per_s *= gyro_mag / GYRO_TIGHTEN_MAG;
             }
             double pitch_delta_deg = pitch_deg_per_s * delta_seconds;
             double yaw_delta_deg = yaw_deg_per_s * delta_seconds;
@@ -331,10 +333,10 @@ public class HidInput extends Thread {
 
                     mouse_final_dx = mouse_smoothed_dx;
                     mouse_final_dy = mouse_smoothed_dy;
-                    if (Math.abs(mouse_smoothed_dx) < Settings.MOUSE_TIGHTEN_THRESH)
-                        mouse_final_dx *= Math.abs(mouse_smoothed_dx) / Settings.MOUSE_TIGHTEN_THRESH;
-                    if (Math.abs(mouse_smoothed_dy) < Settings.MOUSE_TIGHTEN_THRESH)
-                        mouse_final_dy *= Math.abs(mouse_smoothed_dy) / Settings.MOUSE_TIGHTEN_THRESH;
+                    if (Math.abs(mouse_smoothed_dx) < MOUSE_TIGHTEN_THRESH)
+                        mouse_final_dx *= Math.abs(mouse_smoothed_dx) / MOUSE_TIGHTEN_THRESH;
+                    if (Math.abs(mouse_smoothed_dy) < MOUSE_TIGHTEN_THRESH)
+                        mouse_final_dy *= Math.abs(mouse_smoothed_dy) / MOUSE_TIGHTEN_THRESH;
                 }
                 last_rpad_x = newState.rpad_x;
                 last_rpad_y = newState.rpad_y;
