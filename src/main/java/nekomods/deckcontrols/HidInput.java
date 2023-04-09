@@ -104,9 +104,6 @@ public class HidInput extends Thread {
     // SteamDeckGyroDSU claims 16, but a random Invensense datasheet for ICM-42605 (probably not the right part)
     // implies 16.4 which might be more correct.
     private static final double GYRO_LSBS_PER_DEGREE = 16.4;
-    private static final double GYRO_TIGHTEN_MAG = 5;
-    private static final int MOUSE_SMOOTH_THRESH = 500;
-    private static final int MOUSE_TIGHTEN_THRESH = 100;
 
     private int fd = -1;
     boolean debug;
@@ -293,9 +290,9 @@ public class HidInput extends Thread {
             double pitch_deg_per_s = newState.gyro_pitch / GYRO_LSBS_PER_DEGREE;
             double yaw_deg_per_s = newState.gyro_roll / GYRO_LSBS_PER_DEGREE;
             double gyro_mag = Math.sqrt(pitch_deg_per_s * pitch_deg_per_s + yaw_deg_per_s * yaw_deg_per_s);
-            if (gyro_mag < GYRO_TIGHTEN_MAG) {
-                pitch_deg_per_s *= gyro_mag / GYRO_TIGHTEN_MAG;
-                yaw_deg_per_s *= gyro_mag / GYRO_TIGHTEN_MAG;
+            if (gyro_mag < Settings.GYRO_TIGHTEN_MAG) {
+                pitch_deg_per_s *= gyro_mag / Settings.GYRO_TIGHTEN_MAG;
+                yaw_deg_per_s *= gyro_mag / Settings.GYRO_TIGHTEN_MAG;
             }
             double pitch_delta_deg = pitch_deg_per_s * delta_seconds;
             double yaw_delta_deg = yaw_deg_per_s * delta_seconds;
@@ -308,8 +305,8 @@ public class HidInput extends Thread {
                     int rpad_dx = newState.rpad_x - last_rpad_x;
                     int rpad_dy = newState.rpad_y - last_rpad_y;
 
-                    double tier_smooth_thresh_1 = MOUSE_SMOOTH_THRESH / 2;
-                    double tier_smooth_thresh_2 = MOUSE_SMOOTH_THRESH;
+                    double tier_smooth_thresh_1 = Settings.MOUSE_SMOOTH_THRESH / 2;
+                    double tier_smooth_thresh_2 = Settings.MOUSE_SMOOTH_THRESH;
 
                     double dx_mag = Math.abs(rpad_dx);
                     double dy_mag = Math.abs(rpad_dy);
@@ -334,10 +331,10 @@ public class HidInput extends Thread {
 
                     mouse_final_dx = mouse_smoothed_dx;
                     mouse_final_dy = mouse_smoothed_dy;
-                    if (Math.abs(mouse_smoothed_dx) < MOUSE_TIGHTEN_THRESH)
-                        mouse_final_dx *= Math.abs(mouse_smoothed_dx) / MOUSE_TIGHTEN_THRESH;
-                    if (Math.abs(mouse_smoothed_dy) < MOUSE_TIGHTEN_THRESH)
-                        mouse_final_dy *= Math.abs(mouse_smoothed_dy) / MOUSE_TIGHTEN_THRESH;
+                    if (Math.abs(mouse_smoothed_dx) < Settings.MOUSE_TIGHTEN_THRESH)
+                        mouse_final_dx *= Math.abs(mouse_smoothed_dx) / Settings.MOUSE_TIGHTEN_THRESH;
+                    if (Math.abs(mouse_smoothed_dy) < Settings.MOUSE_TIGHTEN_THRESH)
+                        mouse_final_dy *= Math.abs(mouse_smoothed_dy) / Settings.MOUSE_TIGHTEN_THRESH;
                 }
                 last_rpad_x = newState.rpad_x;
                 last_rpad_y = newState.rpad_y;

@@ -4,7 +4,9 @@ import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.CustomizeGuiOverlayEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
 import java.util.Arrays;
@@ -16,7 +18,9 @@ public class DeckControls
     public static InputHooks HOOKS;
     public static HidInput INPUT;
 
-    public DeckControls() {}
+    public DeckControls() {
+        ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Settings.CONFIG_SPEC);
+    }
 
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents
