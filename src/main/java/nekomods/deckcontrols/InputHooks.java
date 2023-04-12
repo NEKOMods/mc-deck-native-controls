@@ -57,7 +57,7 @@ public class InputHooks {
     // need to maintain our own sense of which buttons are pressed
     private int buttonsPressedCache = 0;
 
-    public abstract class AbstractButtonMapping {
+    public static abstract class AbstractButtonMapping {
         public int buttonBitfield;
         // controls whether _this_ mapping is active. context in keyMapping is ignored when using e.g. SimpleButtonMapping
         public IKeyConflictContext keyConflictContext;
@@ -90,7 +90,7 @@ public class InputHooks {
         }
     }
 
-    public class KeyConstantOrMapping {
+    public static class KeyConstantOrMapping {
         private InputConstants.Key key;
         private KeyMapping keyMapping;
 
@@ -201,7 +201,7 @@ public class InputHooks {
         }
     }
 
-    private class KeyRepeatStateHolder {
+    private static class KeyRepeatStateHolder {
         public long repeat_time = -1;
         public final Runnable repeat;
 
@@ -220,7 +220,7 @@ public class InputHooks {
         }
     }
 
-    private class KeyRepeatButtonMapping extends AbstractButtonMapping {
+    private static class KeyRepeatButtonMapping extends AbstractButtonMapping {
         private KeyRepeatStateHolder keyRepeatStateHolder;
 
         public KeyRepeatButtonMapping(int buttonBitfield, IKeyConflictContext keyConflictContext, KeyRepeatStateHolder keyRepeatStateHolder) {
