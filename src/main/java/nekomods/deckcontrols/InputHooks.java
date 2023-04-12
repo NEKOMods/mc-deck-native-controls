@@ -58,6 +58,7 @@ public class InputHooks {
 
     public abstract class AbstractButtonMapping {
         public int buttonBitfield;
+        // controls whether _this_ mapping is active. context in keyMapping is ignored when using e.g. SimpleButtonMapping
         public IKeyConflictContext keyConflictContext;
         // press this key if key conflict context becomes active?
         public boolean activateOnSwitchIn;
@@ -88,14 +89,35 @@ public class InputHooks {
         }
     }
 
+    public class KeyConstantOrMapping {
+        private InputConstants.Key key;
+        private KeyMapping keyMapping;
+
+        public KeyConstantOrMapping(InputConstants.Key key) {
+            this.key = key;
+            this.keyMapping = null;
+        }
+
+        public KeyConstantOrMapping(KeyMapping keyMapping) {
+            this.key = null;
+            this.keyMapping = keyMapping;
+        }
+
+        public InputConstants.Key getKey() {
+            if (keyMapping != null)
+                return keyMapping.getKey();
+
+            return key;
+        }
+    }
+
     public class SimpleButtonMapping extends AbstractButtonMapping {
-        public InputConstants.Key key;
-        // controls whether _this_ mapping is active. context in keyMapping is ignored
+        public KeyConstantOrMapping key;
 
         public SimpleButtonMapping(int buttonBitfield, KeyMapping keyMapping, IKeyConflictContext keyConflictContext) {
             this.buttonBitfield = buttonBitfield;
             // FIXME probably need to save something about the KeyMapping when we save/load config files
-            this.key = keyMapping.getKey();
+            this.key = new KeyConstantOrMapping(keyMapping);
             this.keyConflictContext = keyConflictContext;
         }
 
@@ -105,7 +127,7 @@ public class InputHooks {
 
         public SimpleButtonMapping(int buttonBitfield, InputConstants.Key key, IKeyConflictContext keyConflictContext) {
             this.buttonBitfield = buttonBitfield;
-            this.key = key;
+            this.key = new KeyConstantOrMapping(key);
             this.keyConflictContext = keyConflictContext;
         }
 
@@ -379,6 +401,14 @@ public class InputHooks {
         flick_stick_smoothing[flick_stick_smoothing_i] = input;
         flick_stick_smoothing_i = (flick_stick_smoothing_i + 1) % flick_stick_smoothing.length;
         return Arrays.stream(flick_stick_smoothing).average().orElse(0);
+    }
+
+    private void press(KeyConstantOrMapping key) {
+        press(key.getKey());
+    }
+
+    private void release(KeyConstantOrMapping key) {
+        release(key.getKey());
     }
 
     private void press(InputConstants.Key key) {
