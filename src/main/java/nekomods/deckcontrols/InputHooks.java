@@ -51,8 +51,6 @@ public class InputHooks {
                 keyboardRelease(GLFW_KEY_1 + old_option);
                 keyboardPress(GLFW_KEY_1 + new_option);
             });
-    private long scroll_up_repeat_time = -1;
-    private long scroll_down_repeat_time = -1;
     private final TouchKeyboard touchKeyboard = new TouchKeyboard(this::onTouchKeyboardKey);
     private boolean last_was_gui_mode;
 
@@ -155,6 +153,55 @@ public class InputHooks {
         }
     }
 
+    private class KeyRepeatStateHolder {
+        public long repeat_time = -1;
+        public final Runnable repeat;
+
+        public KeyRepeatStateHolder(Runnable repeat) {
+            this.repeat = repeat;
+        }
+
+        public void update(long delta_nanos) {
+            if (repeat_time > 0) {
+                repeat_time -= delta_nanos;
+                if (repeat_time <= 0) {
+                    repeat.run();
+                    repeat_time = KEY_REPEAT_REPEAT_TIME_NANOS;
+                }
+            }
+        }
+    }
+
+    private class KeyRepeatButtonMapping extends AbstractButtonMapping {
+        private KeyRepeatStateHolder keyRepeatStateHolder;
+
+        public KeyRepeatButtonMapping(int buttonBitfield, IKeyConflictContext keyConflictContext, KeyRepeatStateHolder keyRepeatStateHolder) {
+            this.buttonBitfield = buttonBitfield;
+            this.keyConflictContext = keyConflictContext;
+            this.keyRepeatStateHolder = keyRepeatStateHolder;
+        }
+
+        @Override
+        protected void _press() {
+            this.keyRepeatStateHolder.repeat_time = KEY_REPEAT_ACTIVATE_TIME_NANOS;
+            this.keyRepeatStateHolder.repeat.run();
+        }
+
+        @Override
+        protected void _release() {
+            this.keyRepeatStateHolder.repeat_time = -1;
+        }
+    }
+
+    private final KeyRepeatStateHolder[] keyRepeats = new KeyRepeatStateHolder[] {
+            new KeyRepeatStateHolder(() -> {
+                minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
+            }),
+            new KeyRepeatStateHolder(() -> {
+                minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
+            }),
+    };
+
     private final AbstractButtonMapping[] simpleMappings = new AbstractButtonMapping[] {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_B, minecraft.options.keyJump, KeyConflictContext.IN_GAME),
@@ -182,12 +229,13 @@ public class InputHooks {
             new DisableGyroButton(HidInput.GamepadButtons.BTN_X),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_X, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), KeyConflictContext.GUI),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), new TouchKeyboardInactiveContext()),
+
+            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_UP, KeyConflictContext.GUI, keyRepeats[0]).setActivateOnSwitchIn(true),
+            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_LEFT, KeyConflictContext.IN_GAME, keyRepeats[0]).setActivateOnSwitchIn(true),
+            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_DOWN, KeyConflictContext.GUI, keyRepeats[1]).setActivateOnSwitchIn(true),
+            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_RIGHT, KeyConflictContext.IN_GAME, keyRepeats[1]).setActivateOnSwitchIn(true),
     };
 
-    static int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
-    static int CONTROLS_GPB_SCROLL_DOWN        = HidInput.GamepadButtons.BTN_D_DOWN;
-    static int CONTROLS_GPB_SCROLL_LEFT        = HidInput.GamepadButtons.BTN_D_LEFT;
-    static int CONTROLS_GPB_SCROLL_RIGHT       = HidInput.GamepadButtons.BTN_D_RIGHT;
     static int CONTROLS_GPB_CLICK_MODESWITCH   = HidInput.GamepadButtons.BTN_R4;
     static int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
     static int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LTHUMB_CLICK;
@@ -675,19 +723,8 @@ public class InputHooks {
         }
 
         // key repeat
-        if (scroll_down_repeat_time > 0) {
-            scroll_down_repeat_time -= (current_nanos - last_nanos);
-            if (scroll_down_repeat_time <= 0) {
-                minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
-                scroll_down_repeat_time = KEY_REPEAT_REPEAT_TIME_NANOS;
-            }
-        }
-        if (scroll_up_repeat_time > 0) {
-            scroll_up_repeat_time -= (current_nanos - last_nanos);
-            if (scroll_up_repeat_time <= 0) {
-                minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
-                scroll_up_repeat_time = KEY_REPEAT_REPEAT_TIME_NANOS;
-            }
+        for (KeyRepeatStateHolder repeat : keyRepeats) {
+            repeat.update(current_nanos - last_nanos);
         }
 
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
@@ -757,46 +794,6 @@ public class InputHooks {
                     lpad_menu_selection = -1;
                     rpad_menu_selection = -1;
                     touchKeyboard.resetState();
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_SCROLL_UP) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (is_gui_mode) {
-                        scroll_up_repeat_time = KEY_REPEAT_ACTIVATE_TIME_NANOS;
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
-                    }
-                } else {
-                    scroll_up_repeat_time = -1;
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_SCROLL_DOWN) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (is_gui_mode) {
-                        scroll_down_repeat_time = KEY_REPEAT_ACTIVATE_TIME_NANOS;
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
-                    }
-                } else {
-                    scroll_down_repeat_time = -1;
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_SCROLL_LEFT) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (!is_gui_mode) {
-                        scroll_up_repeat_time = KEY_REPEAT_ACTIVATE_TIME_NANOS;
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
-                    }
-                } else {
-                    scroll_up_repeat_time = -1;
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_SCROLL_RIGHT) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (!is_gui_mode) {
-                        scroll_down_repeat_time = KEY_REPEAT_ACTIVATE_TIME_NANOS;
-                        minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
-                    }
-                } else {
-                    scroll_down_repeat_time = -1;
                 }
             }
             if ((keyevent & CONTROLS_GPB_HOLDSNEAK) != 0) {
