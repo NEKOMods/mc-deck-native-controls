@@ -64,7 +64,7 @@ public class InputHooks {
 
     public static class SimpleButtonMapping {
         public int buttonBitfield;
-        public KeyMapping keyMapping;
+        public InputConstants.Key key;
         // controls whether _this_ mapping is active. context in keyMapping is ignored
         public IKeyConflictContext keyConflictContext;
 
@@ -72,33 +72,51 @@ public class InputHooks {
 
         public SimpleButtonMapping(int buttonBitfield, KeyMapping keyMapping, IKeyConflictContext keyConflictContext) {
             this.buttonBitfield = buttonBitfield;
-            this.keyMapping = keyMapping;
+            // FIXME probably need to save something about the KeyMapping when we save/load config files
+            this.key = keyMapping.getKey();
             this.keyConflictContext = keyConflictContext;
         }
 
         public SimpleButtonMapping(int buttonBitfield, KeyMapping keyMapping) {
             this(buttonBitfield, keyMapping, KeyConflictContext.UNIVERSAL);
         }
+
+        public SimpleButtonMapping(int buttonBitfield, InputConstants.Key key, IKeyConflictContext keyConflictContext) {
+            this.buttonBitfield = buttonBitfield;
+            this.key = key;
+            this.keyConflictContext = keyConflictContext;
+        }
+
+        public SimpleButtonMapping(int buttonBitfield, InputConstants.Key key) {
+            this(buttonBitfield, key, KeyConflictContext.UNIVERSAL);
+        }
     }
 
     private final SimpleButtonMapping[] simpleMappings = new SimpleButtonMapping[] {
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_B, minecraft.options.keyJump, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_Y, minecraft.options.keySprint, KeyConflictContext.IN_GAME),
+
+            // FIXME: mouse controls when these mouse keybinds are weird
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_ANALOG_FULL, minecraft.options.keyUse, KeyConflictContext.UNIVERSAL),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_DIGITAL, minecraft.options.keyPickItem, KeyConflictContext.UNIVERSAL),
+
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_UP, minecraft.options.keySwapOffhand, KeyConflictContext.IN_GAME),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_DOWN, minecraft.options.keyDrop, KeyConflictContext.IN_GAME),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_LEFT, minecraft.options.keySwapOffhand, KeyConflictContext.GUI),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_RIGHT, minecraft.options.keyDrop, KeyConflictContext.GUI),
+
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_OPTIONS, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_ESCAPE), KeyConflictContext.UNIVERSAL),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_ESCAPE), KeyConflictContext.GUI),
+
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_VIEW, minecraft.options.keyInventory, KeyConflictContext.IN_GAME),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_VIEW, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_ESCAPE), KeyConflictContext.GUI),
+
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L4, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_CONTROL), KeyConflictContext.UNIVERSAL),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_ALT), KeyConflictContext.UNIVERSAL),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_R5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.UNIVERSAL),
     };
 
-    static int CONTROLS_GPB_LCLICK             = HidInput.GamepadButtons.BTN_A;
-    static int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
-    static int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_RT_DIGITAL;
-    static int CONTROLS_GPB_SWAPHAND           = HidInput.GamepadButtons.BTN_D_UP;
-    static int CONTROLS_GPB_DROPITEM           = HidInput.GamepadButtons.BTN_D_DOWN;
-    static int CONTROLS_GPB_SWAPHAND_GUI       = HidInput.GamepadButtons.BTN_D_LEFT;
-    static int CONTROLS_GPB_DROPITEM_GUI       = HidInput.GamepadButtons.BTN_D_RIGHT;
-    static int CONTROLS_GPB_ESCAPE             = HidInput.GamepadButtons.BTN_OPTIONS;
-    static int CONTROLS_GPB_ESCAPEALT          = HidInput.GamepadButtons.BTN_A;
-    static int CONTROLS_GPB_INVENTORY          = HidInput.GamepadButtons.BTN_VIEW;
-    static int CONTROLS_GPB_LCTRL              = HidInput.GamepadButtons.BTN_L4;
-    static int CONTROLS_GPB_LALT               = HidInput.GamepadButtons.BTN_L5;
-    static int CONTROLS_GPB_LSHIFTALT          = HidInput.GamepadButtons.BTN_R5;
-    static int CONTROLS_GPB_RCLICK             = HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
     static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_X;
     static int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
     static int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
@@ -120,17 +138,8 @@ public class InputHooks {
         return Arrays.stream(flick_stick_smoothing).average().orElse(0);
     }
 
-    private void press(KeyMapping mapping) {
-        LOGGER.debug("new press " + mapping.getName());
-        press(mapping.getKey());
-    }
-
-    private void release(KeyMapping mapping) {
-        LOGGER.debug("new release " + mapping.getName());
-        release(mapping.getKey());
-    }
-
     private void press(InputConstants.Key key) {
+        LOGGER.debug("new press " + key.getName());
         if (key.getType() == InputConstants.Type.KEYSYM)
             keyboardPress(key.getValue());
         else if (key.getType() == InputConstants.Type.SCANCODE)
@@ -140,6 +149,7 @@ public class InputHooks {
     }
 
     private void release(InputConstants.Key key) {
+        LOGGER.debug("new release " + key.getName());
         if (key.getType() == InputConstants.Type.KEYSYM)
             keyboardRelease(key.getValue());
         else if (key.getType() == InputConstants.Type.SCANCODE)
@@ -630,9 +640,9 @@ public class InputHooks {
                 if (mapping.keyConflictContext.isActive()) {
                     if ((keyevent & mapping.buttonBitfield) != 0) {
                         if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                            press(mapping.keyMapping);
+                            press(mapping.key);
                         } else {
-                            release(mapping.keyMapping);
+                            release(mapping.key);
                         }
                         // mark this as active so we don't try to press it again later
                         mapping.was_active = true;
@@ -640,76 +650,7 @@ public class InputHooks {
                 }
             }
 
-            if ((keyevent & CONTROLS_GPB_LCLICK) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                        mousePress(GLFW_MOUSE_BUTTON_1);
-                    } else {
-                        mouseRelease(GLFW_MOUSE_BUTTON_1);
-                    }
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_JUMP) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keyJump.getKey());
-                    else
-                        release(minecraft.options.keyJump.getKey());
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_MCLICK) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    mousePress(GLFW_MOUSE_BUTTON_3);
-                else
-                    mouseRelease(GLFW_MOUSE_BUTTON_3);
-            }
-            if ((keyevent & CONTROLS_GPB_SWAPHAND) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keySwapOffhand.getKey());
-                    else
-                        release(minecraft.options.keySwapOffhand.getKey());
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_DROPITEM) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keyDrop.getKey());
-                    else
-                        release(minecraft.options.keyDrop.getKey());
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_SWAPHAND_GUI)  != 0) {
-                if (is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keySwapOffhand.getKey());
-                    else
-                        release(minecraft.options.keySwapOffhand.getKey());
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_DROPITEM_GUI) != 0) {
-                if (is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keyDrop.getKey());
-                    else
-                        release(minecraft.options.keyDrop.getKey());
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_ESCAPE) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    keyboardPress(GLFW_KEY_ESCAPE);
-                else
-                    keyboardRelease(GLFW_KEY_ESCAPE);
-            }
-            if ((keyevent & CONTROLS_GPB_ESCAPEALT) != 0) {
-                if (is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        keyboardPress(GLFW_KEY_ESCAPE);
-                    else
-                        keyboardRelease(GLFW_KEY_ESCAPE);
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_INVENTORY) != 0) {
+            /* if ((keyevent & CONTROLS_GPB_INVENTORY) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     if (!is_gui_mode) {
                         // no gui
@@ -733,32 +674,7 @@ public class InputHooks {
                         keyboardRelease(GLFW_KEY_ESCAPE);
                     }
                 }
-            }
-            if ((keyevent & CONTROLS_GPB_LCTRL) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    keyboardPress(GLFW_KEY_LEFT_CONTROL);
-                else
-                    keyboardRelease(GLFW_KEY_LEFT_CONTROL);
-            }
-            if ((keyevent & CONTROLS_GPB_LALT) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    keyboardPress(GLFW_KEY_LEFT_ALT);
-                else
-                    keyboardRelease(GLFW_KEY_LEFT_ALT);
-            }
-            if ((keyevent & CONTROLS_GPB_LSHIFTALT) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    keyboardPress(GLFW_KEY_LEFT_SHIFT);
-                else
-                    keyboardRelease(GLFW_KEY_LEFT_SHIFT);
-            }
-            if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    mousePress(GLFW_MOUSE_BUTTON_2);
-                } else {
-                    mouseRelease(GLFW_MOUSE_BUTTON_2);
-                }
-            }
+            } */
             if ((keyevent & CONTROLS_GPB_GYROINHIBIT) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
@@ -933,11 +849,11 @@ public class InputHooks {
                 if (mapping.keyConflictContext.isActive() && !mapping.was_active) {
                     // mode became active
                     // (but physical button state didn't change)
-                    press(mapping.keyMapping);
+                    press(mapping.key);
                 }
                 if (!mapping.keyConflictContext.isActive() && mapping.was_active) {
                     // mode became inactive
-                    release(mapping.keyMapping);
+                    release(mapping.key);
                 }
             }
             mapping.was_active = mapping.keyConflictContext.isActive();
