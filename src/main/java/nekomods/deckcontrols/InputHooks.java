@@ -66,7 +66,7 @@ public class InputHooks {
         public boolean activateOnSwitchIn;
 
         boolean was_active;
-        private boolean is_pressed;
+        protected boolean is_pressed;
 
         protected abstract void _press();
         protected abstract void _release();
@@ -81,6 +81,9 @@ public class InputHooks {
                 is_pressed = false;
             }
         }
+
+        public void activate() { }
+        public void deactivate() { }
 
         public AbstractButtonMapping setActivateOnSwitchIn(boolean val) {
             this.activateOnSwitchIn = val;
@@ -211,6 +214,112 @@ public class InputHooks {
         }
     }
 
+    public class ToggleButtonMapping extends SimpleButtonMapping {
+        public boolean toggleIsActive;
+        boolean dontReleaseYet;
+        ToggleCompanionButtonMapping toggleCompanionButtonMapping;
+
+        public ToggleButtonMapping(int buttonBitfield, KeyMapping keyMapping, IKeyConflictContext keyConflictContext) {
+            super(buttonBitfield, keyMapping, keyConflictContext);
+        }
+
+        public ToggleButtonMapping(int buttonBitfield, KeyMapping keyMapping) {
+            super(buttonBitfield, keyMapping);
+        }
+
+        public ToggleButtonMapping(int buttonBitfield, InputConstants.Key key, IKeyConflictContext keyConflictContext) {
+            super(buttonBitfield, key, keyConflictContext);
+        }
+
+        public ToggleButtonMapping(int buttonBitfield, InputConstants.Key key) {
+            super(buttonBitfield, key);
+        }
+
+        @Override
+        public void activate() {
+            LOGGER.debug("new toggle logic -- activate");
+            if (toggleIsActive) {
+                LOGGER.debug("new toggle logic -- activate -- pressing");
+                InputHooks.this.press(this.key);
+            }
+        }
+
+        @Override
+        public void deactivate() {
+            LOGGER.debug("new toggle logic -- deactivate");
+            if (toggleIsActive) {
+                LOGGER.debug("new toggle logic -- deactivate -- releasing");
+                InputHooks.this.release(this.key);
+            }
+            toggleIsActive = false;
+        }
+
+        @Override
+        protected void _press() {
+            toggleIsActive = !toggleIsActive;
+            if (MODE_SWITCH_BEEP_LEN > 0)
+                DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+            LOGGER.debug("new toggle logic -- toggle");
+            if (toggleIsActive) {
+                boolean already_pressed = false;
+                if (toggleCompanionButtonMapping != null) {
+                    already_pressed = toggleCompanionButtonMapping.is_pressed;
+                }
+
+                if (!already_pressed) {
+                    LOGGER.debug("new toggle logic -- toggle -- pressing");
+                    InputHooks.this.press(this.key);
+                }
+
+                dontReleaseYet = already_pressed;
+            } else {
+                LOGGER.debug("new toggle logic -- toggle -- releasing");
+                InputHooks.this.release(this.key);
+            }
+        }
+
+        @Override
+        protected void _release() { }
+    }
+
+    public class ToggleCompanionButtonMapping extends AbstractButtonMapping {
+        private ToggleButtonMapping toggleButtonMapping;
+
+        public ToggleCompanionButtonMapping(int buttonBitfield, IKeyConflictContext keyConflictContext, ToggleButtonMapping toggleButtonMapping) {
+            this.buttonBitfield = buttonBitfield;
+            this.keyConflictContext = keyConflictContext;
+            this.toggleButtonMapping = toggleButtonMapping;
+            this.toggleButtonMapping.toggleCompanionButtonMapping = this;
+        }
+
+        @Override
+        protected void _press() {
+            LOGGER.debug("new toggle logic -- hold button press");
+            if (!toggleButtonMapping.toggleIsActive) {
+                LOGGER.debug("new toggle logic -- hold button press -- actually pressing");
+                InputHooks.this.press(toggleButtonMapping.key);
+            } else {
+                LOGGER.debug("new toggle logic -- hold button press -- already latched");
+            }
+        }
+
+        @Override
+        protected void _release() {
+            LOGGER.debug("new toggle logic -- hold button release");
+            if (!toggleButtonMapping.toggleIsActive) {
+                LOGGER.debug("new toggle logic -- hold button release -- releasing (toggle not active)");
+                InputHooks.this.release(toggleButtonMapping.key);
+            } else if (toggleButtonMapping.toggleIsActive && !toggleButtonMapping.dontReleaseYet) {
+                LOGGER.debug("new toggle logic -- hold button release -- releasing toggle");
+                if (MODE_SWITCH_BEEP_LEN > 0)
+                    DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                InputHooks.this.release(toggleButtonMapping.key);
+                toggleButtonMapping.toggleIsActive = false;
+            }
+            toggleButtonMapping.dontReleaseYet = false;
+        }
+    }
+
     private final KeyRepeatStateHolder[] keyRepeats = new KeyRepeatStateHolder[] {
             new KeyRepeatStateHolder(() -> {
                 minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, 1);
@@ -219,6 +328,8 @@ public class InputHooks {
                 minecraft.mouseHandler.onScroll(minecraft.getWindow().getWindow(), 0, -1);
             }),
     };
+
+    final ToggleButtonMapping toggleSneak = new ToggleButtonMapping(HidInput.GamepadButtons.BTN_LTHUMB_CLICK, minecraft.options.keyShift, KeyConflictContext.IN_GAME);
 
     private final AbstractButtonMapping[] simpleMappings = new AbstractButtonMapping[] {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
@@ -257,6 +368,9 @@ public class InputHooks {
             new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_RIGHT, KeyConflictContext.IN_GAME, keyRepeats[1]).setActivateOnSwitchIn(true),
 
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_LT_ANALOG_FULL, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.GUI).setActivateOnSwitchIn(true),
+
+            toggleSneak,
+            new ToggleCompanionButtonMapping(HidInput.GamepadButtons.BTN_LT_ANALOG_FULL, KeyConflictContext.IN_GAME, toggleSneak).setActivateOnSwitchIn(true),
     };
 
     static int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
@@ -793,11 +907,10 @@ public class InputHooks {
             touchKeyboard.resetState();
         }
 
-        // release sneak latch if a GUI opens
+        /* // release sneak latch if a GUI opens
         if (is_gui_mode && sneak_is_latched) {
             if (!manually_sneaking) {
                 LOGGER.debug("unSNEAK because unlatching because GUI");
-                release(minecraft.options.keyShift.getKey());
             } else {
                 LOGGER.debug("ignoring unSNEAK because manually sneaking while GUI");
             }
@@ -815,7 +928,7 @@ public class InputHooks {
                     press(minecraft.options.keyShift.getKey());
                 }
             }
-        }
+        } */
 
         // key repeat
         for (KeyRepeatStateHolder repeat : keyRepeats) {
@@ -836,11 +949,16 @@ public class InputHooks {
             for (AbstractButtonMapping mapping : simpleMappings) {
                 if (mapping.keyConflictContext.isActive()) {
                     if ((keyevent & mapping.buttonBitfield) != 0) {
+                        // if this mapping just activated, let it know
+                        if (!mapping.was_active)
+                            mapping.activate();
+
                         if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                             mapping.press();
                         } else {
                             mapping.release();
                         }
+
                         // mark this as active so we don't try to press it again later
                         mapping.was_active = true;
                     }
@@ -883,7 +1001,7 @@ public class InputHooks {
                     }
                 }
             }
-            if ((keyevent & CONTROLS_GPB_HOLDSNEAK) != 0) {
+            /* if ((keyevent & CONTROLS_GPB_HOLDSNEAK) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                     manually_sneaking = true;
                     if (!sneak_is_latched) {
@@ -917,38 +1035,37 @@ public class InputHooks {
                         if (sneak_is_latched) {
                             sneak_latched_while_manually_sneaking = manually_sneaking;
                             if (!manually_sneaking) {
-                                LOGGER.debug("SNEAK because latching");
-                                press(minecraft.options.keyShift.getKey());
                             } else {
                                 LOGGER.debug("ignoring SNEAK because already sneaking");
                             }
                         } else {
                             if (!manually_sneaking) {
-                                LOGGER.debug("unSNEAK because unlatching");
-                                release(minecraft.options.keyShift.getKey());
                             } else {
                                 LOGGER.debug("ignoring unSNEAK because manually sneaking");
                             }
                         }
                     }
                 }
-            }
+            } */
         }
 
         // if the mode has changed, we have to unpress/press keys as appropriate
         for (AbstractButtonMapping mapping : simpleMappings) {
-            if ((buttonsPressedCache & mapping.buttonBitfield) != 0) {
-                if (mapping.keyConflictContext.isActive() && !mapping.was_active) {
+            if (mapping.keyConflictContext.isActive() && !mapping.was_active) {
+                // mode became active
+                // (but physical button state didn't change)
+                mapping.activate();
+                // if it is currently pressed, press the mapping (if wanted)
+                if ((buttonsPressedCache & mapping.buttonBitfield) != 0) {
                     if (mapping.activateOnSwitchIn) {
-                        // mode became active
-                        // (but physical button state didn't change)
                         mapping.press();
                     }
                 }
-                if (!mapping.keyConflictContext.isActive() && mapping.was_active) {
-                    // mode became inactive
-                    mapping.release();
-                }
+            }
+            if (!mapping.keyConflictContext.isActive() && mapping.was_active) {
+                // mode became inactive
+                mapping.release();
+                mapping.deactivate();
             }
             mapping.was_active = mapping.keyConflictContext.isActive();
         }

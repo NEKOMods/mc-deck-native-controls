@@ -48,7 +48,7 @@ public class OverlayRenderer {
             b.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX);
 
             if (minecraft.screen == null) {
-                if (DeckControls.HOOKS.sneak_is_latched) {
+                if (DeckControls.HOOKS.toggleSneak.toggleIsActive) {
                     drawUiAtlasElem(b, ps, screenW - 16, screenH - 16, UIATLAS_SNEAKING);
                 }
             }
