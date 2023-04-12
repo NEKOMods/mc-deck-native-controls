@@ -7,6 +7,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
+import net.minecraftforge.client.settings.KeyModifier;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -108,6 +109,13 @@ public class InputHooks {
                 return keyMapping.getKey();
 
             return key;
+        }
+
+        public KeyModifier getModifier() {
+            if (keyMapping != null)
+                return keyMapping.getKeyModifier();
+
+            return KeyModifier.NONE;
         }
     }
 
@@ -404,11 +412,27 @@ public class InputHooks {
     }
 
     private void press(KeyConstantOrMapping key) {
+        KeyModifier mod = key.getModifier();
+        if (mod == KeyModifier.SHIFT)
+            keyboardPress(GLFW_KEY_LEFT_SHIFT);
+        if (mod == KeyModifier.CONTROL)
+            keyboardPress(GLFW_KEY_LEFT_CONTROL);
+        if (mod == KeyModifier.ALT)
+            keyboardPress(GLFW_KEY_LEFT_ALT);
+
         press(key.getKey());
     }
 
     private void release(KeyConstantOrMapping key) {
         release(key.getKey());
+
+        KeyModifier mod = key.getModifier();
+        if (mod == KeyModifier.SHIFT)
+            keyboardRelease(GLFW_KEY_LEFT_SHIFT);
+        if (mod == KeyModifier.CONTROL)
+            keyboardRelease(GLFW_KEY_LEFT_CONTROL);
+        if (mod == KeyModifier.ALT)
+            keyboardRelease(GLFW_KEY_LEFT_ALT);
     }
 
     private void press(InputConstants.Key key) {
