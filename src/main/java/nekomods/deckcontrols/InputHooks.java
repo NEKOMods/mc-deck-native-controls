@@ -99,6 +99,18 @@ public class InputHooks {
         }
     }
 
+    private class TouchKeyboardInactiveContext implements IKeyConflictContext {
+        @Override
+        public boolean isActive() {
+            return minecraft.screen != null && !touch_keyboard_active;
+        }
+
+        @Override
+        public boolean conflicts(IKeyConflictContext other) {
+            return false;
+        }
+    }
+
     private final SimpleButtonMapping[] simpleMappings = new SimpleButtonMapping[] {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_B, minecraft.options.keyJump, KeyConflictContext.IN_GAME),
@@ -122,10 +134,13 @@ public class InputHooks {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L4, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_CONTROL), KeyConflictContext.UNIVERSAL),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_ALT), KeyConflictContext.UNIVERSAL),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_R5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.UNIVERSAL),
+
+            // X also gyro inhibit in non-gui mode
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_X, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), KeyConflictContext.GUI),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), new TouchKeyboardInactiveContext()),
     };
 
     static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_X;
-    static int CONTROLS_GPB_LCLICKALT          = HidInput.GamepadButtons.BTN_RPAD_CLICK;
     static int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
     static int CONTROLS_GPB_SCROLL_DOWN        = HidInput.GamepadButtons.BTN_D_DOWN;
     static int CONTROLS_GPB_SCROLL_LEFT        = HidInput.GamepadButtons.BTN_D_LEFT;
@@ -667,21 +682,6 @@ public class InputHooks {
                         gyro_is_enabled = false;
                     else
                         gyro_is_enabled = true;
-                } else {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        mousePress(GLFW_MOUSE_BUTTON_1);
-                    else
-                        mouseRelease(GLFW_MOUSE_BUTTON_1);
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_LCLICKALT) != 0) {
-                if (!touch_keyboard_active) {
-                    if (is_gui_mode) {
-                        if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                            mousePress(GLFW_MOUSE_BUTTON_1);
-                        else
-                            mouseRelease(GLFW_MOUSE_BUTTON_1);
-                    }
                 }
             }
             if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_CLICK) != 0) {
@@ -819,12 +819,7 @@ public class InputHooks {
                                 LOGGER.debug("ignoring unSNEAK because manually sneaking");
                             }
                         }
-                    } else {
-                        mousePress(GLFW_MOUSE_BUTTON_3);
                     }
-                } else {
-                    if (is_gui_mode)
-                        mouseRelease(GLFW_MOUSE_BUTTON_3);
                 }
             }
         }
