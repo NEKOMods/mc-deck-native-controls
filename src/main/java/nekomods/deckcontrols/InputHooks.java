@@ -67,8 +67,11 @@ public class InputHooks {
         public InputConstants.Key key;
         // controls whether _this_ mapping is active. context in keyMapping is ignored
         public IKeyConflictContext keyConflictContext;
+        // press this key if key conflict context becomes active?
+        public boolean activateOnSwitchIn;
 
         boolean was_active;
+        boolean is_pressed;
 
         public SimpleButtonMapping(int buttonBitfield, KeyMapping keyMapping, IKeyConflictContext keyConflictContext) {
             this.buttonBitfield = buttonBitfield;
@@ -89,6 +92,11 @@ public class InputHooks {
 
         public SimpleButtonMapping(int buttonBitfield, InputConstants.Key key) {
             this(buttonBitfield, key, KeyConflictContext.UNIVERSAL);
+        }
+
+        public SimpleButtonMapping setActivateOnSwitchIn(boolean val) {
+            this.activateOnSwitchIn = val;
+            return this;
         }
     }
 
@@ -641,8 +649,12 @@ public class InputHooks {
                     if ((keyevent & mapping.buttonBitfield) != 0) {
                         if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                             press(mapping.key);
+                            mapping.is_pressed = true;
                         } else {
-                            release(mapping.key);
+                            if (mapping.is_pressed) {
+                                release(mapping.key);
+                                mapping.is_pressed = false;
+                            }
                         }
                         // mark this as active so we don't try to press it again later
                         mapping.was_active = true;
@@ -847,13 +859,19 @@ public class InputHooks {
         for (SimpleButtonMapping mapping : simpleMappings) {
             if ((buttonsPressedCache & mapping.buttonBitfield) != 0) {
                 if (mapping.keyConflictContext.isActive() && !mapping.was_active) {
-                    // mode became active
-                    // (but physical button state didn't change)
-                    press(mapping.key);
+                    if (mapping.activateOnSwitchIn) {
+                        // mode became active
+                        // (but physical button state didn't change)
+                        press(mapping.key);
+                        mapping.is_pressed = true;
+                    }
                 }
                 if (!mapping.keyConflictContext.isActive() && mapping.was_active) {
                     // mode became inactive
-                    release(mapping.key);
+                    if (mapping.is_pressed) {
+                        release(mapping.key);
+                        mapping.is_pressed = false;
+                    }
                 }
             }
             mapping.was_active = mapping.keyConflictContext.isActive();
