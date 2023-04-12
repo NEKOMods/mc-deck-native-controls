@@ -19,8 +19,8 @@ public class InputHooks {
     private final Minecraft minecraft = Minecraft.getInstance();
 
     private long last_nanos;
-    private int last_lthumb_x;
-    private int last_lthumb_y;
+    private int backup_wasd_last_thumb_x;
+    private int backup_wasd_last_thumb_y;
     private int last_rthumb_x;
     private int last_rthumb_y;
     boolean sneak_is_latched;
@@ -533,6 +533,90 @@ public class InputHooks {
         }
     }
 
+    private void doBackupWASD(int thumb_x, int thumb_y) {
+        if (minecraft.screen == null) {
+            if (backup_wasd_last_thumb_y < THUMB_DIGITAL_ACTIVATE && thumb_y >= THUMB_DIGITAL_ACTIVATE) {
+                press(minecraft.options.keyUp.getKey());
+            }
+            if (backup_wasd_last_thumb_y >= THUMB_DIGITAL_DEACTIVATE && thumb_y < THUMB_DIGITAL_DEACTIVATE) {
+                release(minecraft.options.keyUp.getKey());
+            }
+            if (-backup_wasd_last_thumb_y < THUMB_DIGITAL_ACTIVATE && -thumb_y >= THUMB_DIGITAL_ACTIVATE) {
+                press(minecraft.options.keyDown.getKey());
+            }
+            if (-backup_wasd_last_thumb_y >= THUMB_DIGITAL_DEACTIVATE && -thumb_y < THUMB_DIGITAL_DEACTIVATE) {
+                release(minecraft.options.keyDown.getKey());
+            }
+            if (backup_wasd_last_thumb_x < THUMB_DIGITAL_ACTIVATE && thumb_x >= THUMB_DIGITAL_ACTIVATE) {
+                press(minecraft.options.keyRight.getKey());
+            }
+            if (backup_wasd_last_thumb_x >= THUMB_DIGITAL_DEACTIVATE && thumb_x < THUMB_DIGITAL_DEACTIVATE) {
+                release(minecraft.options.keyRight.getKey());
+            }
+            if (-backup_wasd_last_thumb_x < THUMB_DIGITAL_ACTIVATE && -thumb_x >= THUMB_DIGITAL_ACTIVATE) {
+                press(minecraft.options.keyLeft.getKey());
+            }
+            if (-backup_wasd_last_thumb_x >= THUMB_DIGITAL_DEACTIVATE && -thumb_x < THUMB_DIGITAL_DEACTIVATE) {
+                release(minecraft.options.keyLeft.getKey());
+            }
+        }
+        backup_wasd_last_thumb_x = thumb_x;
+        backup_wasd_last_thumb_y = thumb_y;
+    }
+
+    private void doMouseCursor(HidInput.AccumHidState accumState) {
+        boolean is_gui_mode = minecraft.screen != null;
+
+        if (!is_gui_mode) {
+            mouse_gui_leftover_frac_x = 0;
+            mouse_gui_leftover_frac_y = 0;
+        }
+        if (accumState.mouseDX != 0 || accumState.mouseDY != 0) {
+            if (!is_gui_mode) {
+                minecraft.mouseHandler.onMove(
+                        minecraft.getWindow().getWindow(),
+                        minecraft.mouseHandler.xpos() + accumState.mouseDX / RPAD_MOUSE_SCALE_X_CAM,
+                        minecraft.mouseHandler.ypos() - accumState.mouseDY / RPAD_MOUSE_SCALE_Y_CAM
+                );
+            } else {
+                // gross, integers and units are hard
+                double mouse_final_dx = accumState.mouseDX + mouse_gui_leftover_frac_x;
+                double mouse_final_dy = accumState.mouseDY + mouse_gui_leftover_frac_y;
+
+                long mouse_int_dx = (long) (mouse_final_dx / RPAD_MOUSE_SCALE_X_GUI);
+                long mouse_int_dy = (long) (mouse_final_dy / RPAD_MOUSE_SCALE_Y_GUI);
+
+                mouse_gui_leftover_frac_x = mouse_final_dx - mouse_int_dx * RPAD_MOUSE_SCALE_X_GUI;
+                mouse_gui_leftover_frac_y = mouse_final_dy - mouse_int_dy * RPAD_MOUSE_SCALE_Y_GUI;
+
+                if (mouse_int_dx != 0 || mouse_int_dy != 0) {
+                    // YUCK
+                    double[] curX = new double[1];
+                    double[] curY = new double[1];
+                    glfwGetCursorPos(
+                            minecraft.getWindow().getWindow(),
+                            curX,
+                            curY
+                    );
+                    glfwSetCursorPos(
+                            minecraft.getWindow().getWindow(),
+                            curX[0] + mouse_int_dx,
+                            curY[0] - mouse_int_dy
+                    );
+                    minecraft.mouseHandler.onMove(
+                            minecraft.getWindow().getWindow(),
+                            curX[0] + mouse_int_dx,
+                            curY[0] - mouse_int_dy
+                    );
+                }
+            }
+        }
+    }
+
+    private void doGyroAndFlickStick(boolean use_gyro, int thumb_x, int thumb_y) {
+
+    }
+
     public void runTick() {
         minecraft.getWindow().setErrorSection("DeckControlsMod");
         minecraft.getProfiler().push("deck_controls_mod");
@@ -560,81 +644,11 @@ public class InputHooks {
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
 
         // movement keys (backup only, for e.g. boats)
-        if (!is_gui_mode) {
-            if (last_lthumb_y < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
-                press(minecraft.options.keyUp.getKey());
-            }
-            if (last_lthumb_y >= THUMB_DIGITAL_DEACTIVATE && gamepad.lthumb_y < THUMB_DIGITAL_DEACTIVATE) {
-                release(minecraft.options.keyUp.getKey());
-            }
-            if (-last_lthumb_y < THUMB_DIGITAL_ACTIVATE && -gamepad.lthumb_y >= THUMB_DIGITAL_ACTIVATE) {
-                press(minecraft.options.keyDown.getKey());
-            }
-            if (-last_lthumb_y >= THUMB_DIGITAL_DEACTIVATE && -gamepad.lthumb_y < THUMB_DIGITAL_DEACTIVATE) {
-                release(minecraft.options.keyDown.getKey());
-            }
-            if (last_lthumb_x < THUMB_DIGITAL_ACTIVATE && gamepad.lthumb_x >= THUMB_DIGITAL_ACTIVATE) {
-                press(minecraft.options.keyRight.getKey());
-            }
-            if (last_lthumb_x >= THUMB_DIGITAL_DEACTIVATE && gamepad.lthumb_x < THUMB_DIGITAL_DEACTIVATE) {
-                release(minecraft.options.keyRight.getKey());
-            }
-            if (-last_lthumb_x < THUMB_DIGITAL_ACTIVATE && -gamepad.lthumb_x >= THUMB_DIGITAL_ACTIVATE) {
-                press(minecraft.options.keyLeft.getKey());
-            }
-            if (-last_lthumb_x >= THUMB_DIGITAL_DEACTIVATE && -gamepad.lthumb_x < THUMB_DIGITAL_DEACTIVATE) {
-                release(minecraft.options.keyLeft.getKey());
-            }
-        }
-        last_lthumb_x = gamepad.lthumb_x;
-        last_lthumb_y = gamepad.lthumb_y;
+        doBackupWASD(gamepad.lthumb_x, gamepad.lthumb_y);
 
         // mouse cursor
         if (rpad_menu == null) {
-            if (!is_gui_mode) {
-                mouse_gui_leftover_frac_x = 0;
-                mouse_gui_leftover_frac_y = 0;
-            }
-            if (accumState.mouseDX != 0 || accumState.mouseDY != 0) {
-                if (!is_gui_mode) {
-                    minecraft.mouseHandler.onMove(
-                            minecraft.getWindow().getWindow(),
-                            minecraft.mouseHandler.xpos() + accumState.mouseDX / RPAD_MOUSE_SCALE_X_CAM,
-                            minecraft.mouseHandler.ypos() - accumState.mouseDY / RPAD_MOUSE_SCALE_Y_CAM
-                    );
-                } else {
-                    // gross, integers and units are hard
-                    double mouse_final_dx = accumState.mouseDX + mouse_gui_leftover_frac_x;
-                    double mouse_final_dy = accumState.mouseDY + mouse_gui_leftover_frac_y;
-
-                    long mouse_int_dx = (long) (mouse_final_dx / RPAD_MOUSE_SCALE_X_GUI);
-                    long mouse_int_dy = (long) (mouse_final_dy / RPAD_MOUSE_SCALE_Y_GUI);
-
-                    mouse_gui_leftover_frac_x = mouse_final_dx - mouse_int_dx * RPAD_MOUSE_SCALE_X_GUI;
-                    mouse_gui_leftover_frac_y = mouse_final_dy - mouse_int_dy * RPAD_MOUSE_SCALE_Y_GUI;
-
-                    if (mouse_int_dx != 0 || mouse_int_dy != 0) {
-                        // YUCK
-                        double[] curX = new double[1];
-                        double[] curY = new double[1];
-                        glfwGetCursorPos(
-                                minecraft.getWindow().getWindow(),
-                                curX,
-                                curY
-                        );
-                        glfwSetCursorPos(
-                                minecraft.getWindow().getWindow(),
-                                curX[0] + mouse_int_dx,
-                                curY[0] - mouse_int_dy
-                        );
-                        minecraft.mouseHandler.onMove(
-                                minecraft.getWindow().getWindow(),
-                                curX[0] + mouse_int_dx,
-                                curY[0] - mouse_int_dy
-                        );
-                    }
-                }
-            }
+            doMouseCursor(accumState);
         }
 
         // menu
