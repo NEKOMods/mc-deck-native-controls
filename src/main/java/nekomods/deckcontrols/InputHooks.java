@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
@@ -57,6 +58,8 @@ public class InputHooks {
 
     // need to maintain our own sense of which buttons are pressed
     private int buttonsPressedCache = 0;
+
+    private HidInput.OtherHidState latestOtherState;
 
     public static abstract class AbstractButtonMapping {
         public int buttonBitfield;
@@ -888,6 +891,7 @@ public class InputHooks {
 
         HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
+        latestOtherState = gamepad;
 
         // movement keys (backup only, for e.g. boats)
         doBackupWASD(gamepad.lthumb_x, gamepad.lthumb_y);
@@ -1065,9 +1069,8 @@ public class InputHooks {
 
     public float fbImpulse(float keyboardImpulse) {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
-        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
-        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = (float)(gamepad.lthumb_y / THUMB_ANALOG_FULLSCALE);
+        if (latestOtherState.lthumb_x * latestOtherState.lthumb_x + latestOtherState.lthumb_y * latestOtherState.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
+            float ret = (float)(latestOtherState.lthumb_y / THUMB_ANALOG_FULLSCALE);
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;
@@ -1078,9 +1081,8 @@ public class InputHooks {
 
     public float lrImpulse(float keyboardImpulse) {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
-        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
-        if (gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = (float)(gamepad.lthumb_x / -THUMB_ANALOG_FULLSCALE);
+        if (latestOtherState.lthumb_x * latestOtherState.lthumb_x + latestOtherState.lthumb_y * latestOtherState.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
+            float ret = (float)(latestOtherState.lthumb_x / -THUMB_ANALOG_FULLSCALE);
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;
@@ -1098,6 +1100,24 @@ public class InputHooks {
             return alt_pressed;
 
         return false;
+    }
+
+    public float rideTickBoatLeftRight() {
+        float ret = (float)(latestOtherState.lthumb_x / THUMB_ANALOG_FULLSCALE);
+        if (ret > 1) ret = 1;
+        if (ret < -1) ret = -1;
+        return ret;
+    }
+
+    public float rideTickBoatUpDown() {
+        float ret = (float)(latestOtherState.lthumb_y / THUMB_ANALOG_FULLSCALE);
+        if (ret > 1) ret = 1;
+        if (ret < -1) ret = -1;
+        return ret;
+    }
+
+    public boolean rideTickBoatActive() {
+        return latestOtherState.lthumb_x * latestOtherState.lthumb_x + latestOtherState.lthumb_y * latestOtherState.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE;
     }
 
     public static void runTickHook() {
@@ -1121,22 +1141,43 @@ public class InputHooks {
         return existing || DeckControls.HOOKS.modifierPressed(key);
     }
 
-    public static void hookControlBoat(Boat boat, float analogInputLeftRight, float analogInputUpDown) {
-        LOGGER.debug("hooked controlBoat function");
-
-    }
-
     public static float hookRideTickBoatLeftRight() {
-        return 0;
+        if (DeckControls.HOOKS == null) return 0;
+        return DeckControls.HOOKS.rideTickBoatLeftRight();
     }
 
     public static float hookRideTickBoatUpDown() {
-        return 0;
+        if (DeckControls.HOOKS == null) return 0;
+        return DeckControls.HOOKS.rideTickBoatUpDown();
     }
 
     public static boolean hookRideTickBoatActive() {
-        // FIXME: this, and the other code, does not sample nicely
-        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
-        return gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE;
+        if (DeckControls.HOOKS == null) return false;
+        return DeckControls.HOOKS.rideTickBoatActive();
+    }
+
+    // right, up are positive
+    public static void hookControlBoat(Boat boat, float analogInputLeftRight, float analogInputUpDown) {
+        if (boat.isVehicle()) {
+            float fwd_speed = 0.0F;
+            boat.deltaRotation += analogInputLeftRight;
+
+            // FIXME this needs some kind of deadzone?
+            /*if (this.inputRight != this.inputLeft && !this.inputUp && !this.inputDown) {
+                fwd_speed += 0.005F;
+            }*/
+
+            boat.setYRot(boat.getYRot() + boat.deltaRotation);
+
+            if (analogInputUpDown > 0)
+                fwd_speed += analogInputUpDown * 0.04f;
+
+            if (analogInputUpDown < 0)
+                fwd_speed += analogInputUpDown * 0.005f;
+
+            boat.setDeltaMovement(boat.getDeltaMovement().add((double)(Mth.sin(-boat.getYRot() * ((float)Math.PI / 180F)) * fwd_speed), 0.0D, (double)(Mth.cos(boat.getYRot() * ((float)Math.PI / 180F)) * fwd_speed)));
+            // FIXME this needs some kind of deadzone too?
+            boat.setPaddleState(analogInputLeftRight > 0 || analogInputUpDown > 0, analogInputLeftRight < 0 || analogInputUpDown > 0);
+        }
     }
 }
