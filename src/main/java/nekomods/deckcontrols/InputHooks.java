@@ -255,6 +255,8 @@ public class InputHooks {
             new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_LEFT, KeyConflictContext.IN_GAME, keyRepeats[0]).setActivateOnSwitchIn(true),
             new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_DOWN, KeyConflictContext.GUI, keyRepeats[1]).setActivateOnSwitchIn(true),
             new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_RIGHT, KeyConflictContext.IN_GAME, keyRepeats[1]).setActivateOnSwitchIn(true),
+
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_LT_ANALOG_FULL, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.GUI).setActivateOnSwitchIn(true),
     };
 
     static int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
@@ -807,11 +809,9 @@ public class InputHooks {
                 if (is_gui_mode && !last_was_gui_mode) {
                     LOGGER.debug("entering GUI while sneak/shift held");
                     release(minecraft.options.keyShift.getKey());
-                    keyboardPress(GLFW_KEY_LEFT_SHIFT);
                 }
                 if (!is_gui_mode && last_was_gui_mode) {
                     LOGGER.debug("exiting GUI while sneak/shift held");
-                    keyboardRelease(GLFW_KEY_LEFT_SHIFT);
                     press(minecraft.options.keyShift.getKey());
                 }
             }
@@ -890,8 +890,6 @@ public class InputHooks {
                         LOGGER.debug("SNEAK because manual");
                         if (!is_gui_mode)
                             press(minecraft.options.keyShift.getKey());
-                        else
-                            keyboardPress(GLFW_KEY_LEFT_SHIFT);
                     } else {
                         LOGGER.debug("ignoring SNEAK because already latched");
                     }
@@ -906,8 +904,6 @@ public class InputHooks {
                         LOGGER.debug("unSNEAK!!");
                         if (!is_gui_mode)
                             release(minecraft.options.keyShift.getKey());
-                        else
-                            keyboardRelease(GLFW_KEY_LEFT_SHIFT);
                     }
                     sneak_latched_while_manually_sneaking = false;
                 }
