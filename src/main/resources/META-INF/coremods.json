@@ -2,5 +2,6 @@
   "hook_isKeyDown": "hook_isKeyDown.js",
   "hook_player_impulse": "hook_player_impulse.js",
   "hook_render": "hook_render.js",
-  "hook_runTick": "hook_runTick.js"
+  "hook_runTick": "hook_runTick.js",
+  "hook_boat": "hook_boat.js"
 }

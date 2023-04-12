@@ -5,6 +5,7 @@ import com.mojang.logging.LogUtils;
 import net.minecraft.Util;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.entity.vehicle.Boat;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
@@ -1118,5 +1119,24 @@ public class InputHooks {
     public static boolean hookKeyDown(boolean existing, int key) {
         if (DeckControls.HOOKS == null) return existing;
         return existing || DeckControls.HOOKS.modifierPressed(key);
+    }
+
+    public static void hookControlBoat(Boat boat, float analogInputLeftRight, float analogInputUpDown) {
+        LOGGER.debug("hooked controlBoat function");
+
+    }
+
+    public static float hookRideTickBoatLeftRight() {
+        return 0;
+    }
+
+    public static float hookRideTickBoatUpDown() {
+        return 0;
+    }
+
+    public static boolean hookRideTickBoatActive() {
+        // FIXME: this, and the other code, does not sample nicely
+        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
+        return gamepad.lthumb_x * gamepad.lthumb_x + gamepad.lthumb_y * gamepad.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE;
     }
 }
