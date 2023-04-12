@@ -61,16 +61,38 @@ public class InputHooks {
     // need to maintain our own sense of which buttons are pressed
     private int buttonsPressedCache = 0;
 
-    public static class SimpleButtonMapping {
+    public abstract class AbstractButtonMapping {
         public int buttonBitfield;
-        public InputConstants.Key key;
-        // controls whether _this_ mapping is active. context in keyMapping is ignored
         public IKeyConflictContext keyConflictContext;
         // press this key if key conflict context becomes active?
         public boolean activateOnSwitchIn;
 
         boolean was_active;
-        boolean is_pressed;
+        private boolean is_pressed;
+
+        protected abstract void _press();
+        protected abstract void _release();
+
+        public void press() {
+            _press();
+            is_pressed = true;
+        }
+        public void release() {
+            if (is_pressed) {
+                _release();
+                is_pressed = false;
+            }
+        }
+
+        public AbstractButtonMapping setActivateOnSwitchIn(boolean val) {
+            this.activateOnSwitchIn = val;
+            return this;
+        }
+    }
+
+    public class SimpleButtonMapping extends AbstractButtonMapping {
+        public InputConstants.Key key;
+        // controls whether _this_ mapping is active. context in keyMapping is ignored
 
         public SimpleButtonMapping(int buttonBitfield, KeyMapping keyMapping, IKeyConflictContext keyConflictContext) {
             this.buttonBitfield = buttonBitfield;
@@ -93,9 +115,31 @@ public class InputHooks {
             this(buttonBitfield, key, KeyConflictContext.UNIVERSAL);
         }
 
-        public SimpleButtonMapping setActivateOnSwitchIn(boolean val) {
-            this.activateOnSwitchIn = val;
-            return this;
+        @Override
+        protected void _press() {
+            InputHooks.this.press(key);
+        }
+
+        @Override
+        protected void _release() {
+            InputHooks.this.release(key);
+        }
+    }
+
+    private class DisableGyroButton extends AbstractButtonMapping {
+        public DisableGyroButton(int buttonBitfield) {
+            this.buttonBitfield = buttonBitfield;
+            this.keyConflictContext = KeyConflictContext.IN_GAME;
+        }
+
+        @Override
+        protected void _press() {
+            gyro_is_enabled = false;
+        }
+
+        @Override
+        protected void _release() {
+            gyro_is_enabled = true;
         }
     }
 
@@ -111,7 +155,7 @@ public class InputHooks {
         }
     }
 
-    private final SimpleButtonMapping[] simpleMappings = new SimpleButtonMapping[] {
+    private final AbstractButtonMapping[] simpleMappings = new AbstractButtonMapping[] {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_B, minecraft.options.keyJump, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_Y, minecraft.options.keySprint, KeyConflictContext.IN_GAME),
@@ -135,12 +179,11 @@ public class InputHooks {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_ALT), KeyConflictContext.UNIVERSAL),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_R5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.UNIVERSAL),
 
-            // X also gyro inhibit in non-gui mode
+            new DisableGyroButton(HidInput.GamepadButtons.BTN_X),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_X, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), KeyConflictContext.GUI),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), new TouchKeyboardInactiveContext()),
     };
 
-    static int CONTROLS_GPB_GYROINHIBIT        = HidInput.GamepadButtons.BTN_X;
     static int CONTROLS_GPB_SCROLL_UP          = HidInput.GamepadButtons.BTN_D_UP;
     static int CONTROLS_GPB_SCROLL_DOWN        = HidInput.GamepadButtons.BTN_D_DOWN;
     static int CONTROLS_GPB_SCROLL_LEFT        = HidInput.GamepadButtons.BTN_D_LEFT;
@@ -658,17 +701,13 @@ public class InputHooks {
             }
 
             // boring keys
-            for (SimpleButtonMapping mapping : simpleMappings) {
+            for (AbstractButtonMapping mapping : simpleMappings) {
                 if (mapping.keyConflictContext.isActive()) {
                     if ((keyevent & mapping.buttonBitfield) != 0) {
                         if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                            press(mapping.key);
-                            mapping.is_pressed = true;
+                            mapping.press();
                         } else {
-                            if (mapping.is_pressed) {
-                                release(mapping.key);
-                                mapping.is_pressed = false;
-                            }
+                            mapping.release();
                         }
                         // mark this as active so we don't try to press it again later
                         mapping.was_active = true;
@@ -676,14 +715,6 @@ public class InputHooks {
                 }
             }
 
-            if ((keyevent & CONTROLS_GPB_GYROINHIBIT) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        gyro_is_enabled = false;
-                    else
-                        gyro_is_enabled = true;
-                }
-            }
             if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_CLICK) != 0) {
                 if (lpad_menu != null) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
@@ -825,22 +856,18 @@ public class InputHooks {
         }
 
         // if the mode has changed, we have to unpress/press keys as appropriate
-        for (SimpleButtonMapping mapping : simpleMappings) {
+        for (AbstractButtonMapping mapping : simpleMappings) {
             if ((buttonsPressedCache & mapping.buttonBitfield) != 0) {
                 if (mapping.keyConflictContext.isActive() && !mapping.was_active) {
                     if (mapping.activateOnSwitchIn) {
                         // mode became active
                         // (but physical button state didn't change)
-                        press(mapping.key);
-                        mapping.is_pressed = true;
+                        mapping.press();
                     }
                 }
                 if (!mapping.keyConflictContext.isActive() && mapping.was_active) {
                     // mode became inactive
-                    if (mapping.is_pressed) {
-                        release(mapping.key);
-                        mapping.is_pressed = false;
-                    }
+                    mapping.release();
                 }
             }
             mapping.was_active = mapping.keyConflictContext.isActive();
