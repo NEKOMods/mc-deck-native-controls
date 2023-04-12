@@ -3,7 +3,10 @@ package nekomods.deckcontrols;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import net.minecraft.Util;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.settings.IKeyConflictContext;
+import net.minecraftforge.client.settings.KeyConflictContext;
 import org.slf4j.Logger;
 
 import java.util.Arrays;
@@ -13,7 +16,7 @@ import static org.lwjgl.glfw.GLFW.*;
 
 public class InputHooks {
     private static final Logger LOGGER = LogUtils.getLogger();
-    private final Minecraft minecraft;
+    private final Minecraft minecraft = Minecraft.getInstance();
 
     private long last_nanos;
     private int last_lthumb_x;
@@ -43,11 +46,11 @@ public class InputHooks {
     private boolean rpad_is_pressed;
     ITouchMenu rpad_menu;
     private final ITouchMenu hotbarMenu = new HotbarGridTouchMenu(
-            (option) -> press(GLFW_KEY_1 + option),
-            (option) -> release(GLFW_KEY_1 + option),
+            (option) -> keyboardPress(GLFW_KEY_1 + option),
+            (option) -> keyboardRelease(GLFW_KEY_1 + option),
             (old_option, new_option) -> {
-                release(GLFW_KEY_1 + old_option);
-                press(GLFW_KEY_1 + new_option);
+                keyboardRelease(GLFW_KEY_1 + old_option);
+                keyboardPress(GLFW_KEY_1 + new_option);
             });
     private long scroll_up_repeat_time = -1;
     private long scroll_down_repeat_time = -1;
@@ -56,10 +59,35 @@ public class InputHooks {
 
     private boolean touch_keyboard_active;
 
+    // need to maintain our own sense of which buttons are pressed
+    private int buttonsPressedCache = 0;
+
+    public static class SimpleButtonMapping {
+        public int buttonBitfield;
+        public KeyMapping keyMapping;
+        // controls whether _this_ mapping is active. context in keyMapping is ignored
+        public IKeyConflictContext keyConflictContext;
+
+        boolean was_active;
+
+        public SimpleButtonMapping(int buttonBitfield, KeyMapping keyMapping, IKeyConflictContext keyConflictContext) {
+            this.buttonBitfield = buttonBitfield;
+            this.keyMapping = keyMapping;
+            this.keyConflictContext = keyConflictContext;
+        }
+
+        public SimpleButtonMapping(int buttonBitfield, KeyMapping keyMapping) {
+            this(buttonBitfield, keyMapping, KeyConflictContext.UNIVERSAL);
+        }
+    }
+
+    private final SimpleButtonMapping[] simpleMappings = new SimpleButtonMapping[] {
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_Y, minecraft.options.keySprint, KeyConflictContext.IN_GAME),
+    };
+
     static int CONTROLS_GPB_LCLICK             = HidInput.GamepadButtons.BTN_A;
     static int CONTROLS_GPB_JUMP               = HidInput.GamepadButtons.BTN_B;
     static int CONTROLS_GPB_MCLICK             = HidInput.GamepadButtons.BTN_RT_DIGITAL;
-    static int CONTROLS_GPB_SPRINT             = HidInput.GamepadButtons.BTN_Y;
     static int CONTROLS_GPB_SWAPHAND           = HidInput.GamepadButtons.BTN_D_UP;
     static int CONTROLS_GPB_DROPITEM           = HidInput.GamepadButtons.BTN_D_DOWN;
     static int CONTROLS_GPB_SWAPHAND_GUI       = HidInput.GamepadButtons.BTN_D_LEFT;
@@ -92,8 +120,32 @@ public class InputHooks {
         return Arrays.stream(flick_stick_smoothing).average().orElse(0);
     }
 
-    public InputHooks() {
-        minecraft = Minecraft.getInstance();
+    private void press(KeyMapping mapping) {
+        LOGGER.debug("new press " + mapping.getName());
+        press(mapping.getKey());
+    }
+
+    private void release(KeyMapping mapping) {
+        LOGGER.debug("new release " + mapping.getName());
+        release(mapping.getKey());
+    }
+
+    private void press(InputConstants.Key key) {
+        if (key.getType() == InputConstants.Type.KEYSYM)
+            keyboardPress(key.getValue());
+        else if (key.getType() == InputConstants.Type.SCANCODE)
+            scancodePress(key.getValue());
+        else if (key.getType() == InputConstants.Type.MOUSE)
+            mousePress(key.getValue());
+    }
+
+    private void release(InputConstants.Key key) {
+        if (key.getType() == InputConstants.Type.KEYSYM)
+            keyboardRelease(key.getValue());
+        else if (key.getType() == InputConstants.Type.SCANCODE)
+            scancodeRelease(key.getValue());
+        else if (key.getType() == InputConstants.Type.MOUSE)
+            mouseRelease(key.getValue());
     }
 
     private int calcKeyModifiers() {
@@ -107,11 +159,7 @@ public class InputHooks {
         return modifiers;
     }
 
-    private void press(InputConstants.Key key) {
-        press(key.getValue());
-    }
-
-    private void press(int key) {
+    private void keyboardPress(int key) {
         if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
             shift_pressed = true;
         if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
@@ -127,11 +175,7 @@ public class InputHooks {
                 calcKeyModifiers());
     }
 
-    private void release(InputConstants.Key key) {
-        release(key.getValue());
-    }
-
-    private void release(int key) {
+    private void keyboardRelease(int key) {
         if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
             shift_pressed = false;
         if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
@@ -143,6 +187,27 @@ public class InputHooks {
                 minecraft.getWindow().getWindow(),
                 key,
                 glfwGetKeyScancode(key),
+                GLFW_RELEASE,
+                calcKeyModifiers());
+    }
+
+    private void scancodePress(int scancode) {
+        // FIXME this is not adequate?
+        // what if mapping is for a scancode, but that key _does_ have a named key?
+        minecraft.keyboardHandler.keyPress(
+                minecraft.getWindow().getWindow(),
+                -1,
+                scancode,
+                GLFW_PRESS,
+                calcKeyModifiers());
+    }
+
+    private void scancodeRelease(int scancode) {
+        // FIXME this is not adequate?
+        minecraft.keyboardHandler.keyPress(
+                minecraft.getWindow().getWindow(),
+                -1,
+                scancode,
                 GLFW_RELEASE,
                 calcKeyModifiers());
     }
@@ -165,8 +230,8 @@ public class InputHooks {
 
     private void onTouchKeyboardKey(int key) {
         if (key >= '0' && key <= '9') {
-            press(GLFW_KEY_0 + key - '0');
-            release(GLFW_KEY_0 + key - '0');
+            keyboardPress(GLFW_KEY_0 + key - '0');
+            keyboardRelease(GLFW_KEY_0 + key - '0');
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -178,8 +243,8 @@ public class InputHooks {
                         calcKeyModifiers());
             }
         } else if (key >= 'a' && key <= 'z') {
-            press(GLFW_KEY_A + key - 'a');
-            release(GLFW_KEY_A + key - 'a');
+            keyboardPress(GLFW_KEY_A + key - 'a');
+            keyboardRelease(GLFW_KEY_A + key - 'a');
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -191,26 +256,26 @@ public class InputHooks {
                         calcKeyModifiers());
             }
         } else if (key >= GLFW_KEY_F1 && key <= GLFW_KEY_F12) {
-            press(key);
-            release(key);
+            keyboardPress(key);
+            keyboardRelease(key);
         } else if (key == ' ') {
-            press(GLFW_KEY_SPACE);
-            release(GLFW_KEY_SPACE);
+            keyboardPress(GLFW_KEY_SPACE);
+            keyboardRelease(GLFW_KEY_SPACE);
             minecraft.keyboardHandler.charTyped(
                     minecraft.getWindow().getWindow(),
                     key, calcKeyModifiers());
         } else if (key == '\t') {
-            press(GLFW_KEY_TAB);
-            release(GLFW_KEY_TAB);
+            keyboardPress(GLFW_KEY_TAB);
+            keyboardRelease(GLFW_KEY_TAB);
         } else if (key == '\b') {
-            press(GLFW_KEY_BACKSPACE);
-            release(GLFW_KEY_BACKSPACE);
+            keyboardPress(GLFW_KEY_BACKSPACE);
+            keyboardRelease(GLFW_KEY_BACKSPACE);
         } else if (key == '\n') {
-            press(GLFW_KEY_ENTER);
-            release(GLFW_KEY_ENTER);
+            keyboardPress(GLFW_KEY_ENTER);
+            keyboardRelease(GLFW_KEY_ENTER);
         } else if (key == ',') {
-            press(GLFW_KEY_COMMA);
-            release(GLFW_KEY_COMMA);
+            keyboardPress(GLFW_KEY_COMMA);
+            keyboardRelease(GLFW_KEY_COMMA);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -221,8 +286,8 @@ public class InputHooks {
                         '<', calcKeyModifiers());
             }
         } else if (key == '.') {
-            press(GLFW_KEY_PERIOD);
-            release(GLFW_KEY_PERIOD);
+            keyboardPress(GLFW_KEY_PERIOD);
+            keyboardRelease(GLFW_KEY_PERIOD);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -233,8 +298,8 @@ public class InputHooks {
                         '>', calcKeyModifiers());
             }
         } else if (key == '[') {
-            press(GLFW_KEY_LEFT_BRACKET);
-            release(GLFW_KEY_LEFT_BRACKET);
+            keyboardPress(GLFW_KEY_LEFT_BRACKET);
+            keyboardRelease(GLFW_KEY_LEFT_BRACKET);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -245,8 +310,8 @@ public class InputHooks {
                         '{', calcKeyModifiers());
             }
         } else if (key == ']') {
-            press(GLFW_KEY_RIGHT_BRACKET);
-            release(GLFW_KEY_RIGHT_BRACKET);
+            keyboardPress(GLFW_KEY_RIGHT_BRACKET);
+            keyboardRelease(GLFW_KEY_RIGHT_BRACKET);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -257,8 +322,8 @@ public class InputHooks {
                         '}', calcKeyModifiers());
             }
         } else if (key == '-') {
-            press(GLFW_KEY_MINUS);
-            release(GLFW_KEY_MINUS);
+            keyboardPress(GLFW_KEY_MINUS);
+            keyboardRelease(GLFW_KEY_MINUS);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -269,8 +334,8 @@ public class InputHooks {
                         '_', calcKeyModifiers());
             }
         } else if (key == '=') {
-            press(GLFW_KEY_EQUAL);
-            release(GLFW_KEY_EQUAL);
+            keyboardPress(GLFW_KEY_EQUAL);
+            keyboardRelease(GLFW_KEY_EQUAL);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -281,8 +346,8 @@ public class InputHooks {
                         '+', calcKeyModifiers());
             }
         } else if (key == '/') {
-            press(GLFW_KEY_SLASH);
-            release(GLFW_KEY_SLASH);
+            keyboardPress(GLFW_KEY_SLASH);
+            keyboardRelease(GLFW_KEY_SLASH);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -293,8 +358,8 @@ public class InputHooks {
                         '?', calcKeyModifiers());
             }
         } else if (key == '\\') {
-            press(GLFW_KEY_BACKSLASH);
-            release(GLFW_KEY_BACKSLASH);
+            keyboardPress(GLFW_KEY_BACKSLASH);
+            keyboardRelease(GLFW_KEY_BACKSLASH);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -305,8 +370,8 @@ public class InputHooks {
                         '|', calcKeyModifiers());
             }
         } else if (key == '`') {
-            press(GLFW_KEY_GRAVE_ACCENT);
-            release(GLFW_KEY_GRAVE_ACCENT);
+            keyboardPress(GLFW_KEY_GRAVE_ACCENT);
+            keyboardRelease(GLFW_KEY_GRAVE_ACCENT);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -317,8 +382,8 @@ public class InputHooks {
                         '~', calcKeyModifiers());
             }
         } else if (key == ';') {
-            press(GLFW_KEY_SEMICOLON);
-            release(GLFW_KEY_SEMICOLON);
+            keyboardPress(GLFW_KEY_SEMICOLON);
+            keyboardRelease(GLFW_KEY_SEMICOLON);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -329,8 +394,8 @@ public class InputHooks {
                         ':', calcKeyModifiers());
             }
         } else if (key == '\'') {
-            press(GLFW_KEY_APOSTROPHE);
-            release(GLFW_KEY_APOSTROPHE);
+            keyboardPress(GLFW_KEY_APOSTROPHE);
+            keyboardRelease(GLFW_KEY_APOSTROPHE);
             if (!shift_pressed) {
                 minecraft.keyboardHandler.charTyped(
                         minecraft.getWindow().getWindow(),
@@ -524,11 +589,11 @@ public class InputHooks {
                 if (is_gui_mode && !last_was_gui_mode) {
                     LOGGER.debug("entering GUI while sneak/shift held");
                     release(minecraft.options.keyShift.getKey());
-                    press(GLFW_KEY_LEFT_SHIFT);
+                    keyboardPress(GLFW_KEY_LEFT_SHIFT);
                 }
                 if (!is_gui_mode && last_was_gui_mode) {
                     LOGGER.debug("exiting GUI while sneak/shift held");
-                    release(GLFW_KEY_LEFT_SHIFT);
+                    keyboardRelease(GLFW_KEY_LEFT_SHIFT);
                     press(minecraft.options.keyShift.getKey());
                 }
             }
@@ -553,7 +618,28 @@ public class InputHooks {
         DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
         while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
+            // update cache
+            if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                buttonsPressedCache |= keyevent;
+            } else {
+                buttonsPressedCache &= ~keyevent;
+            }
+
             // boring keys
+            for (SimpleButtonMapping mapping : simpleMappings) {
+                if (mapping.keyConflictContext.isActive()) {
+                    if ((keyevent & mapping.buttonBitfield) != 0) {
+                        if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
+                            press(mapping.keyMapping);
+                        } else {
+                            release(mapping.keyMapping);
+                        }
+                        // mark this as active so we don't try to press it again later
+                        mapping.was_active = true;
+                    }
+                }
+            }
+
             if ((keyevent & CONTROLS_GPB_LCLICK) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
@@ -576,14 +662,6 @@ public class InputHooks {
                     mousePress(GLFW_MOUSE_BUTTON_3);
                 else
                     mouseRelease(GLFW_MOUSE_BUTTON_3);
-            }
-            if ((keyevent & CONTROLS_GPB_SPRINT) != 0) {
-                if (!is_gui_mode) {
-                    if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(minecraft.options.keySprint.getKey());
-                    else
-                        release(minecraft.options.keySprint.getKey());
-                }
             }
             if ((keyevent & CONTROLS_GPB_SWAPHAND) != 0) {
                 if (!is_gui_mode) {
@@ -619,16 +697,16 @@ public class InputHooks {
             }
             if ((keyevent & CONTROLS_GPB_ESCAPE) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    press(GLFW_KEY_ESCAPE);
+                    keyboardPress(GLFW_KEY_ESCAPE);
                 else
-                    release(GLFW_KEY_ESCAPE);
+                    keyboardRelease(GLFW_KEY_ESCAPE);
             }
             if ((keyevent & CONTROLS_GPB_ESCAPEALT) != 0) {
                 if (is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                        press(GLFW_KEY_ESCAPE);
+                        keyboardPress(GLFW_KEY_ESCAPE);
                     else
-                        release(GLFW_KEY_ESCAPE);
+                        keyboardRelease(GLFW_KEY_ESCAPE);
                 }
             }
             if ((keyevent & CONTROLS_GPB_INVENTORY) != 0) {
@@ -642,7 +720,7 @@ public class InputHooks {
                         // gui
                         LOGGER.debug("YES GUI ESC DOWN");
                         last_btn_view_down_was_e = false;
-                        press(GLFW_KEY_ESCAPE);
+                        keyboardPress(GLFW_KEY_ESCAPE);
                     }
                 } else {
                     if (last_btn_view_down_was_e) {
@@ -652,27 +730,27 @@ public class InputHooks {
                     } else {
                         // gui
                         LOGGER.debug("YES GUI ESC UP");
-                        release(GLFW_KEY_ESCAPE);
+                        keyboardRelease(GLFW_KEY_ESCAPE);
                     }
                 }
             }
             if ((keyevent & CONTROLS_GPB_LCTRL) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    press(GLFW_KEY_LEFT_CONTROL);
+                    keyboardPress(GLFW_KEY_LEFT_CONTROL);
                 else
-                    release(GLFW_KEY_LEFT_CONTROL);
+                    keyboardRelease(GLFW_KEY_LEFT_CONTROL);
             }
             if ((keyevent & CONTROLS_GPB_LALT) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    press(GLFW_KEY_LEFT_ALT);
+                    keyboardPress(GLFW_KEY_LEFT_ALT);
                 else
-                    release(GLFW_KEY_LEFT_ALT);
+                    keyboardRelease(GLFW_KEY_LEFT_ALT);
             }
             if ((keyevent & CONTROLS_GPB_LSHIFTALT) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
-                    press(GLFW_KEY_LEFT_SHIFT);
+                    keyboardPress(GLFW_KEY_LEFT_SHIFT);
                 else
-                    release(GLFW_KEY_LEFT_SHIFT);
+                    keyboardRelease(GLFW_KEY_LEFT_SHIFT);
             }
             if ((keyevent & CONTROLS_GPB_RCLICK) != 0) {
                 if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
@@ -796,7 +874,7 @@ public class InputHooks {
                         if (!is_gui_mode)
                             press(minecraft.options.keyShift.getKey());
                         else
-                            press(GLFW_KEY_LEFT_SHIFT);
+                            keyboardPress(GLFW_KEY_LEFT_SHIFT);
                     } else {
                         LOGGER.debug("ignoring SNEAK because already latched");
                     }
@@ -812,7 +890,7 @@ public class InputHooks {
                         if (!is_gui_mode)
                             release(minecraft.options.keyShift.getKey());
                         else
-                            release(GLFW_KEY_LEFT_SHIFT);
+                            keyboardRelease(GLFW_KEY_LEFT_SHIFT);
                     }
                     sneak_latched_while_manually_sneaking = false;
                 }
@@ -847,6 +925,22 @@ public class InputHooks {
                         mouseRelease(GLFW_MOUSE_BUTTON_3);
                 }
             }
+        }
+
+        // if the mode has changed, we have to unpress/press keys as appropriate
+        for (SimpleButtonMapping mapping : simpleMappings) {
+            if ((buttonsPressedCache & mapping.buttonBitfield) != 0) {
+                if (mapping.keyConflictContext.isActive() && !mapping.was_active) {
+                    // mode became active
+                    // (but physical button state didn't change)
+                    press(mapping.keyMapping);
+                }
+                if (!mapping.keyConflictContext.isActive() && mapping.was_active) {
+                    // mode became inactive
+                    release(mapping.keyMapping);
+                }
+            }
+            mapping.was_active = mapping.keyConflictContext.isActive();
         }
 
         // good gyro controls
