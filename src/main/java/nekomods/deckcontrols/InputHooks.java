@@ -141,6 +141,24 @@ public class InputHooks {
         }
     }
 
+    private class ToggleTouchKeyboardButton extends AbstractButtonMapping {
+        public ToggleTouchKeyboardButton(int buttonBitfield) {
+            this.buttonBitfield = buttonBitfield;
+            this.keyConflictContext = KeyConflictContext.UNIVERSAL;
+        }
+
+        @Override
+        protected void _press() {
+            touch_keyboard_active = !touch_keyboard_active;
+            lpad_menu_selection = -1;
+            rpad_menu_selection = -1;
+            touchKeyboard.resetState();
+        }
+
+        @Override
+        protected void _release() { }
+    }
+
     private class TouchKeyboardInactiveContext implements IKeyConflictContext {
         @Override
         public boolean isActive() {
@@ -207,9 +225,10 @@ public class InputHooks {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_B, minecraft.options.keyJump, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_Y, minecraft.options.keySprint, KeyConflictContext.IN_GAME),
 
-            // FIXME: mouse controls when these mouse keybinds are weird
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_ANALOG_FULL, minecraft.options.keyUse, KeyConflictContext.UNIVERSAL),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_DIGITAL, minecraft.options.keyPickItem, KeyConflictContext.UNIVERSAL),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_ANALOG_FULL, minecraft.options.keyUse, KeyConflictContext.IN_GAME),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_DIGITAL, minecraft.options.keyPickItem, KeyConflictContext.IN_GAME),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_ANALOG_FULL, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_RIGHT), KeyConflictContext.GUI),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_DIGITAL, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_MIDDLE), KeyConflictContext.GUI),
 
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_UP, minecraft.options.keySwapOffhand, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_DOWN, minecraft.options.keyDrop, KeyConflictContext.IN_GAME),
@@ -226,9 +245,11 @@ public class InputHooks {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_ALT), KeyConflictContext.UNIVERSAL),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_R5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.UNIVERSAL),
 
+            new ToggleTouchKeyboardButton(HidInput.GamepadButtons.BTN_R4),
+
             new DisableGyroButton(HidInput.GamepadButtons.BTN_X),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_X, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), KeyConflictContext.GUI),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_1), new TouchKeyboardInactiveContext()),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_X, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_LEFT), KeyConflictContext.GUI),
+            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_LEFT), new TouchKeyboardInactiveContext()),
 
             new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_UP, KeyConflictContext.GUI, keyRepeats[0]).setActivateOnSwitchIn(true),
             new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_LEFT, KeyConflictContext.IN_GAME, keyRepeats[0]).setActivateOnSwitchIn(true),
@@ -236,7 +257,6 @@ public class InputHooks {
             new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_RIGHT, KeyConflictContext.IN_GAME, keyRepeats[1]).setActivateOnSwitchIn(true),
     };
 
-    static int CONTROLS_GPB_CLICK_MODESWITCH   = HidInput.GamepadButtons.BTN_R4;
     static int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
     static int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LTHUMB_CLICK;
 
@@ -861,14 +881,6 @@ public class InputHooks {
                             rpad_is_pressed = false;
                         }
                     }
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_CLICK_MODESWITCH) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    touch_keyboard_active = !touch_keyboard_active;
-                    lpad_menu_selection = -1;
-                    rpad_menu_selection = -1;
-                    touchKeyboard.resetState();
                 }
             }
             if ((keyevent & CONTROLS_GPB_HOLDSNEAK) != 0) {
