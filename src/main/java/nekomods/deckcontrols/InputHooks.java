@@ -21,8 +21,8 @@ public class InputHooks {
     private long last_nanos;
     private int backup_wasd_last_thumb_x;
     private int backup_wasd_last_thumb_y;
-    private int last_rthumb_x;
-    private int last_rthumb_y;
+    private int flick_stick_last_thumb_x;
+    private int flick_stick_last_thumb_y;
     boolean sneak_is_latched;
     private boolean sneak_latched_while_manually_sneaking;
     private boolean manually_sneaking;
@@ -613,8 +613,69 @@ public class InputHooks {
         }
     }
 
-    private void doGyroAndFlickStick(boolean use_gyro, int thumb_x, int thumb_y) {
+    private void doGyroAndFlickStick(boolean use_gyro, int thumb_x, int thumb_y, HidInput.AccumHidState accumState, long delta_nanos) {
+        if (minecraft.screen == null && minecraft.player != null) {
+            double tot_turn_yaw = 0;
+            double tot_turn_pitch = 0;
 
+            if (use_gyro) {
+                if (minecraft.player.isScoping()) {
+                    tot_turn_yaw += -accumState.camYaw * GYRO_CAM_SENSITIVITY_SCOPE_X;
+                    tot_turn_pitch += -accumState.camPitch * GYRO_CAM_SENSITIVITY_SCOPE_Y;
+                } else {
+                    tot_turn_yaw += -accumState.camYaw * GYRO_CAM_SENSITIVITY_X;
+                    tot_turn_pitch += -accumState.camPitch * GYRO_CAM_SENSITIVITY_Y;
+                }
+            }
+
+            if ((thumb_x * thumb_x + thumb_y * thumb_y > FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST) &&
+                    (flick_stick_last_thumb_x * flick_stick_last_thumb_x + flick_stick_last_thumb_y * flick_stick_last_thumb_y <= FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST)) {
+                LOGGER.debug("flick stick start");
+                flick_stick_progress = 0;
+                flick_stick_amount = Math.toDegrees(Math.atan2(thumb_x, thumb_y));
+            } else if (thumb_x * thumb_x + thumb_y * thumb_y > FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
+                double cur_angle = Math.toDegrees(Math.atan2(thumb_x, thumb_y));
+                double last_angle = Math.toDegrees(Math.atan2(flick_stick_last_thumb_x, flick_stick_last_thumb_y));
+
+                double diff_angle = cur_angle - last_angle;
+                if (diff_angle < -180) diff_angle += 360;
+                if (diff_angle > 180) diff_angle -= 360;
+
+                double tier_smooth_thresh_1 = FLICK_STICK_SMOOTH_THRESH / 2;
+                double tier_smooth_thresh_2 = FLICK_STICK_SMOOTH_THRESH;
+                double diff_mag = Math.abs(diff_angle);
+                double smooth_direct_weight = (diff_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
+                if (smooth_direct_weight < 0) smooth_direct_weight = 0;
+                if (smooth_direct_weight > 1) smooth_direct_weight = 1;
+
+                tot_turn_yaw += diff_angle * smooth_direct_weight + flickSmoothed(diff_angle * (1 - smooth_direct_weight));
+            } else if (flick_stick_last_thumb_x * flick_stick_last_thumb_x + flick_stick_last_thumb_y * flick_stick_last_thumb_y >= FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
+                LOGGER.debug("flick stick deactivate");
+                for (int i = 0; i < flick_stick_smoothing.length; i++)
+                    flick_stick_smoothing[i] = 0;
+            }
+
+            if (flick_stick_progress < FLICK_STICK_TIME_NANOS) {
+                double last_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
+                flick_stick_progress = Math.min(flick_stick_progress + delta_nanos, FLICK_STICK_TIME_NANOS);
+                LOGGER.debug("flicking progress raw " + flick_stick_progress);
+                double current_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
+
+                last_flick_progress = flickStickEase(last_flick_progress);
+                current_flick_progress = flickStickEase(current_flick_progress);
+
+                LOGGER.debug("flicking progress " + current_flick_progress);
+                tot_turn_yaw += (current_flick_progress - last_flick_progress) * flick_stick_amount;
+            }
+
+            if (tot_turn_yaw != 0 || tot_turn_pitch != 0) {
+                minecraft.player.turn(
+                        tot_turn_yaw / 0.15,
+                        tot_turn_pitch / 0.15);
+            }
+        }
+        flick_stick_last_thumb_x = thumb_x;
+        flick_stick_last_thumb_y = thumb_y;
     }
 
     public void runTick() {
@@ -885,68 +946,10 @@ public class InputHooks {
         }
 
         // good gyro controls
-        if (!is_gui_mode && minecraft.player != null) {
-            double tot_turn_yaw = 0;
-            double tot_turn_pitch = 0;
-
-            if (gyro_is_enabled && ((gamepad.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) == 0)) {
-                if (minecraft.player.isScoping()) {
-                    tot_turn_yaw += -accumState.camYaw * GYRO_CAM_SENSITIVITY_SCOPE_X;
-                    tot_turn_pitch += -accumState.camPitch * GYRO_CAM_SENSITIVITY_SCOPE_Y;
-                } else {
-                    tot_turn_yaw += -accumState.camYaw * GYRO_CAM_SENSITIVITY_X;
-                    tot_turn_pitch += -accumState.camPitch * GYRO_CAM_SENSITIVITY_Y;
-                }
-            }
-
-            if ((gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST) &&
-                    (last_rthumb_x * last_rthumb_x + last_rthumb_y * last_rthumb_y <= FLICK_STICK_ACTIVATE_DIST * FLICK_STICK_ACTIVATE_DIST)) {
-                LOGGER.debug("flick stick start");
-                flick_stick_progress = 0;
-                flick_stick_amount = Math.toDegrees(Math.atan2(gamepad.rthumb_x, gamepad.rthumb_y));
-            } else if (gamepad.rthumb_x * gamepad.rthumb_x + gamepad.rthumb_y * gamepad.rthumb_y > FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
-                double cur_angle = Math.toDegrees(Math.atan2(gamepad.rthumb_x, gamepad.rthumb_y));
-                double last_angle = Math.toDegrees(Math.atan2(last_rthumb_x, last_rthumb_y));
-
-                double diff_angle = cur_angle - last_angle;
-                if (diff_angle < -180) diff_angle += 360;
-                if (diff_angle > 180) diff_angle -= 360;
-
-                double tier_smooth_thresh_1 = FLICK_STICK_SMOOTH_THRESH / 2;
-                double tier_smooth_thresh_2 = FLICK_STICK_SMOOTH_THRESH;
-                double diff_mag = Math.abs(diff_angle);
-                double smooth_direct_weight = (diff_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
-                if (smooth_direct_weight < 0) smooth_direct_weight = 0;
-                if (smooth_direct_weight > 1) smooth_direct_weight = 1;
-
-                tot_turn_yaw += diff_angle * smooth_direct_weight + flickSmoothed(diff_angle * (1 - smooth_direct_weight));
-            } else if (last_rthumb_x * last_rthumb_x + last_rthumb_y * last_rthumb_y >= FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
-                LOGGER.debug("flick stick deactivate");
-                for (int i = 0; i < flick_stick_smoothing.length; i++)
-                    flick_stick_smoothing[i] = 0;
-            }
-
-            if (flick_stick_progress < FLICK_STICK_TIME_NANOS) {
-                double last_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
-                flick_stick_progress = Math.min(flick_stick_progress + current_nanos - last_nanos, FLICK_STICK_TIME_NANOS);
-                LOGGER.debug("flicking progress raw " + flick_stick_progress);
-                double current_flick_progress = (double)flick_stick_progress / FLICK_STICK_TIME_NANOS;
-
-                last_flick_progress = flickStickEase(last_flick_progress);
-                current_flick_progress = flickStickEase(current_flick_progress);
-
-                LOGGER.debug("flicking progress " + current_flick_progress);
-                tot_turn_yaw += (current_flick_progress - last_flick_progress) * flick_stick_amount;
-            }
-
-            if (tot_turn_yaw != 0 || tot_turn_pitch != 0) {
-                minecraft.player.turn(
-                        tot_turn_yaw / 0.15,
-                        tot_turn_pitch / 0.15);
-            }
-        }
-        last_rthumb_x = gamepad.rthumb_x;
-        last_rthumb_y = gamepad.rthumb_y;
+        doGyroAndFlickStick(
+                gyro_is_enabled && ((gamepad.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) == 0),
+                gamepad.rthumb_x, gamepad.rthumb_y,
+                accumState, current_nanos - last_nanos);
 
         last_was_gui_mode = is_gui_mode;
         last_nanos = current_nanos;
