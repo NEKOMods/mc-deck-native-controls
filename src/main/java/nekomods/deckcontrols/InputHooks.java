@@ -23,7 +23,6 @@ public class InputHooks {
     private int last_lthumb_y;
     private int last_rthumb_x;
     private int last_rthumb_y;
-    private boolean last_btn_view_down_was_e;
     boolean sneak_is_latched;
     private boolean sneak_latched_while_manually_sneaking;
     private boolean manually_sneaking;
@@ -662,31 +661,6 @@ public class InputHooks {
                 }
             }
 
-            /* if ((keyevent & CONTROLS_GPB_INVENTORY) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (!is_gui_mode) {
-                        // no gui
-                        LOGGER.debug("NO GUI e DOWN");
-                        last_btn_view_down_was_e = true;
-                        press(minecraft.options.keyInventory.getKey());
-                    } else {
-                        // gui
-                        LOGGER.debug("YES GUI ESC DOWN");
-                        last_btn_view_down_was_e = false;
-                        keyboardPress(GLFW_KEY_ESCAPE);
-                    }
-                } else {
-                    if (last_btn_view_down_was_e) {
-                        // no gui
-                        LOGGER.debug("NO GUI e UP");
-                        release(minecraft.options.keyInventory.getKey());
-                    } else {
-                        // gui
-                        LOGGER.debug("YES GUI ESC UP");
-                        keyboardRelease(GLFW_KEY_ESCAPE);
-                    }
-                }
-            } */
             if ((keyevent & CONTROLS_GPB_GYROINHIBIT) != 0) {
                 if (!is_gui_mode) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0)
