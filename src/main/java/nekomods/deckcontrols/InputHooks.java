@@ -1162,10 +1162,7 @@ public class InputHooks {
             float fwd_speed = 0.0F;
             boat.deltaRotation += analogInputLeftRight;
 
-            // FIXME this needs some kind of deadzone?
-            /*if (this.inputRight != this.inputLeft && !this.inputUp && !this.inputDown) {
-                fwd_speed += 0.005F;
-            }*/
+            fwd_speed += Math.abs(analogInputLeftRight) * 0.005f;
 
             boat.setYRot(boat.getYRot() + boat.deltaRotation);
 
@@ -1176,8 +1173,10 @@ public class InputHooks {
                 fwd_speed += analogInputUpDown * 0.005f;
 
             boat.setDeltaMovement(boat.getDeltaMovement().add((double)(Mth.sin(-boat.getYRot() * ((float)Math.PI / 180F)) * fwd_speed), 0.0D, (double)(Mth.cos(boat.getYRot() * ((float)Math.PI / 180F)) * fwd_speed)));
-            // FIXME this needs some kind of deadzone too?
-            boat.setPaddleState(analogInputLeftRight > 0 || analogInputUpDown > 0, analogInputLeftRight < 0 || analogInputUpDown > 0);
+            // XXX this is a square deadzone. fine i guess?
+            // also it's broken if deadzone is > fullscale
+            double deadzone = THUMB_DEADZONE / THUMB_ANALOG_FULLSCALE;
+            boat.setPaddleState(analogInputLeftRight > deadzone || analogInputUpDown > deadzone, analogInputLeftRight < -deadzone || analogInputUpDown > deadzone);
         }
     }
 }
