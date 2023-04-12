@@ -23,9 +23,6 @@ public class InputHooks {
     private int backup_wasd_last_thumb_y;
     private int flick_stick_last_thumb_x;
     private int flick_stick_last_thumb_y;
-    boolean sneak_is_latched;
-    private boolean sneak_latched_while_manually_sneaking;
-    private boolean manually_sneaking;
     private boolean gyro_is_enabled = true;
     private long flick_stick_progress = FLICK_STICK_TIME_NANOS;
     private double flick_stick_amount;
@@ -372,9 +369,6 @@ public class InputHooks {
             toggleSneak,
             new ToggleCompanionButtonMapping(HidInput.GamepadButtons.BTN_LT_ANALOG_FULL, KeyConflictContext.IN_GAME, toggleSneak).setActivateOnSwitchIn(true),
     };
-
-    static int CONTROLS_GPB_HOLDSNEAK          = HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
-    static int CONTROLS_GPB_TOGGLESNEAK        = HidInput.GamepadButtons.BTN_LTHUMB_CLICK;
 
     private static double flickStickEase(double input) {
         double flipped = 1 - input;
@@ -907,29 +901,6 @@ public class InputHooks {
             touchKeyboard.resetState();
         }
 
-        /* // release sneak latch if a GUI opens
-        if (is_gui_mode && sneak_is_latched) {
-            if (!manually_sneaking) {
-                LOGGER.debug("unSNEAK because unlatching because GUI");
-            } else {
-                LOGGER.debug("ignoring unSNEAK because manually sneaking while GUI");
-            }
-            sneak_is_latched = false;
-        }
-        // workarounds for if sneak key isn't shift
-        if (minecraft.options.keyShift.getKey().getValue() != GLFW_KEY_LEFT_SHIFT) {
-            if (manually_sneaking) {
-                if (is_gui_mode && !last_was_gui_mode) {
-                    LOGGER.debug("entering GUI while sneak/shift held");
-                    release(minecraft.options.keyShift.getKey());
-                }
-                if (!is_gui_mode && last_was_gui_mode) {
-                    LOGGER.debug("exiting GUI while sneak/shift held");
-                    press(minecraft.options.keyShift.getKey());
-                }
-            }
-        } */
-
         // key repeat
         for (KeyRepeatStateHolder repeat : keyRepeats) {
             repeat.update(current_nanos - last_nanos);
@@ -965,6 +936,7 @@ public class InputHooks {
                 }
             }
 
+            // menu clicking
             if ((keyevent & HidInput.GamepadButtons.BTN_LPAD_CLICK) != 0) {
                 if (lpad_menu != null) {
                     if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
@@ -1001,52 +973,6 @@ public class InputHooks {
                     }
                 }
             }
-            /* if ((keyevent & CONTROLS_GPB_HOLDSNEAK) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    manually_sneaking = true;
-                    if (!sneak_is_latched) {
-                        LOGGER.debug("SNEAK because manual");
-                        if (!is_gui_mode)
-                            press(minecraft.options.keyShift.getKey());
-                    } else {
-                        LOGGER.debug("ignoring SNEAK because already latched");
-                    }
-                } else {
-                    manually_sneaking = false;
-                    if (!sneak_is_latched || !sneak_latched_while_manually_sneaking) {
-                        if (sneak_is_latched) {
-                            if (MODE_SWITCH_BEEP_LEN > 0)
-                                DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
-                        }
-                        sneak_is_latched = false;
-                        LOGGER.debug("unSNEAK!!");
-                        if (!is_gui_mode)
-                            release(minecraft.options.keyShift.getKey());
-                    }
-                    sneak_latched_while_manually_sneaking = false;
-                }
-            }
-            if ((keyevent & CONTROLS_GPB_TOGGLESNEAK) != 0) {
-                if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
-                    if (!is_gui_mode) {
-                        if (MODE_SWITCH_BEEP_LEN > 0)
-                            DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
-                        sneak_is_latched = !sneak_is_latched;
-                        if (sneak_is_latched) {
-                            sneak_latched_while_manually_sneaking = manually_sneaking;
-                            if (!manually_sneaking) {
-                            } else {
-                                LOGGER.debug("ignoring SNEAK because already sneaking");
-                            }
-                        } else {
-                            if (!manually_sneaking) {
-                            } else {
-                                LOGGER.debug("ignoring unSNEAK because manually sneaking");
-                            }
-                        }
-                    }
-                }
-            } */
         }
 
         // if the mode has changed, we have to unpress/press keys as appropriate
