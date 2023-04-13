@@ -12,6 +12,7 @@ import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
 import org.slf4j.Logger;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static nekomods.deckcontrols.Settings.*;
@@ -360,10 +361,10 @@ public class InputHooks {
             }),
     };
 
-    final ToggleButtonMapping toggleSneak = new ToggleButtonMapping(HidInput.GamepadButtons.BTN_LTHUMB_CLICK, minecraft.options.keyShift, KeyConflictContext.IN_GAME);
+    final ToggleButtonMapping toggleSneak;
 
-    private final AbstractButtonMapping[] simpleMappings = new AbstractButtonMapping[] {
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
+    private final AbstractButtonMapping[] simpleMappings; /* = new AbstractButtonMapping[] {
+/*            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_B, minecraft.options.keyJump, KeyConflictContext.IN_GAME),
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_Y, minecraft.options.keySprint, KeyConflictContext.IN_GAME),
 
@@ -401,8 +402,80 @@ public class InputHooks {
             new SimpleButtonMapping(HidInput.GamepadButtons.BTN_LT_ANALOG_FULL, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.GUI).setActivateOnSwitchIn(true),
 
             toggleSneak,
-            new ToggleCompanionButtonMapping(HidInput.GamepadButtons.BTN_LT_ANALOG_FULL, KeyConflictContext.IN_GAME, toggleSneak).setActivateOnSwitchIn(true),
-    };
+                };*/
+
+    public InputHooks() {
+        ArrayList mappings = new ArrayList();
+
+        // special pad click button (hardcoded)
+        mappings.add(new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_LEFT), new TouchKeyboardInactiveContext()));
+
+        int toggleSneakButton = 0;
+        int holdSneakButton = 0;
+        boolean toggleSneakPressAgain = false;
+        boolean holdSneakPressAgain = false;
+
+        for (ButtonMappingConfig mappingConfig : MAPPING_CONFIG) {
+            LOGGER.debug("Mapping type {} from {} to {}", mappingConfig.type, mappingConfig.gamepadButton, mappingConfig.binding);
+
+            AbstractButtonMapping mapping = switch (mappingConfig.type) {
+                case SIMPLE -> {
+                    String binding = mappingConfig.binding;
+
+                    AbstractButtonMapping result = null;
+
+                    if (binding.startsWith("keymapping.")) {
+                        String keyMappingName = binding.substring(11);
+                        for (KeyMapping keyMapping : Minecraft.getInstance().options.keyMappings) {
+                            if (keyMapping.getName().equals(keyMappingName)) {
+                                result = new SimpleButtonMapping(mappingConfig.gamepadButton.toBitfield(), keyMapping, mappingConfig.context.toIKCC()).setActivateOnSwitchIn(mappingConfig.pressAgainWhenActivated);
+                                break;
+                            }
+                        }
+                    } else if (binding.startsWith("inputconstant.")) {
+                        String inputConstantName = binding.substring(14);
+                        InputConstants.Key inputConstant = InputConstants.getKey(inputConstantName);
+                        result = new SimpleButtonMapping(mappingConfig.gamepadButton.toBitfield(), inputConstant, mappingConfig.context.toIKCC()).setActivateOnSwitchIn(mappingConfig.pressAgainWhenActivated);
+                    }
+
+                    assert result != null;
+
+                    yield result;
+                }
+                case DISABLE_GYRO -> new DisableGyroButton(mappingConfig.gamepadButton.toBitfield()).setActivateOnSwitchIn(mappingConfig.pressAgainWhenActivated);
+                case TOGGLE_KEYBOARD -> new ToggleTouchKeyboardButton(mappingConfig.gamepadButton.toBitfield());
+                case SCROLL_UP -> new KeyRepeatButtonMapping(mappingConfig.gamepadButton.toBitfield(), mappingConfig.context.toIKCC(), keyRepeats[0]).setActivateOnSwitchIn(mappingConfig.pressAgainWhenActivated);
+                case SCROLL_DOWN -> new KeyRepeatButtonMapping(mappingConfig.gamepadButton.toBitfield(), mappingConfig.context.toIKCC(), keyRepeats[1]).setActivateOnSwitchIn(mappingConfig.pressAgainWhenActivated);
+                // eww
+                case TOGGLE_SNEAK -> {
+                    toggleSneakButton = mappingConfig.gamepadButton.toBitfield();
+                    toggleSneakPressAgain = mappingConfig.pressAgainWhenActivated;
+                    yield null;
+                }
+                case HOLD_SNEAK -> {
+                    holdSneakButton = mappingConfig.gamepadButton.toBitfield();
+                    holdSneakPressAgain = mappingConfig.pressAgainWhenActivated;
+                    yield null;
+                }
+            };
+            if (mapping != null)
+                mappings.add(mapping);
+        }
+
+        LOGGER.debug(String.format("MAPPING FOR SNEAK %08X %08X", toggleSneakButton, holdSneakButton));
+
+        toggleSneak = new ToggleButtonMapping(toggleSneakButton, minecraft.options.keyShift, KeyConflictContext.IN_GAME);
+        toggleSneak.setActivateOnSwitchIn(toggleSneakPressAgain);
+        // always add, button 0 will never match
+        mappings.add(toggleSneak);
+        ToggleCompanionButtonMapping holdSneak = new ToggleCompanionButtonMapping(holdSneakButton, KeyConflictContext.IN_GAME, toggleSneak);
+        holdSneak.setActivateOnSwitchIn(holdSneakPressAgain);
+        mappings.add(holdSneak);
+
+        AbstractButtonMapping[] createdMappings = new AbstractButtonMapping[mappings.size()];
+        mappings.toArray(createdMappings);
+        simpleMappings = createdMappings;
+    }
 
     private static double flickStickEase(double input) {
         double flipped = 1 - input;

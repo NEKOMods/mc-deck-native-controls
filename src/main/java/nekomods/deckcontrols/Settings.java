@@ -1,13 +1,335 @@
 package nekomods.deckcontrols;
 
+import com.electronwill.nightconfig.core.Config;
+import com.electronwill.nightconfig.core.conversion.ObjectConverter;
+import com.mojang.blaze3d.platform.InputConstants;
+import com.mojang.logging.LogUtils;
+import net.minecraft.client.KeyMapping;
+import net.minecraft.client.Minecraft;
+import net.minecraftforge.client.settings.IKeyConflictContext;
+import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.config.ModConfigEvent;
 import org.apache.commons.lang3.tuple.Pair;
+import org.slf4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Mod.EventBusSubscriber(modid = DeckControls.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class Settings {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
+    public enum ButtonMappingType {
+        SIMPLE,
+        DISABLE_GYRO,
+        TOGGLE_KEYBOARD,
+        SCROLL_UP,
+        SCROLL_DOWN,
+        TOGGLE_SNEAK,
+        HOLD_SNEAK,
+    }
+
+    public enum ButtonMappingContext {
+        UNIVERSAL,
+        IN_GAME,
+        GUI;
+
+        public IKeyConflictContext toIKCC() {
+            return switch(this) {
+                case UNIVERSAL -> KeyConflictContext.UNIVERSAL;
+                case IN_GAME -> KeyConflictContext.IN_GAME;
+                case GUI -> KeyConflictContext.GUI;
+            };
+        }
+    }
+
+    public enum GamepadButtons {
+        DPAD_UP,
+        DPAD_DOWN,
+        DPAD_LEFT,
+        DPAD_RIGHT,
+        A,
+        B,
+        X,
+        Y,
+        L4,
+        L5,
+        R4,
+        R5,
+        VIEW,
+        OPTIONS,
+        // don't allow binding steam/dots, nor pads
+        LEFT_THUMB_TOUCH,
+        RIGHT_THUMB_TOUCH,
+        LEFT_THUMB_CLICK,
+        RIGHT_THUMB_CLICK,
+        LB,
+        RB,
+        LT,
+        RT;
+
+        public int toBitfield() {
+            return switch(this) {
+                case DPAD_UP -> HidInput.GamepadButtons.BTN_D_UP;
+                case DPAD_DOWN -> HidInput.GamepadButtons.BTN_D_DOWN;
+                case DPAD_LEFT -> HidInput.GamepadButtons.BTN_D_LEFT;
+                case DPAD_RIGHT -> HidInput.GamepadButtons.BTN_D_RIGHT;
+                case A -> HidInput.GamepadButtons.BTN_A;
+                case B -> HidInput.GamepadButtons.BTN_B;
+                case X -> HidInput.GamepadButtons.BTN_X;
+                case Y -> HidInput.GamepadButtons.BTN_Y;
+                case L4 -> HidInput.GamepadButtons.BTN_L4;
+                case L5 -> HidInput.GamepadButtons.BTN_L5;
+                case R4 -> HidInput.GamepadButtons.BTN_R4;
+                case R5 -> HidInput.GamepadButtons.BTN_R5;
+                case VIEW -> HidInput.GamepadButtons.BTN_VIEW;
+                case OPTIONS -> HidInput.GamepadButtons.BTN_OPTIONS;
+                case LEFT_THUMB_TOUCH -> HidInput.GamepadButtons.BTN_LTHUMB_TOUCH;
+                case RIGHT_THUMB_TOUCH -> HidInput.GamepadButtons.BTN_RTHUMB_TOUCH;
+                case LEFT_THUMB_CLICK -> HidInput.GamepadButtons.BTN_LTHUMB_CLICK;
+                case RIGHT_THUMB_CLICK -> HidInput.GamepadButtons.BTN_RTHUMB_CLICK;
+                case LB -> HidInput.GamepadButtons.BTN_LT_DIGITAL;
+                case RB -> HidInput.GamepadButtons.BTN_RT_DIGITAL;
+                case LT -> HidInput.GamepadButtons.BTN_LT_ANALOG_FULL;
+                case RT -> HidInput.GamepadButtons.BTN_RT_ANALOG_FULL;
+            };
+        }
+    }
+
+    public static class ButtonMappingConfig {
+        public ButtonMappingType type;
+        public ButtonMappingContext context;
+        public GamepadButtons gamepadButton;
+        public String binding;
+        public boolean pressAgainWhenActivated;
+
+        public ButtonMappingConfig() {
+            this.type = ButtonMappingType.SIMPLE;
+            this.context = ButtonMappingContext.UNIVERSAL;
+            this.gamepadButton = GamepadButtons.A;
+            this.binding = "";
+            this.pressAgainWhenActivated = false;
+        }
+
+        public ButtonMappingConfig setType(ButtonMappingType type) {
+            this.type = type;
+            return this;
+        }
+
+        public ButtonMappingConfig setContext(ButtonMappingContext context) {
+            this.context = context;
+            return this;
+        }
+
+        public ButtonMappingConfig setGamepadButton(GamepadButtons gamepadButton) {
+            this.gamepadButton = gamepadButton;
+            return this;
+        }
+
+        public ButtonMappingConfig setBinding(String binding) {
+            this.binding = binding;
+            return this;
+        }
+
+        public ButtonMappingConfig setPressAgainWhenActivated(boolean pressAgainWhenActivated) {
+            this.pressAgainWhenActivated = pressAgainWhenActivated;
+            return this;
+        }
+
+        public static boolean validate(Object config_) {
+            Config config = (Config)config_;
+            if (config.getEnumOrElse("type", ButtonMappingType.SIMPLE) == ButtonMappingType.SIMPLE) {
+                String binding = config.getOrElse("binding", "");
+
+                if (binding.startsWith("keymapping.")) {
+                    String keymapping = binding.substring(11);
+
+                    boolean found = false;
+                    for (KeyMapping mapping : Minecraft.getInstance().options.keyMappings) {
+                        if (mapping.getName().equals(keymapping)) {
+                            found = true;
+                            break;
+                        }
+                    }
+                    return found;
+                } else if (binding.startsWith("inputconstant.")) {
+                    String inputconstant = binding.substring(14);
+                    try {
+                        InputConstants.Key _dummy = InputConstants.getKey(inputconstant);
+                        return true;
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+
+            // guess it's fine :shrug:
+            return true;
+        }
+    }
+
+    static final ObjectConverter objectConverter = new ObjectConverter();
+    static final Config[] defaultMappings = new Config[] {
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.A)
+                    .setBinding("keymapping.key.attack")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.B)
+                    .setBinding("keymapping.key.jump")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.Y)
+                    .setBinding("keymapping.key.sprint")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.RT)
+                    .setBinding("keymapping.key.use")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.RB)
+                    .setBinding("keymapping.key.pickItem")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.RT)
+                    .setBinding("inputconstant.key.mouse.right")
+                    .setContext(ButtonMappingContext.GUI), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.RB)
+                    .setBinding("inputconstant.key.mouse.middle")
+                    .setContext(ButtonMappingContext.GUI), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.DPAD_UP)
+                    .setBinding("keymapping.key.swapOffhand")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.DPAD_DOWN)
+                    .setBinding("keymapping.key.drop")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.DPAD_LEFT)
+                    .setBinding("keymapping.key.swapOffhand")
+                    .setContext(ButtonMappingContext.GUI), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.DPAD_RIGHT)
+                    .setBinding("keymapping.key.drop")
+                    .setContext(ButtonMappingContext.GUI), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.OPTIONS)
+                    .setBinding("inputconstant.key.keyboard.escape"), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.A)
+                    .setBinding("inputconstant.key.keyboard.escape")
+                    .setContext(ButtonMappingContext.GUI), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.VIEW)
+                    .setBinding("keymapping.key.inventory")
+                    .setContext(ButtonMappingContext.IN_GAME), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.VIEW)
+                    .setBinding("inputconstant.key.keyboard.escape")
+                    .setContext(ButtonMappingContext.GUI), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.L4)
+                    .setBinding("inputconstant.key.keyboard.left.control"), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.L5)
+                    .setBinding("inputconstant.key.keyboard.left.alt"), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.R5)
+                    .setBinding("inputconstant.key.keyboard.left.shift"), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.TOGGLE_KEYBOARD)
+                    .setGamepadButton(GamepadButtons.R4)
+                    .setBinding("TOGGLE_KEYBOARD"), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.DISABLE_GYRO)
+                    .setGamepadButton(GamepadButtons.X)
+                    .setBinding("DISABLE_GYRO")
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.X)
+                    .setBinding("inputconstant.key.mouse.left")
+                    .setContext(ButtonMappingContext.GUI), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SCROLL_UP)
+                    .setGamepadButton(GamepadButtons.DPAD_UP)
+                    .setBinding("SCROLL_UP")
+                    .setContext(ButtonMappingContext.GUI)
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SCROLL_UP)
+                    .setGamepadButton(GamepadButtons.DPAD_LEFT)
+                    .setBinding("SCROLL_UP")
+                    .setContext(ButtonMappingContext.IN_GAME)
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SCROLL_DOWN)
+                    .setGamepadButton(GamepadButtons.DPAD_DOWN)
+                    .setBinding("SCROLL_DOWN")
+                    .setContext(ButtonMappingContext.GUI)
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SCROLL_DOWN)
+                    .setGamepadButton(GamepadButtons.DPAD_RIGHT)
+                    .setBinding("SCROLL_DOWN")
+                    .setContext(ButtonMappingContext.IN_GAME)
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.SIMPLE)
+                    .setGamepadButton(GamepadButtons.LT)
+                    .setBinding("inputconstant.key.keyboard.left.shift")
+                    .setContext(ButtonMappingContext.GUI)
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.HOLD_SNEAK)
+                    .setGamepadButton(GamepadButtons.LT)
+                    .setBinding("HOLD_SNEAK")
+                    .setContext(ButtonMappingContext.IN_GAME)
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+            objectConverter.toConfig(new ButtonMappingConfig()
+                    .setType(ButtonMappingType.TOGGLE_SNEAK)
+                    .setGamepadButton(GamepadButtons.LEFT_THUMB_CLICK)
+                    .setBinding("TOGGLE_SNEAK")
+                    .setContext(ButtonMappingContext.IN_GAME)
+                    .setPressAgainWhenActivated(true), Config::inMemory),
+    };
+
     public static final Settings CONFIG;
     public static final ForgeConfigSpec CONFIG_SPEC;
 
@@ -57,6 +379,8 @@ public class Settings {
     public static long KEY_REPEAT_ACTIVATE_TIME_NANOS = 500_000_000;
     final ForgeConfigSpec.LongValue keyRepeatRepeatTimeVal;
     public static long KEY_REPEAT_REPEAT_TIME_NANOS = 300_000_000;
+    final ForgeConfigSpec.ConfigValue<List<? extends Config>> mappingsVal;
+    public static ButtonMappingConfig[] MAPPING_CONFIG;
 
     static {
         final Pair<Settings, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(Settings::new);
@@ -90,6 +414,13 @@ public class Settings {
             FLICK_STICK_SMOOTH_THRESH = CONFIG.flickStickSmoothVal.get();
             KEY_REPEAT_ACTIVATE_TIME_NANOS = CONFIG.keyRepeatActivateTimeVal.get();
             KEY_REPEAT_REPEAT_TIME_NANOS = CONFIG.keyRepeatRepeatTimeVal.get();
+            ArrayList mappings = new ArrayList();
+            for (Config config : CONFIG.mappingsVal.get()) {
+                mappings.add(objectConverter.toObject(config, ButtonMappingConfig::new));
+            }
+            ButtonMappingConfig[] mappingsArray = new ButtonMappingConfig[mappings.size()];
+            mappings.toArray(mappingsArray);
+            MAPPING_CONFIG = mappingsArray;
         }
     }
 
@@ -180,5 +511,9 @@ public class Settings {
                 .comment("Key repeat repetition time (ns)")
                 .defineInRange("keyRepeatRepeatTime", 300_000_000, 1, Long.MAX_VALUE);
         builder.pop();
+
+        mappingsVal = builder
+                .comment("Key mappings")
+                .defineListAllowEmpty(List.of("mapping"), () -> Arrays.asList(defaultMappings), ButtonMappingConfig::validate);
     }
 }
