@@ -7,6 +7,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.phys.Vec2;
 import net.minecraftforge.client.settings.IKeyConflictContext;
 import net.minecraftforge.client.settings.KeyConflictContext;
 import net.minecraftforge.client.settings.KeyModifier;
@@ -60,7 +61,7 @@ public class InputHooks {
     // need to maintain our own sense of which buttons are pressed
     private int buttonsPressedCache = 0;
 
-    private HidInput.OtherHidState latestOtherState;
+    private Vec2 latestMovementStick;
 
     public static abstract class AbstractButtonMapping {
         public int buttonBitfield;
@@ -924,10 +925,18 @@ public class InputHooks {
 
         HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
         HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
-        latestOtherState = gamepad;
+
+        // used for analog movement
+        if (!SWAP_THUMB_STICKS)
+            latestMovementStick = new Vec2(gamepad.lthumb_x, gamepad.lthumb_y);
+        else
+            latestMovementStick = new Vec2(gamepad.rthumb_x, gamepad.rthumb_y);
 
         // movement keys (backup only, for e.g. boats)
-        doBackupWASD(gamepad.lthumb_x, gamepad.lthumb_y);
+        if (!SWAP_THUMB_STICKS)
+            doBackupWASD(gamepad.lthumb_x, gamepad.lthumb_y);
+        else
+            doBackupWASD(gamepad.rthumb_x, gamepad.rthumb_y);
 
         // mouse cursor
         if (rpad_menu == null) {
@@ -1089,10 +1098,21 @@ public class InputHooks {
         }
 
         // good gyro controls
-        doGyroAndFlickStick(
-                gyro_is_enabled && ((gamepad.buttons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) == 0),
-                gamepad.rthumb_x, gamepad.rthumb_y,
-                accumState, current_nanos - last_nanos);
+        int freeze_gyro_pad;
+        if (!SWAP_PADS)
+            freeze_gyro_pad = HidInput.GamepadButtons.BTN_RPAD_TOUCH;
+        else
+            freeze_gyro_pad = HidInput.GamepadButtons.BTN_LPAD_TOUCH;
+        if (!SWAP_THUMB_STICKS)
+            doGyroAndFlickStick(
+                    gyro_is_enabled && ((gamepad.buttons & freeze_gyro_pad) == 0),
+                    gamepad.rthumb_x, gamepad.rthumb_y,
+                    accumState, current_nanos - last_nanos);
+        else
+            doGyroAndFlickStick(
+                    gyro_is_enabled && ((gamepad.buttons & freeze_gyro_pad) == 0),
+                    gamepad.lthumb_x, gamepad.lthumb_y,
+                    accumState, current_nanos - last_nanos);
 
         last_was_gui_mode = is_gui_mode;
         last_nanos = current_nanos;
@@ -1102,8 +1122,8 @@ public class InputHooks {
 
     public float fbImpulse(float keyboardImpulse) {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
-        if (latestOtherState.lthumb_x * latestOtherState.lthumb_x + latestOtherState.lthumb_y * latestOtherState.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = (float)(latestOtherState.lthumb_y / THUMB_ANALOG_FULLSCALE);
+        if (latestMovementStick.lengthSquared() > THUMB_DEADZONE * THUMB_DEADZONE) {
+            float ret = (float)(latestMovementStick.y / THUMB_ANALOG_FULLSCALE);
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;
@@ -1114,8 +1134,8 @@ public class InputHooks {
 
     public float lrImpulse(float keyboardImpulse) {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
-        if (latestOtherState.lthumb_x * latestOtherState.lthumb_x + latestOtherState.lthumb_y * latestOtherState.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = (float)(latestOtherState.lthumb_x / -THUMB_ANALOG_FULLSCALE);
+        if (latestMovementStick.lengthSquared() > THUMB_DEADZONE * THUMB_DEADZONE) {
+            float ret = (float)(latestMovementStick.x / -THUMB_ANALOG_FULLSCALE);
             if (ret > 1) ret = 1;
             if (ret < -1) ret = -1;
             return ret;
@@ -1136,21 +1156,21 @@ public class InputHooks {
     }
 
     public float rideTickBoatLeftRight() {
-        float ret = (float)(latestOtherState.lthumb_x / THUMB_ANALOG_FULLSCALE);
+        float ret = (float)(latestMovementStick.x / THUMB_ANALOG_FULLSCALE);
         if (ret > 1) ret = 1;
         if (ret < -1) ret = -1;
         return ret;
     }
 
     public float rideTickBoatUpDown() {
-        float ret = (float)(latestOtherState.lthumb_y / THUMB_ANALOG_FULLSCALE);
+        float ret = (float)(latestMovementStick.y / THUMB_ANALOG_FULLSCALE);
         if (ret > 1) ret = 1;
         if (ret < -1) ret = -1;
         return ret;
     }
 
     public boolean rideTickBoatActive() {
-        return latestOtherState.lthumb_x * latestOtherState.lthumb_x + latestOtherState.lthumb_y * latestOtherState.lthumb_y > THUMB_DEADZONE * THUMB_DEADZONE;
+        return latestMovementStick.lengthSquared() > THUMB_DEADZONE * THUMB_DEADZONE;
     }
 
     public static void runTickHook() {

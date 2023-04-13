@@ -381,6 +381,10 @@ public class Settings {
     public static long KEY_REPEAT_REPEAT_TIME_NANOS = 300_000_000;
     final ForgeConfigSpec.ConfigValue<List<? extends Config>> mappingsVal;
     public static ButtonMappingConfig[] MAPPING_CONFIG;
+    final ForgeConfigSpec.BooleanValue swapSticksVal;
+    public static boolean SWAP_THUMB_STICKS = false;
+    final ForgeConfigSpec.BooleanValue swapPadsVal;
+    public static boolean SWAP_PADS = false;
 
     static {
         final Pair<Settings, ForgeConfigSpec> specPair = new ForgeConfigSpec.Builder().configure(Settings::new);
@@ -421,6 +425,8 @@ public class Settings {
             ButtonMappingConfig[] mappingsArray = new ButtonMappingConfig[mappings.size()];
             mappings.toArray(mappingsArray);
             MAPPING_CONFIG = mappingsArray;
+            SWAP_THUMB_STICKS = CONFIG.swapSticksVal.get();
+            SWAP_PADS = CONFIG.swapPadsVal.get();
         }
     }
 
@@ -512,6 +518,12 @@ public class Settings {
                 .defineInRange("keyRepeatRepeatTime", 300_000_000, 1, Long.MAX_VALUE);
         builder.pop();
 
+        swapSticksVal = builder
+                .comment("Swap thumb sticks (so that movement is on the right and flick stick is on the left)")
+                .define("swapThumbSticks", false);
+        swapPadsVal = builder
+                .comment("Swap touchpads (so that hotbar is on the right and mouse is on the left)")
+                .define("swapPads", false);
         mappingsVal = builder
                 .comment("Key mappings")
                 .defineListAllowEmpty(List.of("mapping"), () -> Arrays.asList(defaultMappings), ButtonMappingConfig::validate);
