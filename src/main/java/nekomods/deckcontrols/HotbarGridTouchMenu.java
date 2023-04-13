@@ -22,6 +22,11 @@ public class HotbarGridTouchMenu extends GridTouchMenu {
         int screenW = minecraft.getWindow().getGuiScaledWidth();
         int screenH = minecraft.getWindow().getGuiScaledHeight();
 
+        int xbase = 0;
+        if (Settings.SWAP_PADS)
+            xbase = screenW - 62;
+        ps.translate(xbase, 0, 0);
+
         // Render black outline manually
         RenderSystem.setShaderColor(0, 0, 0, 1);
         RenderSystem.setShader(GameRenderer::getPositionShader);
@@ -105,7 +110,7 @@ public class HotbarGridTouchMenu extends GridTouchMenu {
                 int row = slot / 3;
                 int col = slot % 3;
                 minecraft.gui.renderSlot(
-                        2 + 1 + col * 20,
+                        xbase + 2 + 1 + col * 20,
                         2 + screenH - 61 + row * 20,
                         pPartialTicks,
                         player,

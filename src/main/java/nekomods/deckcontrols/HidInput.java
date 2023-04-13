@@ -168,12 +168,12 @@ public class HidInput extends Thread {
         long last_frame_nanos = -1;
         int frame_times_i = 0;
         // mouse smoothing
-        int last_rpad_x = 0;
-        int last_rpad_y = 0;
-        boolean last_rpad_valid = false;
-        double[] rpad_mouse_smoothing_x = new double[32];
-        double[] rpad_mouse_smoothing_y = new double[32];
-        int rpad_mouse_smoothing_i = 0;
+        int last_mouse_pad_x = 0;
+        int last_mouse_pad_y = 0;
+        boolean last_mouse_pad_valid = false;
+        double[] pad_mouse_smoothing_x = new double[32];
+        double[] pad_mouse_smoothing_y = new double[32];
+        int pad_mouse_smoothing_i = 0;
 
         while (true) {
             int ret = OsIo.read(fd, buf, 64);
@@ -300,18 +300,31 @@ public class HidInput extends Thread {
             double yaw_delta_deg = yaw_deg_per_s * delta_seconds;
 
             // mouse accum
+            int mouse_pad_touch;
+            short mouse_pad_x;
+            short mouse_pad_y;
+            if (!SWAP_PADS) {
+                mouse_pad_touch = HidInput.GamepadButtons.BTN_RPAD_TOUCH;
+                mouse_pad_x = newState.rpad_x;
+                mouse_pad_y = newState.rpad_y;
+            } else {
+                mouse_pad_touch = HidInput.GamepadButtons.BTN_LPAD_TOUCH;
+                mouse_pad_x = newState.lpad_x;
+                mouse_pad_y = newState.lpad_y;
+            }
+
             double mouse_final_dx = 0;
             double mouse_final_dy = 0;
-            if ((currentPressedButtons & HidInput.GamepadButtons.BTN_RPAD_TOUCH) != 0) {
-                if (last_rpad_valid) {
-                    int rpad_dx = newState.rpad_x - last_rpad_x;
-                    int rpad_dy = newState.rpad_y - last_rpad_y;
+            if ((currentPressedButtons & mouse_pad_touch) != 0) {
+                if (last_mouse_pad_valid) {
+                    int pad_dx = mouse_pad_x - last_mouse_pad_x;
+                    int pad_dy = mouse_pad_y - last_mouse_pad_y;
 
                     double tier_smooth_thresh_1 = Settings.MOUSE_SMOOTH_THRESH / 2;
                     double tier_smooth_thresh_2 = Settings.MOUSE_SMOOTH_THRESH;
 
-                    double dx_mag = Math.abs(rpad_dx);
-                    double dy_mag = Math.abs(rpad_dy);
+                    double dx_mag = Math.abs(pad_dx);
+                    double dy_mag = Math.abs(pad_dy);
 
                     double smooth_direct_weight_x = (dx_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
                     if (smooth_direct_weight_x < 0) smooth_direct_weight_x = 0;
@@ -320,16 +333,16 @@ public class HidInput extends Thread {
                     if (smooth_direct_weight_y < 0) smooth_direct_weight_y = 0;
                     if (smooth_direct_weight_y > 1) smooth_direct_weight_y = 1;
 
-                    double mouse_dx_direct = rpad_dx * smooth_direct_weight_x;
-                    double mouse_dy_direct = rpad_dy * smooth_direct_weight_y;
-                    double mouse_dx_to_smooth = rpad_dx * (1 - smooth_direct_weight_x);
-                    double mouse_dy_to_smooth = rpad_dy * (1 - smooth_direct_weight_y);
-                    rpad_mouse_smoothing_x[rpad_mouse_smoothing_i] = mouse_dx_to_smooth;
-                    rpad_mouse_smoothing_y[rpad_mouse_smoothing_i] = mouse_dy_to_smooth;
-                    rpad_mouse_smoothing_i = (rpad_mouse_smoothing_i + 1) % rpad_mouse_smoothing_x.length;
+                    double mouse_dx_direct = pad_dx * smooth_direct_weight_x;
+                    double mouse_dy_direct = pad_dy * smooth_direct_weight_y;
+                    double mouse_dx_to_smooth = pad_dx * (1 - smooth_direct_weight_x);
+                    double mouse_dy_to_smooth = pad_dy * (1 - smooth_direct_weight_y);
+                    pad_mouse_smoothing_x[pad_mouse_smoothing_i] = mouse_dx_to_smooth;
+                    pad_mouse_smoothing_y[pad_mouse_smoothing_i] = mouse_dy_to_smooth;
+                    pad_mouse_smoothing_i = (pad_mouse_smoothing_i + 1) % pad_mouse_smoothing_x.length;
 
-                    double mouse_smoothed_dx = mouse_dx_direct + Arrays.stream(rpad_mouse_smoothing_x).average().orElse(0);
-                    double mouse_smoothed_dy = mouse_dy_direct + Arrays.stream(rpad_mouse_smoothing_y).average().orElse(0);
+                    double mouse_smoothed_dx = mouse_dx_direct + Arrays.stream(pad_mouse_smoothing_x).average().orElse(0);
+                    double mouse_smoothed_dy = mouse_dy_direct + Arrays.stream(pad_mouse_smoothing_y).average().orElse(0);
 
                     mouse_final_dx = mouse_smoothed_dx;
                     mouse_final_dy = mouse_smoothed_dy;
@@ -338,11 +351,11 @@ public class HidInput extends Thread {
                     if (Math.abs(mouse_smoothed_dy) < MOUSE_TIGHTEN_THRESH)
                         mouse_final_dy *= Math.abs(mouse_smoothed_dy) / MOUSE_TIGHTEN_THRESH;
                 }
-                last_rpad_x = newState.rpad_x;
-                last_rpad_y = newState.rpad_y;
-                last_rpad_valid = true;
+                last_mouse_pad_x = mouse_pad_x;
+                last_mouse_pad_y = mouse_pad_y;
+                last_mouse_pad_valid = true;
             } else {
-                last_rpad_valid = false;
+                last_mouse_pad_valid = false;
             }
 
             // big CAS

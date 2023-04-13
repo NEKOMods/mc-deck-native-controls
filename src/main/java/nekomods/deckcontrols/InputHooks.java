@@ -369,7 +369,10 @@ public class InputHooks {
         ArrayList mappings = new ArrayList();
 
         // special pad click button (hardcoded)
-        mappings.add(new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_LEFT), new TouchKeyboardInactiveContext()));
+        mappings.add(new SimpleButtonMapping(
+                SWAP_PADS ? HidInput.GamepadButtons.BTN_LPAD_CLICK : HidInput.GamepadButtons.BTN_RPAD_CLICK,
+                InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_LEFT),
+                new TouchKeyboardInactiveContext()));
 
         int toggleSneakButton = 0;
         int holdSneakButton = 0;
@@ -919,8 +922,13 @@ public class InputHooks {
             lpad_menu = touchKeyboard.getLeft();
             rpad_menu = touchKeyboard.getRight();
         } else {
-            lpad_menu = hotbarMenu;
-            rpad_menu = null;
+            if (!SWAP_PADS) {
+                lpad_menu = hotbarMenu;
+                rpad_menu = null;
+            } else {
+                lpad_menu = null;
+                rpad_menu = hotbarMenu;
+            }
         }
 
         HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
@@ -939,7 +947,7 @@ public class InputHooks {
             doBackupWASD(gamepad.rthumb_x, gamepad.rthumb_y);
 
         // mouse cursor
-        if (rpad_menu == null) {
+        if ((!SWAP_PADS && rpad_menu == null) || (SWAP_PADS && lpad_menu == null)) {
             doMouseCursor(accumState);
         }
 
