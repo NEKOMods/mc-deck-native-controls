@@ -362,47 +362,7 @@ public class InputHooks {
     };
 
     final ToggleButtonMapping toggleSneak;
-
-    private final AbstractButtonMapping[] simpleMappings; /* = new AbstractButtonMapping[] {
-/*            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, minecraft.options.keyAttack, KeyConflictContext.IN_GAME),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_B, minecraft.options.keyJump, KeyConflictContext.IN_GAME),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_Y, minecraft.options.keySprint, KeyConflictContext.IN_GAME),
-
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_ANALOG_FULL, minecraft.options.keyUse, KeyConflictContext.IN_GAME),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_DIGITAL, minecraft.options.keyPickItem, KeyConflictContext.IN_GAME),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_ANALOG_FULL, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_RIGHT), KeyConflictContext.GUI),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RT_DIGITAL, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_MIDDLE), KeyConflictContext.GUI),
-
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_UP, minecraft.options.keySwapOffhand, KeyConflictContext.IN_GAME),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_DOWN, minecraft.options.keyDrop, KeyConflictContext.IN_GAME),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_LEFT, minecraft.options.keySwapOffhand, KeyConflictContext.GUI),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_D_RIGHT, minecraft.options.keyDrop, KeyConflictContext.GUI),
-
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_OPTIONS, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_ESCAPE), KeyConflictContext.UNIVERSAL),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_A, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_ESCAPE), KeyConflictContext.GUI),
-
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_VIEW, minecraft.options.keyInventory, KeyConflictContext.IN_GAME),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_VIEW, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_ESCAPE), KeyConflictContext.GUI),
-
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L4, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_CONTROL), KeyConflictContext.UNIVERSAL),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_L5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_ALT), KeyConflictContext.UNIVERSAL),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_R5, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.UNIVERSAL),
-
-            new ToggleTouchKeyboardButton(HidInput.GamepadButtons.BTN_R4),
-
-            new DisableGyroButton(HidInput.GamepadButtons.BTN_X),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_X, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_LEFT), KeyConflictContext.GUI),
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_RPAD_CLICK, InputConstants.Type.MOUSE.getOrCreate(GLFW_MOUSE_BUTTON_LEFT), new TouchKeyboardInactiveContext()),
-
-            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_UP, KeyConflictContext.GUI, keyRepeats[0]).setActivateOnSwitchIn(true),
-            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_LEFT, KeyConflictContext.IN_GAME, keyRepeats[0]).setActivateOnSwitchIn(true),
-            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_DOWN, KeyConflictContext.GUI, keyRepeats[1]).setActivateOnSwitchIn(true),
-            new KeyRepeatButtonMapping(HidInput.GamepadButtons.BTN_D_RIGHT, KeyConflictContext.IN_GAME, keyRepeats[1]).setActivateOnSwitchIn(true),
-
-            new SimpleButtonMapping(HidInput.GamepadButtons.BTN_LT_ANALOG_FULL, InputConstants.Type.KEYSYM.getOrCreate(GLFW_KEY_LEFT_SHIFT), KeyConflictContext.GUI).setActivateOnSwitchIn(true),
-
-            toggleSneak,
-                };*/
+    private final AbstractButtonMapping[] simpleMappings;
 
     public InputHooks() {
         ArrayList mappings = new ArrayList();
