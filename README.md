@@ -9,7 +9,7 @@ This mod gives Minecraft Java Edition native support for the Steam Deck's inputs
 
 ## Control mapping
 
-This is hardcoded for now, sorry!
+The following is the default config. It can be changed in the config file. More instructions / GUI coming soon...
 
 ### Non-GUI mode
 ![non-GUI controls](./docs/nongui.svg)
