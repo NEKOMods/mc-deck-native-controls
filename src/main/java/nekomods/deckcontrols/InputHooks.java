@@ -1165,6 +1165,7 @@ public class InputHooks {
     }
 
     public boolean rideTickBoatActive() {
+        if (minecraft.screen != null) return false;     // don't move when inventory is up
         return latestMovementStick.lengthSquared() > THUMB_DEADZONE * THUMB_DEADZONE;
     }
 
