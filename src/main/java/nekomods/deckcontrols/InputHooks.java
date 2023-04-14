@@ -291,7 +291,7 @@ public class InputHooks {
         protected void _press() {
             toggleIsActive = !toggleIsActive;
             if (MODE_SWITCH_BEEP_LEN > 0)
-                DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                DeckControls.HID_INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
             LOGGER.debug("new toggle logic -- toggle");
             if (toggleIsActive) {
                 boolean already_pressed = false;
@@ -345,7 +345,7 @@ public class InputHooks {
             } else if (toggleButtonMapping.toggleIsActive && !toggleButtonMapping.dontReleaseYet) {
                 LOGGER.debug("new toggle logic -- hold button release -- releasing toggle");
                 if (MODE_SWITCH_BEEP_LEN > 0)
-                    DeckControls.INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
+                    DeckControls.HID_INPUT.beep(MODE_SWITCH_BEEP_FREQ, MODE_SWITCH_BEEP_LEN);
                 InputHooks.this.release(toggleButtonMapping.key);
                 toggleButtonMapping.toggleIsActive = false;
             }
@@ -930,8 +930,8 @@ public class InputHooks {
             }
         }
 
-        HidInput.AccumHidState accumState = DeckControls.INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
-        HidInput.OtherHidState gamepad = DeckControls.INPUT.latestInput;
+        HidInput.AccumHidState accumState = DeckControls.HID_INPUT.accumInput.getAndSet(new HidInput.AccumHidState());
+        HidInput.OtherHidState gamepad = DeckControls.HID_INPUT.latestInput;
 
         // used for analog movement
         if (!SWAP_THUMB_STICKS)
@@ -977,7 +977,7 @@ public class InputHooks {
                         lpad_menu_selection = lpad_menu.padToOption(menu_x, menu_y);
                         if (lpad_is_pressed)
                             lpad_menu.onChangeWhileClicked(old_lpad_menu_selection, lpad_menu_selection);
-                        DeckControls.INPUT.tick(false);
+                        DeckControls.HID_INPUT.tick(false);
                     }
                 }
             } else {
@@ -997,7 +997,7 @@ public class InputHooks {
                         rpad_menu_selection = rpad_menu.padToOption(menu_x, menu_y);
                         if (rpad_is_pressed)
                             rpad_menu.onChangeWhileClicked(old_rpad_menu_selection, rpad_menu_selection);
-                        DeckControls.INPUT.tick(true);
+                        DeckControls.HID_INPUT.tick(true);
                     }
                 }
             } else {
@@ -1014,9 +1014,9 @@ public class InputHooks {
             repeat.update(current_nanos - last_nanos);
         }
 
-        DeckControls.INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
+        DeckControls.HID_INPUT.keyEvents.addLast(HidInput.GamepadButtons.FLAG_BARRIER);
         int keyevent;
-        while ((keyevent = DeckControls.INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
+        while ((keyevent = DeckControls.HID_INPUT.keyEvents.removeFirst()) != HidInput.GamepadButtons.FLAG_BARRIER) {
             // update cache
             if ((keyevent & HidInput.GamepadButtons.FLAG_BTN_UP) == 0) {
                 buttonsPressedCache |= keyevent;

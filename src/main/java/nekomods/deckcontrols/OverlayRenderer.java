@@ -36,7 +36,7 @@ public class OverlayRenderer {
         int screenW = minecraft.getWindow().getGuiScaledWidth();
         int screenH = minecraft.getWindow().getGuiScaledHeight();
 
-        if (DeckControls.HOOKS != null && DeckControls.INPUT != null && DeckControls.INPUT.isAlive()) {
+        if (DeckControls.HOOKS != null && DeckControls.HID_INPUT != null && DeckControls.HID_INPUT.isAlive()) {
             RenderSystem.disableDepthTest();
             RenderSystem.enableBlend();
             RenderSystem.defaultBlendFunc();

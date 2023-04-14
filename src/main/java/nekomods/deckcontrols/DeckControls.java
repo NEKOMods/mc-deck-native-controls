@@ -16,7 +16,8 @@ public class DeckControls
 {
     public static final String MODID = "deckcontrols";
     public static InputHooks HOOKS;
-    public static HidInput INPUT;
+    public static HidInput HID_INPUT;
+    public static TouchscreenInput TOUCH_INPUT;
 
     public DeckControls() {
         ModLoadingContext.get().registerConfig(ModConfig.Type.CLIENT, Settings.CONFIG_SPEC);
@@ -28,8 +29,10 @@ public class DeckControls
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            INPUT = new HidInput();
-            INPUT.start();
+            HID_INPUT = new HidInput();
+            HID_INPUT.start();
+
+            TOUCH_INPUT = new TouchscreenInput();
 
             HOOKS = new InputHooks();
         }
@@ -44,13 +47,13 @@ public class DeckControls
                 dt.getLeft().add("");
                 dt.getLeft().add(
                         "Steam Deck native input: " +
-                                (INPUT.isAlive() ? "ok" : "not ok") +
-                                (INPUT.debug ? ", using simulator" : "")
+                                (HID_INPUT.isAlive() ? "ok" : "not ok") +
+                                (HID_INPUT.debug ? ", using simulator" : "")
                 );
                 dt.getLeft().add(String.format(
                         "Missed frames: %d, avg frame time %f ms",
-                        DeckControls.INPUT.missedFrames,
-                        Arrays.stream(DeckControls.INPUT.frameTimes).average().orElse(0) / 1e6
+                        DeckControls.HID_INPUT.missedFrames,
+                        Arrays.stream(DeckControls.HID_INPUT.frameTimes).average().orElse(0) / 1e6
                 ));
             }
         }
