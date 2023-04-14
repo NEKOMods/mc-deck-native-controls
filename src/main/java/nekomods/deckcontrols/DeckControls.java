@@ -56,6 +56,10 @@ public class DeckControls
                         DeckControls.HID_INPUT.missedFrames,
                         Arrays.stream(DeckControls.HID_INPUT.frameTimes).average().orElse(0) / 1e6
                 ));
+                dt.getLeft().add(
+                        "Steam Deck touchscreen input: " +
+                                (TOUCH_INPUT.isAlive() ? "ok" : "not ok")
+                );
             }
         }
     }

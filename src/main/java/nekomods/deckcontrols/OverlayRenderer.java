@@ -36,16 +36,6 @@ public class OverlayRenderer {
         int screenW = minecraft.getWindow().getGuiScaledWidth();
         int screenH = minecraft.getWindow().getGuiScaledHeight();
 
-        if (DeckControls.TOUCH_INPUT != null) {
-            int point = 0;
-            for (int i = 0; i < TouchscreenInput.NUM_TOUCH_POINTS; i++) {
-                if (DeckControls.TOUCH_INPUT.touchPoints[i].tracking_id > 0) {
-                    String text = "Touch point " + i + " ID " + DeckControls.TOUCH_INPUT.touchPoints[i].tracking_id + " = (" + DeckControls.TOUCH_INPUT.touchPoints[i].x + ", " + DeckControls.TOUCH_INPUT.touchPoints[i].y + ")";
-                    minecraft.font.draw(ps, text, 0, (point++) * 8, 0x00ff00);
-                }
-            }
-        }
-
         if (DeckControls.HOOKS != null && DeckControls.HID_INPUT != null && DeckControls.HID_INPUT.isAlive()) {
             RenderSystem.disableDepthTest();
             RenderSystem.enableBlend();
