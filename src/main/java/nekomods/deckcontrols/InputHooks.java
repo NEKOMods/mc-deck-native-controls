@@ -870,8 +870,7 @@ public class InputHooks {
                 double tier_smooth_thresh_2 = FLICK_STICK_SMOOTH_THRESH;
                 double diff_mag = Math.abs(diff_angle);
                 double smooth_direct_weight = (diff_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
-                if (smooth_direct_weight < 0) smooth_direct_weight = 0;
-                if (smooth_direct_weight > 1) smooth_direct_weight = 1;
+                smooth_direct_weight = Mth.clamp(smooth_direct_weight, 0, 1);
 
                 tot_turn_yaw += diff_angle * smooth_direct_weight + flickSmoothed(diff_angle * (1 - smooth_direct_weight));
             } else if (flick_stick_last_thumb_x * flick_stick_last_thumb_x + flick_stick_last_thumb_y * flick_stick_last_thumb_y >= FLICK_STICK_DEACTIVATE_DIST * FLICK_STICK_DEACTIVATE_DIST) {
@@ -1131,10 +1130,7 @@ public class InputHooks {
     public float fbImpulse(float keyboardImpulse) {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
         if (latestMovementStick.lengthSquared() > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = (float)(latestMovementStick.y / THUMB_ANALOG_FULLSCALE);
-            if (ret > 1) ret = 1;
-            if (ret < -1) ret = -1;
-            return ret;
+            return Mth.clamp((float)(latestMovementStick.y / THUMB_ANALOG_FULLSCALE), -1, 1);
         } else {
             return keyboardImpulse;
         }
@@ -1143,10 +1139,7 @@ public class InputHooks {
     public float lrImpulse(float keyboardImpulse) {
         if (minecraft.screen != null) return keyboardImpulse;   // don't move when inventory is up
         if (latestMovementStick.lengthSquared() > THUMB_DEADZONE * THUMB_DEADZONE) {
-            float ret = (float)(latestMovementStick.x / -THUMB_ANALOG_FULLSCALE);
-            if (ret > 1) ret = 1;
-            if (ret < -1) ret = -1;
-            return ret;
+            return Mth.clamp((float)(latestMovementStick.x / -THUMB_ANALOG_FULLSCALE), -1, 1);
         } else {
             return keyboardImpulse;
         }
@@ -1164,17 +1157,11 @@ public class InputHooks {
     }
 
     public float rideTickBoatLeftRight() {
-        float ret = (float)(latestMovementStick.x / THUMB_ANALOG_FULLSCALE);
-        if (ret > 1) ret = 1;
-        if (ret < -1) ret = -1;
-        return ret;
+        return Mth.clamp((float)(latestMovementStick.x / THUMB_ANALOG_FULLSCALE), -1, 1);
     }
 
     public float rideTickBoatUpDown() {
-        float ret = (float)(latestMovementStick.y / THUMB_ANALOG_FULLSCALE);
-        if (ret > 1) ret = 1;
-        if (ret < -1) ret = -1;
-        return ret;
+        return Mth.clamp((float)(latestMovementStick.y / THUMB_ANALOG_FULLSCALE), -1, 1);
     }
 
     public boolean rideTickBoatActive() {

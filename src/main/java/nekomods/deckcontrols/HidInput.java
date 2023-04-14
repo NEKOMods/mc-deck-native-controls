@@ -2,6 +2,7 @@ package nekomods.deckcontrols;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.Util;
+import net.minecraft.util.Mth;
 import org.slf4j.Logger;
 
 import java.nio.file.Files;
@@ -327,11 +328,9 @@ public class HidInput extends Thread {
                     double dy_mag = Math.abs(pad_dy);
 
                     double smooth_direct_weight_x = (dx_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
-                    if (smooth_direct_weight_x < 0) smooth_direct_weight_x = 0;
-                    if (smooth_direct_weight_x > 1) smooth_direct_weight_x = 1;
+                    smooth_direct_weight_x = Mth.clamp(smooth_direct_weight_x, 0, 1);
                     double smooth_direct_weight_y = (dy_mag - tier_smooth_thresh_1) / (tier_smooth_thresh_2 - tier_smooth_thresh_1);
-                    if (smooth_direct_weight_y < 0) smooth_direct_weight_y = 0;
-                    if (smooth_direct_weight_y > 1) smooth_direct_weight_y = 1;
+                    smooth_direct_weight_y = Mth.clamp(smooth_direct_weight_y, 0, 1);
 
                     double mouse_dx_direct = pad_dx * smooth_direct_weight_x;
                     double mouse_dy_direct = pad_dy * smooth_direct_weight_y;
