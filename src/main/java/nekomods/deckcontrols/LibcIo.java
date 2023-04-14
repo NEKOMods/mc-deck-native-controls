@@ -4,10 +4,10 @@ import com.sun.jna.Library;
 import com.sun.jna.Native;
 import com.sun.jna.NativeLong;
 
-public class OsIo {
-    private static OsIoInterface INSTANCE = Native.load("c", OsIoInterface.class);
+public class LibcIo {
+    private static LibcIoInterface INSTANCE = Native.load("c", LibcIoInterface.class);
 
-    public interface OsIoInterface extends Library {
+    public interface LibcIoInterface extends Library {
         int open(String pathname, int flags);
         int read(int fd, byte[] data, NativeLong len);
         int ioctl(int fd, int cmd, byte[] p);

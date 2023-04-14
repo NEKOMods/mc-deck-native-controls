@@ -121,7 +121,7 @@ public class HidInput extends Thread {
     public void run() {
         LOGGER.info("Deck controls thread init...");
 
-        fd = OsIo.open("/tmp/mc-deck-debug-sim", 0);
+        fd = LibcIo.open("/tmp/mc-deck-debug-sim", 0);
         if (fd != -1) {
             LOGGER.info("Deck controls using simulator");
             debug = true;
@@ -147,7 +147,7 @@ public class HidInput extends Thread {
 
                         LOGGER.info("Deck controls are at " + devname_full_path);
 
-                        fd = OsIo.open(devname_full_path, 0);
+                        fd = LibcIo.open(devname_full_path, 0);
                         break;
                     }
                 }
@@ -177,7 +177,7 @@ public class HidInput extends Thread {
         int pad_mouse_smoothing_i = 0;
 
         while (true) {
-            int ret = OsIo.read(fd, buf, 64);
+            int ret = LibcIo.read(fd, buf, 64);
             if (ret != 64) {
                 LOGGER.error("Bad read length " + ret);
                 continue;
@@ -411,7 +411,7 @@ public class HidInput extends Thread {
         buf[8] = (byte)(repeats & 0xFF);
         buf[9] = (byte)((repeats >> 8) & 0xFF);
 
-        return OsIo.ioctl(fd, 0xC0414806, buf) == 0;
+        return LibcIo.ioctl(fd, 0xC0414806, buf) == 0;
     }
 
     public boolean tick(boolean leftRight) {
@@ -431,6 +431,6 @@ public class HidInput extends Thread {
         buf[6] = 0x03;  // -24 to 6, other/global intensity
         // steam sends more bytes, but afaict the firmware doesn't read them
 
-        return OsIo.ioctl(fd, 0xC0414806, buf) == 0;
+        return LibcIo.ioctl(fd, 0xC0414806, buf) == 0;
     }
 }
