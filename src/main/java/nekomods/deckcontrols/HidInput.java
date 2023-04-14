@@ -411,6 +411,7 @@ public class HidInput extends Thread {
         buf[8] = (byte)(repeats & 0xFF);
         buf[9] = (byte)((repeats >> 8) & 0xFF);
 
+        // HIDIOCSFEATURE
         return LibcIo.ioctl(fd, 0xC0414806, buf) == 0;
     }
 
@@ -431,6 +432,7 @@ public class HidInput extends Thread {
         buf[6] = 0x03;  // -24 to 6, other/global intensity
         // steam sends more bytes, but afaict the firmware doesn't read them
 
+        // HIDIOCSFEATURE
         return LibcIo.ioctl(fd, 0xC0414806, buf) == 0;
     }
 }

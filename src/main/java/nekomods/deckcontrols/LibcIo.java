@@ -11,6 +11,8 @@ public class LibcIo {
         int open(String pathname, int flags);
         int read(int fd, byte[] data, NativeLong len);
         int ioctl(int fd, int cmd, byte[] p);
+        int ioctl(int fd, int cmd, NativeLong p);
+        int close(int fd);
     }
 
     public static int open(String pathname, int flags) {
@@ -23,5 +25,13 @@ public class LibcIo {
 
     public static int ioctl(int fd, int cmd, byte[] p) {
         return INSTANCE.ioctl(fd, cmd, p);
+    }
+
+    public static int ioctl(int fd, int cmd, NativeLong p) {
+        return INSTANCE.ioctl(fd, cmd, p);
+    }
+
+    public static int close(int fd) {
+        return INSTANCE.close(fd);
     }
 }
