@@ -26,7 +26,7 @@ function initializeCoreMod() {
 
                 methodNode.instructions.insert(grab_func_call, asmapi.buildMethodCall(
                     "nekomods/deckcontrols/TouchscreenInput",
-                    "touchRemoveFromCursor",
+                    "touchGrab",
                     "()V",
                     asmapi.MethodType.STATIC));
 
@@ -59,7 +59,7 @@ function initializeCoreMod() {
 
                 methodNode.instructions.insert(grab_func_call, asmapi.buildMethodCall(
                     "nekomods/deckcontrols/TouchscreenInput",
-                    "touchReturnToCursor",
+                    "touchUngrab",
                     "()V",
                     asmapi.MethodType.STATIC));
 

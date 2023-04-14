@@ -55,8 +55,8 @@ public class TouchscreenInput {
         }
     }
 
-    public static void touchRemoveFromCursor() {
-        LOGGER.debug("remove touchscreen from cursor");
+    public static void touchGrab() {
+        LOGGER.debug("grab touchscreen");
 
         if (DeckControls.TOUCH_INPUT != null) {
             // EVIOCGRAB
@@ -64,8 +64,8 @@ public class TouchscreenInput {
         }
     }
 
-    public static void touchReturnToCursor() {
-        LOGGER.debug("return touchscreen back to cursor");
+    public static void touchUngrab() {
+        LOGGER.debug("ungrab touchscreen");
 
         if (DeckControls.TOUCH_INPUT != null) {
             // EVIOCGRAB
