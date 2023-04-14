@@ -29,7 +29,7 @@ public class TouchscreenInput extends Thread {
     private int fd;
     private int latest_slot;
 
-    private static class TouchPoint implements Cloneable {
+    public static class TouchPoint implements Cloneable {
         public int tracking_id;
         public int x;
         public int y;
@@ -49,15 +49,18 @@ public class TouchscreenInput extends Thread {
             return clone;
         }
     }
-    private static final int NUM_TOUCH_POINTS = 10;
-    public static final TouchPoint[] touchPoints = new TouchPoint[NUM_TOUCH_POINTS];
+    public static final int NUM_TOUCH_POINTS = 10;
+    public TouchPoint[] touchPoints = new TouchPoint[NUM_TOUCH_POINTS];
+    private TouchPoint[] newTouchPoints = new TouchPoint[NUM_TOUCH_POINTS];
 
     public TouchscreenInput() {
         super("Steam Deck Touchscreen Thread");
         super.setDaemon(true);
 
-        for (int i = 0; i < NUM_TOUCH_POINTS; i++)
+        for (int i = 0; i < NUM_TOUCH_POINTS; i++) {
             touchPoints[i] = new TouchPoint();
+            newTouchPoints[i] = new TouchPoint();
+        }
 
         AtomicInteger touch_fd = new AtomicInteger(-1);
 
@@ -115,13 +118,6 @@ public class TouchscreenInput extends Thread {
 
         if (fd == -1) return;
 
-        int latest_tracking_id = -1;
-        boolean tracking_id_changed = false;
-        int latest_pos_x = -1;
-        boolean pos_x_changed = false;
-        int latest_pos_y = -1;
-        boolean pos_y_changed = false;
-
         while (true) {
             // FIXME verify if 32-bit still works
             byte[] event_bytes;
@@ -150,43 +146,25 @@ public class TouchscreenInput extends Thread {
             int code = event_buf.getShort();
             int value = event_buf.getInt();
 
-//            LOGGER.debug("evt " + tv_sec + " " + tv_usec + " " + type + " " + code + " " + value);
-
             if (type == EV_ABS && code == ABS_MT_SLOT) {
                 latest_slot = value;
             }
             if (type == EV_ABS && code == ABS_MT_TRACKING_ID) {
-                latest_tracking_id = value;
-                tracking_id_changed = true;
+                newTouchPoints[latest_slot].tracking_id = value;
             }
             if (type == EV_ABS && code == ABS_MT_POSITION_X) {
-                latest_pos_x = value;
-                pos_x_changed = true;
+                newTouchPoints[latest_slot].x = value;
             }
             if (type == EV_ABS && code == ABS_MT_POSITION_Y) {
-                latest_pos_y = value;
-                pos_y_changed = true;
+                newTouchPoints[latest_slot].y = value;
             }
 
             if (type == EV_SYN && code == SYN_REPORT) {
-//                LOGGER.debug("slot " + latest_slot + " tracking " + latest_tracking_id + " = (" + latest_pos_x + ", " + latest_pos_y + ")");
-                TouchPoint tp = touchPoints[latest_slot].clone();
-                if (tracking_id_changed)
-                    tp.tracking_id = latest_tracking_id;
-                if (pos_x_changed)
-                    tp.x = latest_pos_x;
-                if (pos_y_changed)
-                    tp.y = latest_pos_y;
-                touchPoints[latest_slot] = tp;
-                tracking_id_changed = false;
-                pos_x_changed = false;
-                pos_y_changed = false;
-
-                for (int i = 0; i < NUM_TOUCH_POINTS; i++) {
-                    if (touchPoints[i].tracking_id > 0) {
-                        LOGGER.debug("Touch point " + i + " ID " + touchPoints[i].tracking_id + " = (" + touchPoints[i].x + ", " + touchPoints[i].y + ")");
-                    }
-                }
+                // FIXME this might not be GC efficient
+                TouchPoint[] clonedTouchPoints = new TouchPoint[NUM_TOUCH_POINTS];
+                for (int i = 0; i < NUM_TOUCH_POINTS; i++)
+                    clonedTouchPoints[i] = newTouchPoints[i].clone();
+                touchPoints = clonedTouchPoints;
             }
         }
     }
