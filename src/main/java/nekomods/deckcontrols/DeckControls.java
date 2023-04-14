@@ -33,6 +33,7 @@ public class DeckControls
             HID_INPUT.start();
 
             TOUCH_INPUT = new TouchscreenInput();
+            TOUCH_INPUT.start();
 
             HOOKS = new InputHooks();
         }
