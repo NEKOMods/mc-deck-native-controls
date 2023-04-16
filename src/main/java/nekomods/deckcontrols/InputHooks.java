@@ -38,6 +38,7 @@ public class InputHooks {
     boolean shift_pressed;
     private boolean ctrl_pressed;
     private boolean alt_pressed;
+    private boolean[] key_is_pressed = new boolean[GLFW_KEY_LAST];
     int lpad_menu_selection = -1;
     private int last_lpad_menu_selection;
     private boolean lpad_is_pressed;
@@ -508,12 +509,11 @@ public class InputHooks {
     }
 
     private void keyboardPress(int key) {
-        if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
-            shift_pressed = true;
-        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
-            ctrl_pressed = true;
-        if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
-            alt_pressed = true;
+        key_is_pressed[key] = true;
+
+        shift_pressed = key_is_pressed[GLFW_KEY_LEFT_SHIFT] || key_is_pressed[GLFW_KEY_RIGHT_SHIFT];
+        ctrl_pressed = key_is_pressed[GLFW_KEY_LEFT_CONTROL] || key_is_pressed[GLFW_KEY_RIGHT_CONTROL];
+        alt_pressed = key_is_pressed[GLFW_KEY_LEFT_ALT] || key_is_pressed[GLFW_KEY_RIGHT_ALT];
 
         minecraft.keyboardHandler.keyPress(
                 minecraft.getWindow().getWindow(),
@@ -524,12 +524,11 @@ public class InputHooks {
     }
 
     private void keyboardRelease(int key) {
-        if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
-            shift_pressed = false;
-        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
-            ctrl_pressed = false;
-        if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
-            alt_pressed = false;
+        key_is_pressed[key] = false;
+
+        shift_pressed = key_is_pressed[GLFW_KEY_LEFT_SHIFT] || key_is_pressed[GLFW_KEY_RIGHT_SHIFT];
+        ctrl_pressed = key_is_pressed[GLFW_KEY_LEFT_CONTROL] || key_is_pressed[GLFW_KEY_RIGHT_CONTROL];
+        alt_pressed = key_is_pressed[GLFW_KEY_LEFT_ALT] || key_is_pressed[GLFW_KEY_RIGHT_ALT];
 
         minecraft.keyboardHandler.keyPress(
                 minecraft.getWindow().getWindow(),
@@ -1145,15 +1144,8 @@ public class InputHooks {
         }
     }
 
-    public boolean modifierPressed(int key) {
-        if (key == GLFW_KEY_LEFT_SHIFT || key == GLFW_KEY_RIGHT_SHIFT)
-            return shift_pressed;
-        if (key == GLFW_KEY_LEFT_CONTROL || key == GLFW_KEY_RIGHT_CONTROL)
-            return ctrl_pressed;
-        if (key == GLFW_KEY_LEFT_ALT || key == GLFW_KEY_RIGHT_ALT)
-            return alt_pressed;
-
-        return false;
+    public boolean keyPressed(int key) {
+        return key_is_pressed[key];
     }
 
     public float rideTickBoatLeftRight() {
@@ -1187,7 +1179,7 @@ public class InputHooks {
 
     public static boolean hookKeyDown(boolean existing, int key) {
         if (DeckControls.HOOKS == null) return existing;
-        return existing || DeckControls.HOOKS.modifierPressed(key);
+        return existing || DeckControls.HOOKS.keyPressed(key);
     }
 
     public static float hookRideTickBoatLeftRight() {
