@@ -167,6 +167,7 @@ public class HidInput extends Thread {
         int lastPressedButtons = 0;
         long last_frame_id = -1;
         long last_frame_nanos = -1;
+        long last_reenable_gyro_nanos = -1;
         int frame_times_i = 0;
         // mouse smoothing
         int last_mouse_pad_x = 0;
@@ -189,6 +190,12 @@ public class HidInput extends Thread {
             }
 
             long current_nanos = Util.getNanos();
+
+            // Turn gyro back on every second; fix for new Steam client
+            if (current_nanos - last_reenable_gyro_nanos > 1_000_000_000) {
+                turnGyroOn();
+                last_reenable_gyro_nanos = current_nanos;
+            }
 
             long frame_id = (buf[4] & 0xFF) | ((buf[5] & 0xFF) << 8) | ((buf[6] & 0xFF) << 16) | ((buf[7] & 0xFF) << 24);
             if (last_frame_id != -1) {
@@ -431,6 +438,21 @@ public class HidInput extends Thread {
         buf[5] = 0x03;  // low/mid/high in controller haptics intensity
         buf[6] = 0x03;  // -24 to 6, other/global intensity
         // steam sends more bytes, but afaict the firmware doesn't read them
+
+        // HIDIOCSFEATURE
+        return LibcIo.ioctl(fd, 0xC0414806, buf) == 0;
+    }
+
+    public boolean turnGyroOn() {
+        // no, we never want to turn the gyro off
+
+        byte[] buf = new byte[65];
+        buf[0] = 0x00;
+        buf[1] = (byte)0x87;
+        buf[2] = 0x03;
+        buf[3] = 0x30;
+        buf[4] = 0x18;
+        buf[5] = 0x00;
 
         // HIDIOCSFEATURE
         return LibcIo.ioctl(fd, 0xC0414806, buf) == 0;
